@@ -1,0 +1,34 @@
+{
+  "name": "sacd",
+  "version": "1.0.0",
+  "description": "",
+  "main": "hardhat.config.ts",
+  "scripts": {
+    "build": "npx hardhat clean && npx hardhat compile",
+    "test": "npx hardhat test",
+    "lint": "npm run lint:ts && npm run lint:sol",
+    "lint:fix": "npm run lint:ts:fix && npm run lint:sol:fix",
+    "lint:ts": "npx prettier --check '**/*.ts'",
+    "lint:ts:fix": "npx prettier --write '**/*.ts'",
+    "lint:sol": "npx prettier --check --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
+    "lint:sol:fix": "npx prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
+    "prepare": "husky"
+  },
+  "author": "",
+  "license": "ISC",
+  "lint-staged": {
+    "**/*.ts": "npm run lint:ts:fix",
+    "**/*.sol": "npm run lint:sol:fix"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "hardhat": "^2.22.6"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox-viem": "^3.0.0",
+    "husky": "^9.1.0",
+    "lint-staged": "^15.2.7",
+    "prettier": "^3.3.3",
+    "prettier-plugin-solidity": "^1.3.1"
+  }
+}
