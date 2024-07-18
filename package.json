@@ -21,6 +21,7 @@
     "**/*.sol": "npm run lint:sol:fix"
   },
   "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2",
     "dotenv": "^16.4.5",
     "hardhat": "^2.22.6"
   },
