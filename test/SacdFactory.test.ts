@@ -1,81 +1,124 @@
-import { time, loadFixture } from '@nomicfoundation/hardhat-toolbox-viem/network-helpers'
+import { time, loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import { expect } from 'chai'
 import hre from 'hardhat'
-import { getAddress, parseGwei, isAddress } from 'viem'
+import { EventLog } from 'ethers'
 
 import * as C from './constants'
 
-describe.only('SacdFactory', function () {
-  async function deployMockERC721() {
-    const [, user1] = await hre.viem.getWalletClients()
-    const mockErc721 = await hre.viem.deployContract('MockERC721')
-    await mockErc721.write.mint([user1.account.address])
-
-    return { mockErc721 }
-  }
-
+describe('SacdFactory', function () {
   async function deploySacdFactory() {
+    const [owner, grantor, grantee] = await hre.ethers.getSigners()
     const DEFAULT_EXPIRATION = BigInt((await time.latest()) + time.duration.years(1))
-    const [owner, user1] = await hre.viem.getWalletClients()
 
-    const sacdTemplate = await hre.viem.deployContract('Sacd')
-    const sacdFactory = await hre.viem.deployContract('SacdFactory', [sacdTemplate.address])
+    const mockErc721Factory = await hre.ethers.getContractFactory('MockERC721')
+    const sacdTemplateFactory = await hre.ethers.getContractFactory('Sacd')
+    const sacdFactoryFactory = await hre.ethers.getContractFactory('SacdFactory')
 
-    return { sacdTemplate, sacdFactory, owner, user1, DEFAULT_EXPIRATION }
+    const mockErc721 = await mockErc721Factory.deploy()
+    const sacdTemplate = await sacdTemplateFactory.deploy()
+    const sacdFactory = await sacdFactoryFactory.deploy(await sacdTemplate.getAddress())
+
+    await mockErc721.mint(grantor.address)
+
+    return { owner, grantor, grantee, mockErc721, sacdTemplate, sacdFactory, DEFAULT_EXPIRATION }
   }
 
   describe('constructor', () => {
     it('Should correctly set the SACD template', async () => {
       const { sacdTemplate, sacdFactory } = await loadFixture(deploySacdFactory)
 
-      expect(await sacdFactory.read.sacdTemplate()).to.equal(getAddress(sacdTemplate.address))
+      expect(await sacdFactory.sacdTemplate()).to.equal(await sacdTemplate.getAddress())
     })
   })
 
   describe('createSacd', () => {
+    context('Error handling', () => {
+      it('Should revert if caller is not the token Id owner', async () => {
+        const { mockErc721, sacdFactory, grantee, DEFAULT_EXPIRATION } = await loadFixture(deploySacdFactory)
+
+        await expect(
+          sacdFactory
+            .connect(grantee)
+            .createSacd(
+              await mockErc721.getAddress(),
+              1n,
+              C.MOCK_PERMISSIONS,
+              grantee.address,
+              DEFAULT_EXPIRATION,
+              C.MOCK_SOURCE
+            )
+        )
+          .to.be.revertedWithCustomError(sacdFactory, 'Unauthorized')
+          .withArgs(grantee.address)
+      })
+      it('Should revert if tokend ID does not exist', async () => {
+        const { mockErc721, sacdFactory, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(deploySacdFactory)
+
+        await expect(
+          sacdFactory
+            .connect(grantor)
+            .createSacd(
+              await mockErc721.getAddress(),
+              2n,
+              C.MOCK_PERMISSIONS,
+              grantee.address,
+              DEFAULT_EXPIRATION,
+              C.MOCK_SOURCE
+            )
+        )
+          .to.be.revertedWithCustomError(sacdFactory, 'InvalidTokenId')
+          .withArgs(await mockErc721.getAddress(), 2)
+      })
+    })
+
     context('State', () => {
       it('Should create a new SACD with correct params', async () => {
-        const { mockErc721 } = await loadFixture(deployMockERC721)
-        const { sacdFactory, user1, DEFAULT_EXPIRATION } = await loadFixture(deploySacdFactory)
+        const { mockErc721, sacdFactory, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(deploySacdFactory)
 
-        await sacdFactory.write.createSacd(
-          [mockErc721.address, 1n, C.MOCK_PERMISSIONS, user1.account.address, DEFAULT_EXPIRATION, ''],
-          {
-            account: user1.account,
-          }
-        )
-        const sacdCreatedEvents = await sacdFactory.getEvents.SacdCreated()
+        const tx = await sacdFactory
+          .connect(grantor)
+          .createSacd(
+            await mockErc721.getAddress(),
+            1n,
+            C.MOCK_PERMISSIONS,
+            grantee.address,
+            DEFAULT_EXPIRATION,
+            C.MOCK_SOURCE
+          )
+        const sacdAddress = ((await tx.wait())?.logs[0] as EventLog).args.sacdAddress as string
+        const sacdCreated = await hre.ethers.getContractAt('Sacd', sacdAddress)
 
-        const sacdCreated = await hre.viem.getContractAt('Sacd', sacdCreatedEvents[0].args.sacdAddress as `0x${string}`)
-
-        expect(await sacdCreated.read.initialized()).to.be.true
-        expect(await sacdCreated.read.nftAddr()).to.equal(getAddress(mockErc721.address))
-        expect(await sacdCreated.read.tokenId()).to.equal(1n)
-        expect(await sacdCreated.read.permissions()).to.equal(C.MOCK_PERMISSIONS)
-        expect(await sacdCreated.read.grantee()).to.equal(getAddress(user1.account.address))
-        expect(await sacdCreated.read.expiration()).to.equal(DEFAULT_EXPIRATION)
-        expect(await sacdCreated.read.source()).to.equal('')
+        expect(await sacdCreated.initialized()).to.be.true
+        expect(await sacdCreated.nftAddr()).to.equal(await mockErc721.getAddress())
+        expect(await sacdCreated.tokenId()).to.equal(1n)
+        expect(await sacdCreated.permissions()).to.equal(C.MOCK_PERMISSIONS)
+        expect(await sacdCreated.grantee()).to.equal(grantee.address)
+        expect(await sacdCreated.expiration()).to.equal(DEFAULT_EXPIRATION)
+        expect(await sacdCreated.source()).to.equal(C.MOCK_SOURCE)
       })
     })
 
     context('Events', () => {
       it('Should emit SacdCreated with correct params', async () => {
-        const { mockErc721 } = await loadFixture(deployMockERC721)
-        const { sacdFactory, user1, DEFAULT_EXPIRATION } = await loadFixture(deploySacdFactory)
+        const { mockErc721, sacdFactory, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(deploySacdFactory)
 
-        await sacdFactory.write.createSacd(
-          [mockErc721.address, 1n, C.MOCK_PERMISSIONS, user1.account.address, DEFAULT_EXPIRATION, ''],
-          {
-            account: user1.account,
-          }
-        )
+        const tx = await sacdFactory
+          .connect(grantor)
+          .createSacd(
+            await mockErc721.getAddress(),
+            1n,
+            C.MOCK_PERMISSIONS,
+            grantee.address,
+            DEFAULT_EXPIRATION,
+            C.MOCK_SOURCE
+          )
 
-        const sacdCreatedEvents = await sacdFactory.getEvents.SacdCreated()
-        expect(sacdCreatedEvents).to.have.lengthOf(1)
-        expect(sacdCreatedEvents[0].args.nftAddress).to.equal(getAddress(mockErc721.address))
-        expect(sacdCreatedEvents[0].args.permissions).to.equal(C.MOCK_PERMISSIONS)
-        expect(isAddress(sacdCreatedEvents[0].args.sacdAddress as string)).to.be.true
-        expect(sacdCreatedEvents[0].args.tokenId).to.equal(1n)
+        const eventLog = (await tx.wait())?.logs[0] as EventLog
+
+        expect(eventLog.args.nftAddress).to.equal(await mockErc721.getAddress())
+        expect(eventLog.args.tokenId).to.equal(1n)
+        expect(eventLog.args.permissions).to.equal(C.MOCK_PERMISSIONS)
+        expect(hre.ethers.isAddress(eventLog.args.sacdAddress)).to.be.true
       })
     })
   })

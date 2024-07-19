@@ -6,16 +6,19 @@ import {Clones} from '@openzeppelin/contracts/proxy/Clones.sol';
 
 import {ISacd} from './interfaces/ISacd.sol';
 
+error Unauthorized(address addr);
+error InvalidTokenId(address nftAddr, uint256 tokenId);
+
 // TODO Documentation
 contract SacdFactory {
+  address public sacdTemplate;
+
   event SacdCreated(
     address indexed nftAddress,
     uint256 indexed tokenId,
     uint256 permissions,
     address indexed sacdAddress
   );
-
-  address public sacdTemplate;
 
   constructor(address _sacdTemplate) {
     sacdTemplate = _sacdTemplate;
@@ -26,10 +29,19 @@ contract SacdFactory {
     address nftAddr,
     uint256 tokenId,
     uint256 permissions,
-    address grantee, // TODO replace grantee by _msgSender()
+    address grantee,
     uint256 expiration,
     string calldata source
   ) external returns (address clone) {
+    try IERC721(nftAddr).ownerOf(tokenId) returns (address tokenIdOwner) {
+      if (tokenIdOwner != msg.sender) {
+        // TODO Replace by _msgSender()
+        revert Unauthorized(msg.sender); // TODO Replace by _msgSender()
+      }
+    } catch {
+      revert InvalidTokenId(nftAddr, tokenId);
+    }
+
     // TODO Check tokenId ownership
     clone = Clones.clone(sacdTemplate);
     ISacd(clone).initialize(nftAddr, tokenId, permissions, grantee, expiration, source);
