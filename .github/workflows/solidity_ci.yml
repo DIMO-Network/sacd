@@ -3,7 +3,7 @@ name: Solidity CI
 on: [push]
 
 jobs:
-  test-parallel:
+  test:
     runs-on: ubuntu-latest
 
     strategy:

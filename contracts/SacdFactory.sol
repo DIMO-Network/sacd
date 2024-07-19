@@ -5,6 +5,7 @@ import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {Clones} from '@openzeppelin/contracts/proxy/Clones.sol';
 
 import {ISacd} from './interfaces/ISacd.sol';
+import {Sacd} from './Sacd.sol';
 
 error Unauthorized(address addr);
 error InvalidTokenId(address nftAddr, uint256 tokenId);
@@ -42,10 +43,23 @@ contract SacdFactory {
       revert InvalidTokenId(nftAddr, tokenId);
     }
 
-    // TODO Check tokenId ownership
     clone = Clones.clone(sacdTemplate);
     ISacd(clone).initialize(nftAddr, tokenId, permissions, grantee, expiration, source);
 
     emit SacdCreated(nftAddr, tokenId, permissions, clone);
+  }
+
+  // TODO Documentation
+  function hasPermission(
+    uint256 tokenId,
+    address grantee,
+    address sacdAddr,
+    uint8 permissionIndex
+  ) external view returns (bool) {
+    Sacd sacd = Sacd(sacdAddr);
+    if (sacd.tokenId() != tokenId || sacd.grantee() != grantee || sacd.expiration() <= block.timestamp) {
+      return false;
+    }
+    return (sacd.permissions() >> (2 * permissionIndex)) & 3 == 3;
   }
 }
