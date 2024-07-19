@@ -62,4 +62,18 @@ contract SacdFactory {
     }
     return (sacd.permissions() >> (2 * permissionIndex)) & 3 == 3;
   }
+
+  // TODO Documentation
+  function hasPermissions(
+    uint256 tokenId,
+    address grantee,
+    address sacdAddr,
+    uint256 permissions
+  ) external view returns (bool) {
+    Sacd sacd = Sacd(sacdAddr);
+    if (sacd.tokenId() != tokenId || sacd.grantee() != grantee || sacd.expiration() <= block.timestamp) {
+      return false;
+    }
+    return (sacd.permissions() & permissions) == permissions;
+  }
 }
