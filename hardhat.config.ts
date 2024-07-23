@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv'
 
-import type { HardhatUserConfig } from 'hardhat/config'
-import '@nomicfoundation/hardhat-toolbox-viem'
+import { HardhatUserConfig } from 'hardhat/config'
+import '@nomicfoundation/hardhat-toolbox'
 
 dotenv.config()
 
