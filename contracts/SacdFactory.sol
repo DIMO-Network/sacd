@@ -60,7 +60,7 @@ contract SacdFactory {
     if (sacd.tokenId() != tokenId || sacd.grantee() != grantee || sacd.expiration() <= block.timestamp) {
       return false;
     }
-    return (sacd.permissions() >> (2 * permissionIndex)) & 3 == 3;
+    return (sacd.permissions() >> permissionIndex) & 1 == 1;
   }
 
   // TODO Documentation
