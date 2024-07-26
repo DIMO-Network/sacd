@@ -11,27 +11,17 @@ describe('SacdFactory', function () {
     const DEFAULT_EXPIRATION = BigInt((await time.latest()) + time.duration.years(1))
 
     const mockErc721Factory = await hre.ethers.getContractFactory('MockERC721')
-    const sacdTemplateFactory = await hre.ethers.getContractFactory('Sacd')
     const sacdFactoryFactory = await hre.ethers.getContractFactory('SacdFactory')
 
     const mockErc721 = await mockErc721Factory.deploy()
-    const sacdTemplate = await sacdTemplateFactory.deploy()
-    const sacdFactory = await sacdFactoryFactory.deploy(await sacdTemplate.getAddress())
+    const sacdFactory = await sacdFactoryFactory.deploy()
 
     await mockErc721.mint(grantor.address)
 
-    return { owner, grantor, grantee, otherAccount, mockErc721, sacdTemplate, sacdFactory, DEFAULT_EXPIRATION }
+    return { owner, grantor, grantee, otherAccount, mockErc721, sacdFactory, DEFAULT_EXPIRATION }
   }
 
-  describe('constructor', () => {
-    it('Should correctly set the SACD template', async () => {
-      const { sacdTemplate, sacdFactory } = await loadFixture(setup)
-
-      expect(await sacdFactory.sacdTemplate()).to.equal(await sacdTemplate.getAddress())
-    })
-  })
-
-  describe('createSacd', () => {
+  describe('set', () => {
     context('Error handling', () => {
       it('Should revert if caller is not the token Id owner', async () => {
         const { mockErc721, sacdFactory, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
@@ -39,7 +29,7 @@ describe('SacdFactory', function () {
         await expect(
           sacdFactory
             .connect(grantee)
-            .createSacd(
+            .set(
               await mockErc721.getAddress(),
               1n,
               C.MOCK_PERMISSIONS,
@@ -51,13 +41,22 @@ describe('SacdFactory', function () {
           .to.be.revertedWithCustomError(sacdFactory, 'Unauthorized')
           .withArgs(grantee.address)
       })
+      it('Should revert if nft address is not an ERC721', async () => {
+        const { sacdFactory, grantor, grantee, otherAccount, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        await expect(
+          sacdFactory
+            .connect(grantor)
+            .set(otherAccount.address, 2n, C.MOCK_PERMISSIONS, grantee.address, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+        ).to.be.reverted
+      })
       it('Should revert if tokend ID does not exist', async () => {
         const { mockErc721, sacdFactory, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
 
         await expect(
           sacdFactory
             .connect(grantor)
-            .createSacd(
+            .set(
               await mockErc721.getAddress(),
               2n,
               C.MOCK_PERMISSIONS,
@@ -74,27 +73,17 @@ describe('SacdFactory', function () {
     context('State', () => {
       it('Should create a new SACD with correct params', async () => {
         const { mockErc721, sacdFactory, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
 
-        const tx = await sacdFactory
+        await sacdFactory
           .connect(grantor)
-          .createSacd(
-            await mockErc721.getAddress(),
-            1n,
-            C.MOCK_PERMISSIONS,
-            grantee.address,
-            DEFAULT_EXPIRATION,
-            C.MOCK_SOURCE
-          )
-        const sacdAddress = ((await tx.wait())?.logs[0] as EventLog).args.sacdAddress as string
-        const sacdCreated = await hre.ethers.getContractAt('Sacd', sacdAddress)
+          .set(mockErc721Address, 1n, C.MOCK_PERMISSIONS, grantee.address, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
 
-        expect(await sacdCreated.initialized()).to.be.true
-        expect(await sacdCreated.nftAddr()).to.equal(await mockErc721.getAddress())
-        expect(await sacdCreated.tokenId()).to.equal(1n)
-        expect(await sacdCreated.permissions()).to.equal(C.MOCK_PERMISSIONS)
-        expect(await sacdCreated.grantee()).to.equal(grantee.address)
-        expect(await sacdCreated.expiration()).to.equal(DEFAULT_EXPIRATION)
-        expect(await sacdCreated.source()).to.equal(C.MOCK_SOURCE)
+        const permissionRecord = await sacdFactory.permissionRecords(mockErc721Address, 1n, grantee.address)
+
+        expect(permissionRecord.permissions).to.equal(C.MOCK_PERMISSIONS)
+        expect(permissionRecord.expiry).to.equal(DEFAULT_EXPIRATION)
+        expect(permissionRecord.source).to.equal(C.MOCK_SOURCE)
       })
     })
 
@@ -104,7 +93,7 @@ describe('SacdFactory', function () {
 
         const tx = await sacdFactory
           .connect(grantor)
-          .createSacd(
+          .set(
             await mockErc721.getAddress(),
             1n,
             C.MOCK_PERMISSIONS,
@@ -118,7 +107,6 @@ describe('SacdFactory', function () {
         expect(eventLog.args.nftAddress).to.equal(await mockErc721.getAddress())
         expect(eventLog.args.tokenId).to.equal(1n)
         expect(eventLog.args.permissions).to.equal(C.MOCK_PERMISSIONS)
-        expect(hre.ethers.isAddress(eventLog.args.sacdAddress)).to.be.true
       })
     })
   })
@@ -126,172 +114,112 @@ describe('SacdFactory', function () {
   describe('hasPermission', () => {
     it('Should return false if token Id does not match', async () => {
       const { mockErc721, sacdFactory, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
-      const tx = await sacdFactory
-        .connect(grantor)
-        .createSacd(
-          await mockErc721.getAddress(),
-          1n,
-          C.MOCK_PERMISSIONS,
-          grantee.address,
-          DEFAULT_EXPIRATION,
-          C.MOCK_SOURCE
-        )
-      const sacdAddress = ((await tx.wait())?.logs[0] as EventLog).args.sacdAddress as string
+      const mockErc721Address = await mockErc721.getAddress()
 
-      expect(await sacdFactory.hasPermission(2n, grantee.address, sacdAddress, 0)).to.be.false
+      await sacdFactory
+        .connect(grantor)
+        .set(mockErc721Address, 1n, C.MOCK_PERMISSIONS, grantee.address, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+
+      expect(await sacdFactory.hasPermission(mockErc721Address, 2n, grantee.address, 0)).to.be.false
     })
     it('Should return false if grantee does not match', async () => {
       const { mockErc721, sacdFactory, grantor, grantee, otherAccount, DEFAULT_EXPIRATION } = await loadFixture(setup)
-      const tx = await sacdFactory
-        .connect(grantor)
-        .createSacd(
-          await mockErc721.getAddress(),
-          1n,
-          C.MOCK_PERMISSIONS,
-          grantee.address,
-          DEFAULT_EXPIRATION,
-          C.MOCK_SOURCE
-        )
-      const sacdAddress = ((await tx.wait())?.logs[0] as EventLog).args.sacdAddress as string
+      const mockErc721Address = await mockErc721.getAddress()
 
-      expect(await sacdFactory.hasPermission(1n, otherAccount.address, sacdAddress, 0)).to.be.false
+      await sacdFactory
+        .connect(grantor)
+        .set(mockErc721Address, 1n, C.MOCK_PERMISSIONS, grantee.address, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+
+      expect(await sacdFactory.hasPermission(mockErc721Address, 1n, otherAccount.address, 0)).to.be.false
     })
     it('Should return false if permission is already expired', async () => {
       const { mockErc721, sacdFactory, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
-      const tx = await sacdFactory
-        .connect(grantor)
-        .createSacd(
-          await mockErc721.getAddress(),
-          1n,
-          C.MOCK_PERMISSIONS,
-          grantee.address,
-          DEFAULT_EXPIRATION,
-          C.MOCK_SOURCE
-        )
-      const sacdAddress = ((await tx.wait())?.logs[0] as EventLog).args.sacdAddress as string
+      const mockErc721Address = await mockErc721.getAddress()
 
+      await sacdFactory
+        .connect(grantor)
+        .set(mockErc721Address, 1n, C.MOCK_PERMISSIONS, grantee.address, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
       await time.increase(time.duration.years(5))
 
-      expect(await sacdFactory.hasPermission(1n, grantee.address, sacdAddress, 0)).to.be.false
+      expect(await sacdFactory.hasPermission(mockErc721Address, 1n, grantee.address, 0)).to.be.false
     })
     it('Should return false if it does not have permission', async () => {
       const { mockErc721, sacdFactory, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
-      const tx = await sacdFactory
-        .connect(grantor)
-        .createSacd(
-          await mockErc721.getAddress(),
-          1n,
-          C.MOCK_PERMISSIONS,
-          grantee.address,
-          DEFAULT_EXPIRATION,
-          C.MOCK_SOURCE
-        )
-      const sacdAddress = ((await tx.wait())?.logs[0] as EventLog).args.sacdAddress as string
+      const mockErc721Address = await mockErc721.getAddress()
 
-      expect(await sacdFactory.hasPermission(1n, grantee.address, sacdAddress, 0)).to.be.false
+      await sacdFactory
+        .connect(grantor)
+        .set(mockErc721Address, 1n, C.MOCK_PERMISSIONS, grantee.address, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+
+      expect(await sacdFactory.hasPermission(mockErc721Address, 1n, grantee.address, 0)).to.be.false
     })
     it('Should return true if it has permission', async () => {
       const { mockErc721, sacdFactory, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
-      const tx = await sacdFactory
-        .connect(grantor)
-        .createSacd(
-          await mockErc721.getAddress(),
-          1n,
-          C.MOCK_PERMISSIONS,
-          grantee.address,
-          DEFAULT_EXPIRATION,
-          C.MOCK_SOURCE
-        )
-      const sacdAddress = ((await tx.wait())?.logs[0] as EventLog).args.sacdAddress as string
+      const mockErc721Address = await mockErc721.getAddress()
 
-      expect(await sacdFactory.hasPermission(1n, grantee.address, sacdAddress, 4)).to.be.true
+      await sacdFactory
+        .connect(grantor)
+        .set(mockErc721Address, 1n, C.MOCK_PERMISSIONS, grantee.address, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+
+      expect(await sacdFactory.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.true
     })
   })
 
   describe('hasPermissions', () => {
     it('Should return false if token Id does not match', async () => {
       const { mockErc721, sacdFactory, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
-      const tx = await sacdFactory
-        .connect(grantor)
-        .createSacd(
-          await mockErc721.getAddress(),
-          1n,
-          C.MOCK_PERMISSIONS,
-          grantee.address,
-          DEFAULT_EXPIRATION,
-          C.MOCK_SOURCE
-        )
-      const sacdAddress = ((await tx.wait())?.logs[0] as EventLog).args.sacdAddress as string
+      const mockErc721Address = await mockErc721.getAddress()
 
-      expect(await sacdFactory.hasPermissions(2n, grantee.address, sacdAddress, C.MOCK_PERMISSIONS)).to.be.false
+      await sacdFactory
+        .connect(grantor)
+        .set(mockErc721Address, 1n, C.MOCK_PERMISSIONS, grantee.address, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+
+      expect(await sacdFactory.hasPermissions(mockErc721Address, 2n, grantee.address, C.MOCK_PERMISSIONS)).to.be.false
     })
     it('Should return false if grantee does not match', async () => {
       const { mockErc721, sacdFactory, grantor, grantee, otherAccount, DEFAULT_EXPIRATION } = await loadFixture(setup)
-      const tx = await sacdFactory
-        .connect(grantor)
-        .createSacd(
-          await mockErc721.getAddress(),
-          1n,
-          C.MOCK_PERMISSIONS,
-          grantee.address,
-          DEFAULT_EXPIRATION,
-          C.MOCK_SOURCE
-        )
-      const sacdAddress = ((await tx.wait())?.logs[0] as EventLog).args.sacdAddress as string
+      const mockErc721Address = await mockErc721.getAddress()
 
-      expect(await sacdFactory.hasPermissions(1n, otherAccount.address, sacdAddress, C.MOCK_PERMISSIONS)).to.be.false
+      await sacdFactory
+        .connect(grantor)
+        .set(mockErc721Address, 1n, C.MOCK_PERMISSIONS, grantee.address, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+
+      expect(await sacdFactory.hasPermissions(mockErc721Address, 1n, otherAccount.address, C.MOCK_PERMISSIONS)).to.be
+        .false
     })
     it('Should return false if permission is already expired', async () => {
       const { mockErc721, sacdFactory, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
-      const tx = await sacdFactory
+      const mockErc721Address = await mockErc721.getAddress()
+
+      await sacdFactory
         .connect(grantor)
-        .createSacd(
-          await mockErc721.getAddress(),
-          1n,
-          C.MOCK_PERMISSIONS,
-          grantee.address,
-          DEFAULT_EXPIRATION,
-          C.MOCK_SOURCE
-        )
-      const sacdAddress = ((await tx.wait())?.logs[0] as EventLog).args.sacdAddress as string
+        .set(mockErc721Address, 1n, C.MOCK_PERMISSIONS, grantee.address, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
 
       await time.increase(time.duration.years(5))
 
-      expect(await sacdFactory.hasPermissions(1n, grantee.address, sacdAddress, C.MOCK_PERMISSIONS)).to.be.false
+      expect(await sacdFactory.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.be.false
     })
     it('Should return false if it does not have permission', async () => {
       const { mockErc721, sacdFactory, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
-      const tx = await sacdFactory
-        .connect(grantor)
-        .createSacd(
-          await mockErc721.getAddress(),
-          1n,
-          C.MOCK_PERMISSIONS,
-          grantee.address,
-          DEFAULT_EXPIRATION,
-          C.MOCK_SOURCE
-        )
-      const sacdAddress = ((await tx.wait())?.logs[0] as EventLog).args.sacdAddress as string
+      const mockErc721Address = await mockErc721.getAddress()
 
-      // C.MOCK_PERMISSIONS 816 11 00 11 00 00
-      // Test               819 11 00 11 00 11
-      expect(await sacdFactory.hasPermissions(1n, grantee.address, sacdAddress, 819)).to.be.false
+      await sacdFactory
+        .connect(grantor)
+        .set(mockErc721Address, 1n, C.MOCK_PERMISSIONS, grantee.address, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+
+      // C.MOCK_PERMISSIONS 816 1 1 0 0 1 1 0 0 0 0
+      // Test               819 1 1 0 0 1 1 0 0 1 1
+      expect(await sacdFactory.hasPermissions(mockErc721Address, 1n, grantee.address, 819)).to.be.false
     })
     it('Should return true if it has permission', async () => {
       const { mockErc721, sacdFactory, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
-      const tx = await sacdFactory
-        .connect(grantor)
-        .createSacd(
-          await mockErc721.getAddress(),
-          1n,
-          C.MOCK_PERMISSIONS,
-          grantee.address,
-          DEFAULT_EXPIRATION,
-          C.MOCK_SOURCE
-        )
-      const sacdAddress = ((await tx.wait())?.logs[0] as EventLog).args.sacdAddress as string
+      const mockErc721Address = await mockErc721.getAddress()
 
-      expect(await sacdFactory.hasPermissions(1n, grantee.address, sacdAddress, C.MOCK_PERMISSIONS)).to.be.true
+      await sacdFactory
+        .connect(grantor)
+        .set(mockErc721Address, 1n, C.MOCK_PERMISSIONS, grantee.address, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+
+      expect(await sacdFactory.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.be.true
     })
   })
 })

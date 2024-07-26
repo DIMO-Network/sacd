@@ -11,69 +11,70 @@ error Unauthorized(address addr);
 error InvalidTokenId(address nftAddr, uint256 tokenId);
 
 // TODO Documentation
+// TODO Make it upgradeable
+// TODO Rename it to SACD if we really don't spawn contracts
 contract SacdFactory {
-  address public sacdTemplate;
-
-  event SacdCreated(
-    address indexed nftAddress,
-    uint256 indexed tokenId,
-    uint256 permissions,
-    address indexed sacdAddress
-  );
-
-  constructor(address _sacdTemplate) {
-    sacdTemplate = _sacdTemplate;
+  struct PermissionRecord {
+    uint256 permissions;
+    uint256 expiry;
+    string source;
   }
 
+  mapping(address erc721Address => mapping(uint256 tokenId => mapping(address grantee => PermissionRecord)))
+    public permissionRecords;
+
+  event SacdCreated(address indexed nftAddress, uint256 indexed tokenId, uint256 permissions);
+
+  constructor() {}
+
   // TODO Documentation
-  function createSacd(
+  function set(
     address nftAddr,
     uint256 tokenId,
     uint256 permissions,
     address grantee,
     uint256 expiration,
     string calldata source
-  ) external returns (address clone) {
+  ) external {
     try IERC721(nftAddr).ownerOf(tokenId) returns (address tokenIdOwner) {
+      // TODO Replace by _msgSender()
       if (tokenIdOwner != msg.sender) {
-        // TODO Replace by _msgSender()
-        revert Unauthorized(msg.sender); // TODO Replace by _msgSender()
+        revert Unauthorized(msg.sender);
       }
     } catch {
       revert InvalidTokenId(nftAddr, tokenId);
     }
 
-    clone = Clones.clone(sacdTemplate);
-    ISacd(clone).initialize(nftAddr, tokenId, permissions, grantee, expiration, source);
+    permissionRecords[nftAddr][tokenId][grantee] = PermissionRecord(permissions, expiration, source);
 
-    emit SacdCreated(nftAddr, tokenId, permissions, clone);
+    emit SacdCreated(nftAddr, tokenId, permissions);
   }
 
   // TODO Documentation
   function hasPermission(
+    address nftAddr,
     uint256 tokenId,
     address grantee,
-    address sacdAddr,
     uint8 permissionIndex
   ) external view returns (bool) {
-    Sacd sacd = Sacd(sacdAddr);
-    if (sacd.tokenId() != tokenId || sacd.grantee() != grantee || sacd.expiration() <= block.timestamp) {
+    PermissionRecord memory pr = permissionRecords[nftAddr][tokenId][grantee];
+    if (pr.expiry <= block.timestamp) {
       return false;
     }
-    return (sacd.permissions() >> permissionIndex) & 1 == 1;
+    return (pr.permissions >> permissionIndex) & 1 == 1;
   }
 
   // TODO Documentation
   function hasPermissions(
+    address nftAddr,
     uint256 tokenId,
     address grantee,
-    address sacdAddr,
     uint256 permissions
   ) external view returns (bool) {
-    Sacd sacd = Sacd(sacdAddr);
-    if (sacd.tokenId() != tokenId || sacd.grantee() != grantee || sacd.expiration() <= block.timestamp) {
+    PermissionRecord memory pr = permissionRecords[nftAddr][tokenId][grantee];
+    if (pr.expiry <= block.timestamp) {
       return false;
     }
-    return (sacd.permissions() & permissions) == permissions;
+    return (pr.permissions & permissions) == permissions;
   }
 }
