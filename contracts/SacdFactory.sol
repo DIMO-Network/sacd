@@ -25,9 +25,16 @@ contract SacdFactory {
 
   event SacdCreated(address indexed nftAddress, uint256 indexed tokenId, uint256 permissions);
 
-  constructor() {}
-
-  // TODO Documentation
+  /**
+   * @notice Sets a permission record to a grantee
+   * @dev The caller must be the owner of the token
+   * @param nftAddr The ERC721 contract address
+   * @param tokenId Token Id associated with the permissions
+   * @param permissions The uint256 that represents the byte array of permissions
+   * @param grantee The address to receive the permission
+   * @param expiration Expiration of the permissions
+   * @param source The URI source associated with the permissions
+   */
   function set(
     address nftAddr,
     uint256 tokenId,
@@ -50,7 +57,13 @@ contract SacdFactory {
     emit SacdCreated(nftAddr, tokenId, permissions);
   }
 
-  // TODO Documentation
+  /**
+   * @notice Checks if a user has a permission
+   * @param nftAddr The ERC721 contract address
+   * @param tokenId Token Id associated with the permissions
+   * @param grantee The address to be checked
+   * @param permissionIndex The relative index of the permission
+   */
   function hasPermission(
     address nftAddr,
     uint256 tokenId,
@@ -64,7 +77,13 @@ contract SacdFactory {
     return (pr.permissions >> permissionIndex) & 1 == 1;
   }
 
-  // TODO Documentation
+  /**
+   * @notice Checks if a user has a set of permissions
+   * @param nftAddr The ERC721 contract address
+   * @param tokenId Token Id associated with the permissions
+   * @param grantee The address to be checked
+   * @param permissions The uint256 that represents the byte array of permissions
+   */
   function hasPermissions(
     address nftAddr,
     uint256 tokenId,
