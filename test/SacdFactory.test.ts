@@ -82,7 +82,7 @@ describe('SacdFactory', function () {
         const permissionRecord = await sacdFactory.permissionRecords(mockErc721Address, 1n, grantee.address)
 
         expect(permissionRecord.permissions).to.equal(C.MOCK_PERMISSIONS)
-        expect(permissionRecord.expiry).to.equal(DEFAULT_EXPIRATION)
+        expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
         expect(permissionRecord.source).to.equal(C.MOCK_SOURCE)
       })
     })
@@ -107,6 +107,8 @@ describe('SacdFactory', function () {
         expect(eventLog.args.nftAddress).to.equal(await mockErc721.getAddress())
         expect(eventLog.args.tokenId).to.equal(1n)
         expect(eventLog.args.permissions).to.equal(C.MOCK_PERMISSIONS)
+        expect(eventLog.args.expiration).to.equal(DEFAULT_EXPIRATION)
+        expect(eventLog.args.source).to.equal(C.MOCK_SOURCE)
       })
     })
   })

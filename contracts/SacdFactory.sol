@@ -16,14 +16,20 @@ error InvalidTokenId(address nftAddr, uint256 tokenId);
 contract SacdFactory {
   struct PermissionRecord {
     uint256 permissions;
-    uint256 expiry;
+    uint256 expiration;
     string source;
   }
 
   mapping(address erc721Address => mapping(uint256 tokenId => mapping(address grantee => PermissionRecord)))
     public permissionRecords;
 
-  event SacdCreated(address indexed nftAddress, uint256 indexed tokenId, uint256 permissions);
+  event SacdCreated(
+    address indexed nftAddress,
+    uint256 indexed tokenId,
+    uint256 permissions,
+    uint256 expiration,
+    string source
+  );
 
   /**
    * @notice Sets a permission record to a grantee
@@ -54,7 +60,7 @@ contract SacdFactory {
 
     permissionRecords[nftAddr][tokenId][grantee] = PermissionRecord(permissions, expiration, source);
 
-    emit SacdCreated(nftAddr, tokenId, permissions);
+    emit SacdCreated(nftAddr, tokenId, permissions, expiration, source);
   }
 
   /**
@@ -71,7 +77,7 @@ contract SacdFactory {
     uint8 permissionIndex
   ) external view returns (bool) {
     PermissionRecord memory pr = permissionRecords[nftAddr][tokenId][grantee];
-    if (pr.expiry <= block.timestamp) {
+    if (pr.expiration <= block.timestamp) {
       return false;
     }
     return (pr.permissions >> permissionIndex) & 1 == 1;
@@ -91,7 +97,7 @@ contract SacdFactory {
     uint256 permissions
   ) external view returns (bool) {
     PermissionRecord memory pr = permissionRecords[nftAddr][tokenId][grantee];
-    if (pr.expiry <= block.timestamp) {
+    if (pr.expiration <= block.timestamp) {
       return false;
     }
     return (pr.permissions & permissions) == permissions;
