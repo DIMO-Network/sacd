@@ -6,8 +6,8 @@ interface ISacd {
   function initialize(
     address _asset,
     uint256 _tokenId,
-    uint256 _permissions,
     address _grantee,
+    uint256 _permissions,
     uint256 _expiration,
     string calldata _source
   ) external;

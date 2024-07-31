@@ -47,8 +47,8 @@ contract SacdFactory {
   function set(
     address asset,
     uint256 tokenId,
-    uint256 permissions,
     address grantee,
+    uint256 permissions,
     uint256 expiration,
     string calldata source
   ) external returns (address sacd) {
@@ -69,7 +69,7 @@ contract SacdFactory {
       sacd = Clones.clone(sacdTemplate);
       sacds[asset][tokenId] = sacd;
       // TODO maybe avoid setting perm in the init to emit SacdCreated first
-      ISacd(sacd).initialize(asset, tokenId, permissions, grantee, expiration, source);
+      ISacd(sacd).initialize(asset, tokenId, grantee, permissions, expiration, source);
       emit SacdCreated(sacd, asset, tokenId);
     } else {
       ISacd(sacd).setPermissions(permissions, grantee, expiration, source);

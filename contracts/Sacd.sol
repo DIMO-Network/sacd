@@ -36,8 +36,8 @@ contract Sacd {
   function initialize(
     address _asset,
     uint256 _tokenId,
-    uint256 _permissions,
     address _grantee,
+    uint256 _permissions,
     uint256 _expiration,
     string calldata _source
   ) external {
@@ -52,13 +52,14 @@ contract Sacd {
 
     // TODO maybe not all must be != 0
     // TODO maybe avoid setting perm in the init to emit SacdCreated first
-    if (_permissions != 0 && _grantee != address(0) && bytes(_source).length > 0) {
+    if (_permissions != 0 && _grantee != address(0) && _expiration != 0 && bytes(_source).length > 0) {
       _setPermissions(_permissions, _grantee, _expiration, _source);
     }
   }
 
   // TODO Create function to set permissions for a certain grantee
 
+  // TODO Documentation
   function setPermissions(
     uint256 _permissions,
     address _grantee,
@@ -77,6 +78,7 @@ contract Sacd {
     _setPermissions(_permissions, _grantee, _expiration, _source);
   }
 
+  // TODO Documentation
   function _setPermissions(
     uint256 _permissions,
     address _grantee,
