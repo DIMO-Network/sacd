@@ -1,21 +1,40 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
-// TODO Documentation
+import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
+
+import 'hardhat/console.sol';
+
+error AlreadyInitialized();
+error Unauthorized(address addr);
+error InvalidTokenId(address asset, uint256 tokenId);
+
+// TODO Documentation, explaing this contract represents a token Id and can have multiple grantees
 contract Sacd {
-  error AlreadyInitialized();
+  struct PermissionRecord {
+    uint256 permissions;
+    uint256 expiration;
+    string source;
+  }
 
   bool public initialized;
-  address public nftAddr;
+  address public asset; // TODO Do we need this?
   uint256 public tokenId;
-  uint256 public permissions;
-  address public grantee;
-  uint256 public expiration;
-  string public source;
+
+  mapping(address grantee => PermissionRecord) public permissionRecords;
+
+  event PermissionsSet(
+    address indexed asset,
+    uint256 indexed tokenId,
+    uint256 permissions,
+    address indexed grantee,
+    uint256 expiration,
+    string source
+  );
 
   // TODO Documentation
   function initialize(
-    address _nftAddr,
+    address _asset,
     uint256 _tokenId,
     uint256 _permissions,
     address _grantee,
@@ -28,11 +47,44 @@ contract Sacd {
     // TODO Make other checks
 
     initialized = true;
-    nftAddr = _nftAddr;
+    asset = _asset;
     tokenId = _tokenId;
-    permissions = _permissions;
-    grantee = _grantee;
-    expiration = _expiration;
-    source = _source;
+
+    // TODO maybe not all must be != 0
+    // TODO maybe avoid setting perm in the init to emit SacdCreated first
+    if (_permissions != 0 && _grantee != address(0) && bytes(_source).length > 0) {
+      _setPermissions(_permissions, _grantee, _expiration, _source);
+    }
+  }
+
+  // TODO Create function to set permissions for a certain grantee
+
+  function setPermissions(
+    uint256 _permissions,
+    address _grantee,
+    uint256 _expiration,
+    string calldata _source
+  ) external {
+    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
+      // TODO Just for testing, it will be replaced soon
+      if (tokenIdOwner != tx.origin) {
+        revert Unauthorized(tx.origin);
+      }
+    } catch {
+      revert InvalidTokenId(asset, tokenId);
+    }
+
+    _setPermissions(_permissions, _grantee, _expiration, _source);
+  }
+
+  function _setPermissions(
+    uint256 _permissions,
+    address _grantee,
+    uint256 _expiration,
+    string calldata _source
+  ) private {
+    permissionRecords[_grantee] = PermissionRecord(_permissions, _expiration, _source);
+
+    emit PermissionsSet(asset, tokenId, _permissions, _grantee, _expiration, _source);
   }
 }

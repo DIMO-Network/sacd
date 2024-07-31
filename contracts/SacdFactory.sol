@@ -7,6 +7,8 @@ import {Clones} from '@openzeppelin/contracts/proxy/Clones.sol';
 import {ISacd} from './interfaces/ISacd.sol';
 import {Sacd} from './Sacd.sol';
 
+import 'hardhat/console.sol';
+
 error Unauthorized(address addr);
 error InvalidTokenId(address asset, uint256 tokenId);
 
@@ -20,17 +22,18 @@ contract SacdFactory {
     string source;
   }
 
+  address public sacdTemplate;
+  mapping(address asset => mapping(uint256 tokenId => address sacd)) public sacds;
   mapping(address asset => mapping(uint256 tokenId => mapping(address grantee => PermissionRecord)))
     public permissionRecords;
 
-  event SacdCreated(
-    address indexed asset,
-    uint256 indexed tokenId,
-    uint256 permissions,
-    uint256 expiration,
-    string source
-  );
+  event SacdCreated(address indexed sacd, address indexed asset, uint256 indexed tokenId);
 
+  constructor(address _sacdTemplate) {
+    sacdTemplate = _sacdTemplate;
+  }
+
+  // TODO rename this function?
   /**
    * @notice Sets a permission record to a grantee
    * @dev The caller must be the owner of the token
@@ -48,11 +51,11 @@ contract SacdFactory {
     address grantee,
     uint256 expiration,
     string calldata source
-  ) external {
+  ) external returns (address sacd) {
     try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
-      // TODO Replace by _msgSender()
-      if (tokenIdOwner != msg.sender) {
-        revert Unauthorized(msg.sender);
+      // TODO Just for testing, it will be replaced soon
+      if (tokenIdOwner != tx.origin) {
+        revert Unauthorized(tx.origin);
       }
     } catch {
       revert InvalidTokenId(asset, tokenId);
@@ -60,7 +63,17 @@ contract SacdFactory {
 
     permissionRecords[asset][tokenId][grantee] = PermissionRecord(permissions, expiration, source);
 
-    emit SacdCreated(asset, tokenId, permissions, expiration, source);
+    sacd = sacds[asset][tokenId];
+
+    if (sacd == address(0)) {
+      sacd = Clones.clone(sacdTemplate);
+      sacds[asset][tokenId] = sacd;
+      // TODO maybe avoid setting perm in the init to emit SacdCreated first
+      ISacd(sacd).initialize(asset, tokenId, permissions, grantee, expiration, source);
+      emit SacdCreated(sacd, asset, tokenId);
+    } else {
+      ISacd(sacd).setPermissions(permissions, grantee, expiration, source);
+    }
   }
 
   /**
