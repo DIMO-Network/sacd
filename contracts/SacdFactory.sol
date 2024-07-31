@@ -8,7 +8,7 @@ import {ISacd} from './interfaces/ISacd.sol';
 import {Sacd} from './Sacd.sol';
 
 error Unauthorized(address addr);
-error InvalidTokenId(address nftAddr, uint256 tokenId);
+error InvalidTokenId(address asset, uint256 tokenId);
 
 // TODO Documentation
 // TODO Make it upgradeable
@@ -20,11 +20,11 @@ contract SacdFactory {
     string source;
   }
 
-  mapping(address erc721Address => mapping(uint256 tokenId => mapping(address grantee => PermissionRecord)))
+  mapping(address asset => mapping(uint256 tokenId => mapping(address grantee => PermissionRecord)))
     public permissionRecords;
 
   event SacdCreated(
-    address indexed nftAddress,
+    address indexed asset,
     uint256 indexed tokenId,
     uint256 permissions,
     uint256 expiration,
@@ -34,7 +34,7 @@ contract SacdFactory {
   /**
    * @notice Sets a permission record to a grantee
    * @dev The caller must be the owner of the token
-   * @param nftAddr The ERC721 contract address
+   * @param asset The contract address
    * @param tokenId Token Id associated with the permissions
    * @param permissions The uint256 that represents the byte array of permissions
    * @param grantee The address to receive the permission
@@ -42,41 +42,41 @@ contract SacdFactory {
    * @param source The URI source associated with the permissions
    */
   function set(
-    address nftAddr,
+    address asset,
     uint256 tokenId,
     uint256 permissions,
     address grantee,
     uint256 expiration,
     string calldata source
   ) external {
-    try IERC721(nftAddr).ownerOf(tokenId) returns (address tokenIdOwner) {
+    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
       // TODO Replace by _msgSender()
       if (tokenIdOwner != msg.sender) {
         revert Unauthorized(msg.sender);
       }
     } catch {
-      revert InvalidTokenId(nftAddr, tokenId);
+      revert InvalidTokenId(asset, tokenId);
     }
 
-    permissionRecords[nftAddr][tokenId][grantee] = PermissionRecord(permissions, expiration, source);
+    permissionRecords[asset][tokenId][grantee] = PermissionRecord(permissions, expiration, source);
 
-    emit SacdCreated(nftAddr, tokenId, permissions, expiration, source);
+    emit SacdCreated(asset, tokenId, permissions, expiration, source);
   }
 
   /**
    * @notice Checks if a user has a permission
-   * @param nftAddr The ERC721 contract address
+   * @param asset The contract address
    * @param tokenId Token Id associated with the permissions
    * @param grantee The address to be checked
    * @param permissionIndex The relative index of the permission
    */
   function hasPermission(
-    address nftAddr,
+    address asset,
     uint256 tokenId,
     address grantee,
     uint8 permissionIndex
   ) external view returns (bool) {
-    PermissionRecord memory pr = permissionRecords[nftAddr][tokenId][grantee];
+    PermissionRecord memory pr = permissionRecords[asset][tokenId][grantee];
     if (pr.expiration <= block.timestamp) {
       return false;
     }
@@ -85,18 +85,18 @@ contract SacdFactory {
 
   /**
    * @notice Checks if a user has a set of permissions
-   * @param nftAddr The ERC721 contract address
+   * @param asset The contract address
    * @param tokenId Token Id associated with the permissions
    * @param grantee The address to be checked
    * @param permissions The uint256 that represents the byte array of permissions
    */
   function hasPermissions(
-    address nftAddr,
+    address asset,
     uint256 tokenId,
     address grantee,
     uint256 permissions
   ) external view returns (bool) {
-    PermissionRecord memory pr = permissionRecords[nftAddr][tokenId][grantee];
+    PermissionRecord memory pr = permissionRecords[asset][tokenId][grantee];
     if (pr.expiration <= block.timestamp) {
       return false;
     }

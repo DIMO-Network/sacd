@@ -41,7 +41,7 @@ describe('SacdFactory', function () {
           .to.be.revertedWithCustomError(sacdFactory, 'Unauthorized')
           .withArgs(grantee.address)
       })
-      it('Should revert if nft address is not an ERC721', async () => {
+      it('Should revert if asset address is not an ERC721', async () => {
         const { sacdFactory, grantor, grantee, otherAccount, DEFAULT_EXPIRATION } = await loadFixture(setup)
 
         await expect(
@@ -104,7 +104,7 @@ describe('SacdFactory', function () {
 
         const eventLog = (await tx.wait())?.logs[0] as EventLog
 
-        expect(eventLog.args.nftAddress).to.equal(await mockErc721.getAddress())
+        expect(eventLog.args.asset).to.equal(await mockErc721.getAddress())
         expect(eventLog.args.tokenId).to.equal(1n)
         expect(eventLog.args.permissions).to.equal(C.MOCK_PERMISSIONS)
         expect(eventLog.args.expiration).to.equal(DEFAULT_EXPIRATION)
