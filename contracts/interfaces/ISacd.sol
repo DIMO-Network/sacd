@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 // TODO Documentation
 interface ISacd {
-  function initialize(address _asset, uint256 _tokenId) external;
+  function initialize(address _asset, uint256 _tokenId, address _currentTokenIdOwner) external;
 
   function setPermissions(
     uint256 _permissions,

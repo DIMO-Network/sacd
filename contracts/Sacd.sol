@@ -3,11 +3,6 @@ pragma solidity ^0.8.24;
 
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 
-error AlreadyInitialized();
-error ZeroAddress();
-error Unauthorized(address addr);
-error InvalidTokenId(address asset, uint256 tokenId);
-
 // TODO Documentation, explaing this contract represents a token Id and can have multiple grantees
 contract Sacd {
   struct PermissionRecord {
@@ -19,6 +14,7 @@ contract Sacd {
   bool public initialized;
   address public asset;
   uint256 public tokenId;
+  address public currentTokenIdOwner;
 
   mapping(address grantee => PermissionRecord) public permissionRecords;
 
@@ -31,8 +27,13 @@ contract Sacd {
     string source
   );
 
+  error AlreadyInitialized();
+  error ZeroAddress();
+  error Unauthorized(address addr);
+  error InvalidTokenId(address asset, uint256 tokenId);
+
   // TODO Documentation
-  function initialize(address _asset, uint256 _tokenId) external {
+  function initialize(address _asset, uint256 _tokenId, address _currentTokenIdOwner) external {
     if (initialized) {
       revert AlreadyInitialized();
     }
@@ -42,10 +43,14 @@ contract Sacd {
     if (_tokenId == 0) {
       revert InvalidTokenId(_asset, _tokenId);
     }
+    if (_currentTokenIdOwner == address(0)) {
+      revert ZeroAddress();
+    }
 
     initialized = true;
     asset = _asset;
     tokenId = _tokenId;
+    currentTokenIdOwner = _currentTokenIdOwner;
   }
 
   // TODO Documentation
@@ -67,12 +72,21 @@ contract Sacd {
     _setPermissions(_permissions, _grantee, _expiration, _source);
   }
 
+  // TODO Documentation
   /**
    * @notice Checks if a user has a permission
    * @param grantee The address to be checked
    * @param permissionIndex The relative index of the permission
    */
   function hasPermission(address grantee, uint8 permissionIndex) external view returns (bool) {
+    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
+      if (tokenIdOwner != currentTokenIdOwner) {
+        return false;
+      }
+    } catch {
+      return false;
+    }
+
     PermissionRecord memory pr = permissionRecords[grantee];
     if (pr.expiration <= block.timestamp) {
       return false;
@@ -80,12 +94,21 @@ contract Sacd {
     return (pr.permissions >> permissionIndex) & 1 == 1;
   }
 
+  // TODO Documentation
   /**
    * @notice Checks if a user has a set of permissions
    * @param grantee The address to be checked
    * @param permissions The uint256 that represents the byte array of permissions
    */
   function hasPermissions(address grantee, uint256 permissions) external view returns (bool) {
+    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
+      if (tokenIdOwner != currentTokenIdOwner) {
+        return false;
+      }
+    } catch {
+      return false;
+    }
+
     PermissionRecord memory pr = permissionRecords[grantee];
     if (pr.expiration <= block.timestamp) {
       return false;

@@ -7,19 +7,16 @@ import {Clones} from '@openzeppelin/contracts/proxy/Clones.sol';
 import {ISacd} from './interfaces/ISacd.sol';
 import {Sacd} from './Sacd.sol';
 
-import 'hardhat/console.sol';
-
-error Unauthorized(address addr);
-error InvalidTokenId(address asset, uint256 tokenId);
-
 // TODO Documentation
 // TODO Make it upgradeable
-// TODO Rename it to SACD if we really don't spawn contracts
 contract SacdFactory {
   address public sacdTemplate;
   mapping(address asset => mapping(uint256 tokenId => address sacd)) public sacds;
 
   event SacdCreated(address indexed sacd, address indexed asset, uint256 indexed tokenId);
+
+  error Unauthorized(address addr);
+  error InvalidTokenId(address asset, uint256 tokenId);
 
   constructor(address _sacdTemplate) {
     sacdTemplate = _sacdTemplate;
@@ -40,15 +37,15 @@ contract SacdFactory {
       if (tokenIdOwner != tx.origin) {
         revert Unauthorized(tx.origin);
       }
+
+      sacd = Clones.clone(sacdTemplate);
+      sacds[asset][tokenId] = sacd;
+      ISacd(sacd).initialize(asset, tokenId, tokenIdOwner);
+
+      emit SacdCreated(sacd, asset, tokenId);
     } catch {
       revert InvalidTokenId(asset, tokenId);
     }
-
-    sacd = Clones.clone(sacdTemplate);
-    sacds[asset][tokenId] = sacd;
-    ISacd(sacd).initialize(asset, tokenId);
-
-    emit SacdCreated(sacd, asset, tokenId);
   }
 
   /**
@@ -77,19 +74,19 @@ contract SacdFactory {
       if (tokenIdOwner != tx.origin) {
         revert Unauthorized(tx.origin);
       }
+
+      sacd = Clones.clone(sacdTemplate);
+      sacds[asset][tokenId] = sacd;
+      ISacd(sacd).initialize(asset, tokenId, tokenIdOwner);
+
+      emit SacdCreated(sacd, asset, tokenId);
+
+      // TODO maybe not all must be != 0
+      if (permissions != 0 && grantee != address(0) && expiration != 0 && bytes(source).length > 0) {
+        ISacd(sacd).setPermissions(permissions, grantee, expiration, source);
+      }
     } catch {
       revert InvalidTokenId(asset, tokenId);
-    }
-
-    sacd = Clones.clone(sacdTemplate);
-    sacds[asset][tokenId] = sacd;
-    ISacd(sacd).initialize(asset, tokenId);
-
-    emit SacdCreated(sacd, asset, tokenId);
-
-    // TODO maybe not all must be != 0
-    if (permissions != 0 && grantee != address(0) && expiration != 0 && bytes(source).length > 0) {
-      ISacd(sacd).setPermissions(permissions, grantee, expiration, source);
     }
   }
 
@@ -131,5 +128,14 @@ contract SacdFactory {
       return false;
     }
     return ISacd(sacd).hasPermissions(grantee, permissions);
+  }
+
+  // TODO Documentation
+  function onTransfer(address asset, uint256 tokenId) external {
+    if (msg.sender != asset) {
+      revert Unauthorized(msg.sender);
+    }
+
+    sacds[asset][tokenId] = address(0);
   }
 }
