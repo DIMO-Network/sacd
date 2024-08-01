@@ -18,4 +18,8 @@ interface ISacd {
     uint256 _expiration,
     string calldata _source
   ) external;
+
+  function hasPermission(address grantee, uint8 permissionIndex) external view returns (bool);
+
+  function hasPermissions(address grantee, uint256 permissions) external view returns (bool);
 }

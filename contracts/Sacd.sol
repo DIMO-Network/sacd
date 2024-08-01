@@ -78,6 +78,32 @@ contract Sacd {
     _setPermissions(_permissions, _grantee, _expiration, _source);
   }
 
+  /**
+   * @notice Checks if a user has a permission
+   * @param grantee The address to be checked
+   * @param permissionIndex The relative index of the permission
+   */
+  function hasPermission(address grantee, uint8 permissionIndex) external view returns (bool) {
+    PermissionRecord memory pr = permissionRecords[grantee];
+    if (pr.expiration <= block.timestamp) {
+      return false;
+    }
+    return (pr.permissions >> permissionIndex) & 1 == 1;
+  }
+
+  /**
+   * @notice Checks if a user has a set of permissions
+   * @param grantee The address to be checked
+   * @param permissions The uint256 that represents the byte array of permissions
+   */
+  function hasPermissions(address grantee, uint256 permissions) external view returns (bool) {
+    PermissionRecord memory pr = permissionRecords[grantee];
+    if (pr.expiration <= block.timestamp) {
+      return false;
+    }
+    return (pr.permissions & permissions) == permissions;
+  }
+
   // TODO Documentation
   function _setPermissions(
     uint256 _permissions,

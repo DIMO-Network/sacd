@@ -89,11 +89,11 @@ contract SacdFactory {
     address grantee,
     uint8 permissionIndex
   ) external view returns (bool) {
-    PermissionRecord memory pr = permissionRecords[asset][tokenId][grantee];
-    if (pr.expiration <= block.timestamp) {
+    address sacd = sacds[asset][tokenId];
+    if (sacd == address(0)) {
       return false;
     }
-    return (pr.permissions >> permissionIndex) & 1 == 1;
+    return ISacd(sacd).hasPermission(grantee, permissionIndex);
   }
 
   /**
@@ -109,10 +109,10 @@ contract SacdFactory {
     address grantee,
     uint256 permissions
   ) external view returns (bool) {
-    PermissionRecord memory pr = permissionRecords[asset][tokenId][grantee];
-    if (pr.expiration <= block.timestamp) {
+    address sacd = sacds[asset][tokenId];
+    if (sacd == address(0)) {
       return false;
     }
-    return (pr.permissions & permissions) == permissions;
+    return ISacd(sacd).hasPermissions(grantee, permissions);
   }
 }

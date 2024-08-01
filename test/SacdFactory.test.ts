@@ -305,7 +305,7 @@ describe('SacdFactory', function () {
     })
   })
 
-  describe.skip('hasPermission', () => {
+  describe('hasPermission', () => {
     it('Should return false if token Id does not match', async () => {
       const { mockErc721, sacdFactory, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
       const mockErc721Address = await mockErc721.getAddress()
@@ -359,7 +359,7 @@ describe('SacdFactory', function () {
     })
   })
 
-  describe.skip('hasPermissions', () => {
+  describe('hasPermissions', () => {
     it('Should return false if token Id does not match', async () => {
       const { mockErc721, sacdFactory, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
       const mockErc721Address = await mockErc721.getAddress()
