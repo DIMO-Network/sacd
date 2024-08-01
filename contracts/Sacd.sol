@@ -3,9 +3,8 @@ pragma solidity ^0.8.24;
 
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 
-import 'hardhat/console.sol';
-
 error AlreadyInitialized();
+error ZeroAddress();
 error Unauthorized(address addr);
 error InvalidTokenId(address asset, uint256 tokenId);
 
@@ -18,7 +17,7 @@ contract Sacd {
   }
 
   bool public initialized;
-  address public asset; // TODO Do we need this?
+  address public asset;
   uint256 public tokenId;
 
   mapping(address grantee => PermissionRecord) public permissionRecords;
@@ -33,31 +32,21 @@ contract Sacd {
   );
 
   // TODO Documentation
-  function initialize(
-    address _asset,
-    uint256 _tokenId,
-    address _grantee,
-    uint256 _permissions,
-    uint256 _expiration,
-    string calldata _source
-  ) external {
+  function initialize(address _asset, uint256 _tokenId) external {
     if (initialized) {
       revert AlreadyInitialized();
     }
-    // TODO Make other checks
+    if (_asset == address(0)) {
+      revert ZeroAddress();
+    }
+    if (_tokenId == 0) {
+      revert InvalidTokenId(_asset, _tokenId);
+    }
 
     initialized = true;
     asset = _asset;
     tokenId = _tokenId;
-
-    // TODO maybe not all must be != 0
-    // TODO maybe avoid setting perm in the init to emit SacdCreated first
-    if (_permissions != 0 && _grantee != address(0) && _expiration != 0 && bytes(_source).length > 0) {
-      _setPermissions(_permissions, _grantee, _expiration, _source);
-    }
   }
-
-  // TODO Create function to set permissions for a certain grantee
 
   // TODO Documentation
   function setPermissions(
