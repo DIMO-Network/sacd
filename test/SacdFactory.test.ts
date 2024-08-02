@@ -1,7 +1,7 @@
 import { time, loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import { expect } from 'chai'
 import hre from 'hardhat'
-import { EventLog, Log } from 'ethers'
+import { EventLog } from 'ethers'
 
 import * as C from './constants'
 
@@ -10,13 +10,13 @@ describe('SacdFactory', function () {
     const [owner, grantor, grantee, otherAccount] = await hre.ethers.getSigners()
     const DEFAULT_EXPIRATION = BigInt((await time.latest()) + time.duration.years(1))
 
-    const mockErc721Factory = await hre.ethers.getContractFactory('MockERC721')
+    const mockErc721Factory = await hre.ethers.getContractFactory('MockERC721withSacd')
     const sacdTemplateFactory = await hre.ethers.getContractFactory('Sacd')
     const sacdFactoryFactory = await hre.ethers.getContractFactory('SacdFactory')
 
-    const mockErc721 = await mockErc721Factory.deploy()
     const sacdTemplate = await sacdTemplateFactory.deploy()
     const sacdFactory = await sacdFactoryFactory.deploy(await sacdTemplate.getAddress())
+    const mockErc721 = await mockErc721Factory.deploy(await sacdFactory.getAddress())
 
     await mockErc721.mint(grantor.address)
 
@@ -52,9 +52,13 @@ describe('SacdFactory', function () {
         const { mockErc721, sacdFactory, grantor } = await loadFixture(setup)
         const mockErc721Address = await mockErc721.getAddress()
 
-        await (await sacdFactory.connect(grantor)['createSacd(address,uint256)'](mockErc721Address, 1n)).wait()
+        await sacdFactory.connect(grantor)['createSacd(address,uint256)'](mockErc721Address, 1n)
 
         const sacdToken01Address = await sacdFactory.sacds(mockErc721Address, 1n)
+
+        expect(hre.ethers.isAddress(sacdToken01Address)).to.be.true
+        expect(sacdToken01Address).to.not.equal(hre.ethers.ZeroAddress)
+
         const sacd = await hre.ethers.getContractAt('Sacd', sacdToken01Address)
 
         expect(await sacd.asset()).to.equal(mockErc721Address)
@@ -85,6 +89,30 @@ describe('SacdFactory', function () {
           sacdFactory,
           'SacdCreated'
         )
+      })
+    })
+
+    context('on transfer', () => {
+      it('Should create a new SACD when token ID is transferred', async () => {
+        const { mockErc721, sacdFactory, grantor, grantee, otherAccount } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+
+        await sacdFactory.connect(grantor)['createSacd(address,uint256)'](mockErc721Address, 1n)
+
+        const sacdToken01AddressBefore = await sacdFactory.sacds(mockErc721Address, 1n)
+
+        expect(hre.ethers.isAddress(sacdToken01AddressBefore)).to.be.true
+        expect(sacdToken01AddressBefore).to.not.equal(hre.ethers.ZeroAddress)
+
+        await mockErc721.connect(grantor).transferFrom(grantor.address, otherAccount.address, 1n)
+
+        await sacdFactory.connect(otherAccount)['createSacd(address,uint256)'](mockErc721Address, 1n)
+
+        const sacdToken01AddressAfter = await sacdFactory.sacds(mockErc721Address, 1n)
+
+        expect(hre.ethers.isAddress(sacdToken01AddressAfter)).to.be.true
+        expect(sacdToken01AddressAfter).to.not.equal(hre.ethers.ZeroAddress)
+        expect(sacdToken01AddressAfter).to.not.equal(sacdToken01AddressBefore)
       })
     })
   })
@@ -135,15 +163,17 @@ describe('SacdFactory', function () {
         const { mockErc721, sacdFactory, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
         const mockErc721Address = await mockErc721.getAddress()
 
-        await (
-          await sacdFactory
-            .connect(grantor)
-            [
-              'createSacd(address,uint256,address,uint256,uint256,string)'
-            ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
-        ).wait()
+        await sacdFactory
+          .connect(grantor)
+          [
+            'createSacd(address,uint256,address,uint256,uint256,string)'
+          ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
 
         const sacdToken01Address = await sacdFactory.sacds(mockErc721Address, 1n)
+
+        expect(hre.ethers.isAddress(sacdToken01Address)).to.be.true
+        expect(sacdToken01Address).to.not.equal(hre.ethers.ZeroAddress)
+
         const sacd = await hre.ethers.getContractAt('Sacd', sacdToken01Address)
 
         expect(await sacd.asset()).to.equal(mockErc721Address)
@@ -367,6 +397,38 @@ describe('SacdFactory', function () {
         expect(permissionsEvent).to.be.empty
       })
     })
+
+    context('on transfer', () => {
+      it('Should create a new SACD when token ID is transferred', async () => {
+        const { mockErc721, sacdFactory, grantor, grantee, otherAccount, DEFAULT_EXPIRATION } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+
+        await sacdFactory
+          .connect(grantor)
+          [
+            'createSacd(address,uint256,address,uint256,uint256,string)'
+          ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+
+        const sacdToken01AddressBefore = await sacdFactory.sacds(mockErc721Address, 1n)
+
+        expect(hre.ethers.isAddress(sacdToken01AddressBefore)).to.be.true
+        expect(sacdToken01AddressBefore).to.not.equal(hre.ethers.ZeroAddress)
+
+        await mockErc721.connect(grantor).transferFrom(grantor.address, otherAccount.address, 1n)
+
+        await sacdFactory
+          .connect(otherAccount)
+          [
+            'createSacd(address,uint256,address,uint256,uint256,string)'
+          ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+
+        const sacdToken01AddressAfter = await sacdFactory.sacds(mockErc721Address, 1n)
+
+        expect(hre.ethers.isAddress(sacdToken01AddressAfter)).to.be.true
+        expect(sacdToken01AddressAfter).to.not.equal(hre.ethers.ZeroAddress)
+        expect(sacdToken01AddressAfter).to.not.equal(sacdToken01AddressBefore)
+      })
+    })
   })
 
   describe('hasPermission', () => {
@@ -430,6 +492,25 @@ describe('SacdFactory', function () {
         ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
 
       expect(await sacdFactory.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.true
+    })
+
+    context('on transfer', () => {
+      it('Should return false if when token ID is transferred', async () => {
+        const { mockErc721, sacdFactory, grantor, grantee, otherAccount, DEFAULT_EXPIRATION } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+
+        await sacdFactory
+          .connect(grantor)
+          [
+            'createSacd(address,uint256,address,uint256,uint256,string)'
+          ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+
+        expect(await sacdFactory.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.true
+
+        await mockErc721.connect(grantor).transferFrom(grantor.address, otherAccount.address, 1n)
+
+        expect(await sacdFactory.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.false
+      })
     })
   })
 
@@ -498,6 +579,44 @@ describe('SacdFactory', function () {
         ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
 
       expect(await sacdFactory.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.be.true
+    })
+
+    context('on transfer', () => {
+      it('Should return false if when token ID is transferred', async () => {
+        const { mockErc721, sacdFactory, grantor, grantee, otherAccount, DEFAULT_EXPIRATION } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+
+        await sacdFactory
+          .connect(grantor)
+          [
+            'createSacd(address,uint256,address,uint256,uint256,string)'
+          ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+
+        expect(await sacdFactory.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.be.true
+
+        await mockErc721.connect(grantor).transferFrom(grantor.address, otherAccount.address, 1n)
+
+        expect(await sacdFactory.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.be.false
+      })
+    })
+  })
+
+  describe('onTransfer', () => {
+    it('Should set SACD to address(0) when token ID is transferred', async () => {
+      const { mockErc721, sacdFactory, grantor, otherAccount } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
+
+      await sacdFactory.connect(grantor)['createSacd(address,uint256)'](mockErc721Address, 1n)
+
+      const sacdAddressBefore = await sacdFactory.sacds(mockErc721Address, 1n)
+
+      expect(sacdAddressBefore).to.not.equal(hre.ethers.ZeroAddress)
+
+      await mockErc721.connect(grantor).transferFrom(grantor.address, otherAccount.address, 1n)
+
+      const sacdAddressAfter = await sacdFactory.sacds(mockErc721Address, 1n)
+
+      expect(sacdAddressAfter).to.equal(hre.ethers.ZeroAddress)
     })
   })
 })
