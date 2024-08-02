@@ -8,72 +8,98 @@ import {ISacd} from './interfaces/ISacd.sol';
 import {Sacd} from './Sacd.sol';
 
 error Unauthorized(address addr);
-error InvalidTokenId(address nftAddr, uint256 tokenId);
+error InvalidTokenId(address asset, uint256 tokenId);
 
 // TODO Documentation
+// TODO Make it upgradeable
+// TODO Rename it to SACD if we really don't spawn contracts
 contract SacdFactory {
-  address public sacdTemplate;
-
-  event SacdCreated(
-    address indexed nftAddress,
-    uint256 indexed tokenId,
-    uint256 permissions,
-    address indexed sacdAddress
-  );
-
-  constructor(address _sacdTemplate) {
-    sacdTemplate = _sacdTemplate;
+  struct PermissionRecord {
+    uint256 permissions;
+    uint256 expiration;
+    string source;
   }
 
-  // TODO Documentation
-  function createSacd(
-    address nftAddr,
+  mapping(address asset => mapping(uint256 tokenId => mapping(address grantee => PermissionRecord)))
+    public permissionRecords;
+
+  event SacdCreated(
+    address indexed asset,
+    uint256 indexed tokenId,
+    uint256 permissions,
+    uint256 expiration,
+    string source
+  );
+
+  /**
+   * @notice Sets a permission record to a grantee
+   * @dev The caller must be the owner of the token
+   * @param asset The contract address
+   * @param tokenId Token Id associated with the permissions
+   * @param permissions The uint256 that represents the byte array of permissions
+   * @param grantee The address to receive the permission
+   * @param expiration Expiration of the permissions
+   * @param source The URI source associated with the permissions
+   */
+  function set(
+    address asset,
     uint256 tokenId,
     uint256 permissions,
     address grantee,
     uint256 expiration,
     string calldata source
-  ) external returns (address clone) {
-    try IERC721(nftAddr).ownerOf(tokenId) returns (address tokenIdOwner) {
+  ) external {
+    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
+      // TODO Replace by _msgSender()
       if (tokenIdOwner != msg.sender) {
-        // TODO Replace by _msgSender()
-        revert Unauthorized(msg.sender); // TODO Replace by _msgSender()
+        revert Unauthorized(msg.sender);
       }
     } catch {
-      revert InvalidTokenId(nftAddr, tokenId);
+      revert InvalidTokenId(asset, tokenId);
     }
 
-    clone = Clones.clone(sacdTemplate);
-    ISacd(clone).initialize(nftAddr, tokenId, permissions, grantee, expiration, source);
+    permissionRecords[asset][tokenId][grantee] = PermissionRecord(permissions, expiration, source);
 
-    emit SacdCreated(nftAddr, tokenId, permissions, clone);
+    emit SacdCreated(asset, tokenId, permissions, expiration, source);
   }
 
-  // TODO Documentation
+  /**
+   * @notice Checks if a user has a permission
+   * @param asset The contract address
+   * @param tokenId Token Id associated with the permissions
+   * @param grantee The address to be checked
+   * @param permissionIndex The relative index of the permission
+   */
   function hasPermission(
+    address asset,
     uint256 tokenId,
     address grantee,
-    address sacdAddr,
     uint8 permissionIndex
   ) external view returns (bool) {
-    Sacd sacd = Sacd(sacdAddr);
-    if (sacd.tokenId() != tokenId || sacd.grantee() != grantee || sacd.expiration() <= block.timestamp) {
+    PermissionRecord memory pr = permissionRecords[asset][tokenId][grantee];
+    if (pr.expiration <= block.timestamp) {
       return false;
     }
-    return (sacd.permissions() >> (2 * permissionIndex)) & 3 == 3;
+    return (pr.permissions >> permissionIndex) & 1 == 1;
   }
 
-  // TODO Documentation
+  /**
+   * @notice Checks if a user has a set of permissions
+   * @param asset The contract address
+   * @param tokenId Token Id associated with the permissions
+   * @param grantee The address to be checked
+   * @param permissions The uint256 that represents the byte array of permissions
+   */
   function hasPermissions(
+    address asset,
     uint256 tokenId,
     address grantee,
-    address sacdAddr,
     uint256 permissions
   ) external view returns (bool) {
-    Sacd sacd = Sacd(sacdAddr);
-    if (sacd.tokenId() != tokenId || sacd.grantee() != grantee || sacd.expiration() <= block.timestamp) {
+    PermissionRecord memory pr = permissionRecords[asset][tokenId][grantee];
+    if (pr.expiration <= block.timestamp) {
       return false;
     }
-    return (sacd.permissions() & permissions) == permissions;
+    return (pr.permissions & permissions) == permissions;
   }
 }
