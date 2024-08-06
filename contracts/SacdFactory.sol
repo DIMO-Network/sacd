@@ -7,32 +7,49 @@ import {Clones} from '@openzeppelin/contracts/proxy/Clones.sol';
 import {ISacd} from './interfaces/ISacd.sol';
 import {Sacd} from './Sacd.sol';
 
-error Unauthorized(address addr);
-error InvalidTokenId(address asset, uint256 tokenId);
-
 // TODO Documentation
 // TODO Make it upgradeable
-// TODO Rename it to SACD if we really don't spawn contracts
 contract SacdFactory {
-  struct PermissionRecord {
-    uint256 permissions;
-    uint256 expiration;
-    string source;
+  address public sacdTemplate;
+  mapping(address asset => mapping(uint256 tokenId => address sacd)) public sacds;
+
+  event SacdCreated(address indexed sacd, address indexed asset, uint256 indexed tokenId);
+
+  error Unauthorized(address addr);
+  error InvalidTokenId(address asset, uint256 tokenId);
+
+  constructor(address _sacdTemplate) {
+    sacdTemplate = _sacdTemplate;
   }
 
-  mapping(address asset => mapping(uint256 tokenId => mapping(address grantee => PermissionRecord)))
-    public permissionRecords;
+  /**
+   * @notice Creates a new SACD if not defined for the token ID
+   * @dev The caller must be the owner of the token
+   * @param asset The contract address
+   * @param tokenId Token Id associated with the permissions
+   */
+  function createSacd(address asset, uint256 tokenId) external returns (address sacd) {
+    sacd = sacds[asset][tokenId];
+    if (sacd != address(0)) return sacd;
 
-  event SacdCreated(
-    address indexed asset,
-    uint256 indexed tokenId,
-    uint256 permissions,
-    uint256 expiration,
-    string source
-  );
+    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
+      // TODO Just for testing, it will be replaced soon
+      if (tokenIdOwner != tx.origin) {
+        revert Unauthorized(tx.origin);
+      }
+
+      sacd = Clones.clone(sacdTemplate);
+      sacds[asset][tokenId] = sacd;
+      ISacd(sacd).initialize(asset, tokenId, tokenIdOwner);
+
+      emit SacdCreated(sacd, asset, tokenId);
+    } catch {
+      revert InvalidTokenId(asset, tokenId);
+    }
+  }
 
   /**
-   * @notice Sets a permission record to a grantee
+   * @notice Creates a new SACD if not defined for the token ID and sets a permission record to a grantee
    * @dev The caller must be the owner of the token
    * @param asset The contract address
    * @param tokenId Token Id associated with the permissions
@@ -41,26 +58,36 @@ contract SacdFactory {
    * @param expiration Expiration of the permissions
    * @param source The URI source associated with the permissions
    */
-  function set(
+  function createSacd(
     address asset,
     uint256 tokenId,
-    uint256 permissions,
     address grantee,
+    uint256 permissions,
     uint256 expiration,
     string calldata source
-  ) external {
+  ) external returns (address sacd) {
+    sacd = sacds[asset][tokenId];
+    if (sacd != address(0)) return sacd;
+
     try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
-      // TODO Replace by _msgSender()
-      if (tokenIdOwner != msg.sender) {
-        revert Unauthorized(msg.sender);
+      // TODO Just for testing, it will be replaced soon
+      if (tokenIdOwner != tx.origin) {
+        revert Unauthorized(tx.origin);
+      }
+
+      sacd = Clones.clone(sacdTemplate);
+      sacds[asset][tokenId] = sacd;
+      ISacd(sacd).initialize(asset, tokenId, tokenIdOwner);
+
+      emit SacdCreated(sacd, asset, tokenId);
+
+      // TODO maybe not all must be != 0
+      if (permissions != 0 && grantee != address(0) && expiration != 0 && bytes(source).length > 0) {
+        ISacd(sacd).setPermissions(permissions, grantee, expiration, source);
       }
     } catch {
       revert InvalidTokenId(asset, tokenId);
     }
-
-    permissionRecords[asset][tokenId][grantee] = PermissionRecord(permissions, expiration, source);
-
-    emit SacdCreated(asset, tokenId, permissions, expiration, source);
   }
 
   /**
@@ -76,11 +103,11 @@ contract SacdFactory {
     address grantee,
     uint8 permissionIndex
   ) external view returns (bool) {
-    PermissionRecord memory pr = permissionRecords[asset][tokenId][grantee];
-    if (pr.expiration <= block.timestamp) {
+    address sacd = sacds[asset][tokenId];
+    if (sacd == address(0)) {
       return false;
     }
-    return (pr.permissions >> permissionIndex) & 1 == 1;
+    return ISacd(sacd).hasPermission(grantee, permissionIndex);
   }
 
   /**
@@ -96,10 +123,19 @@ contract SacdFactory {
     address grantee,
     uint256 permissions
   ) external view returns (bool) {
-    PermissionRecord memory pr = permissionRecords[asset][tokenId][grantee];
-    if (pr.expiration <= block.timestamp) {
+    address sacd = sacds[asset][tokenId];
+    if (sacd == address(0)) {
       return false;
     }
-    return (pr.permissions & permissions) == permissions;
+    return ISacd(sacd).hasPermissions(grantee, permissions);
+  }
+
+  // TODO Documentation
+  function onTransfer(address asset, uint256 tokenId) external {
+    if (msg.sender != asset) {
+      revert Unauthorized(msg.sender);
+    }
+
+    sacds[asset][tokenId] = address(0);
   }
 }
