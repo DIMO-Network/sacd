@@ -91,7 +91,7 @@ contract Sacd {
     if (pr.expiration <= block.timestamp) {
       return false;
     }
-    return (pr.permissions >> permissionIndex) & 1 == 1;
+    return (pr.permissions >> (2 * permissionIndex)) & 3 == 3;
   }
 
   // TODO Documentation
