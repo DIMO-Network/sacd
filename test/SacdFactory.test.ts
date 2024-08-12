@@ -564,8 +564,8 @@ describe('SacdFactory', function () {
           'createSacd(address,uint256,address,uint256,uint256,string)'
         ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
 
-      // C.MOCK_PERMISSIONS 816 1 1 0 0 1 1 0 0 0 0
-      // Test               819 1 1 0 0 1 1 0 0 1 1
+      // C.MOCK_PERMISSIONS 816 11 00 11 00 00
+      // Test               819 11 00 11 00 11
       expect(await sacdFactory.hasPermissions(mockErc721Address, 1n, grantee.address, 819)).to.be.false
     })
     it('Should return true if it has permission', async () => {

@@ -209,8 +209,8 @@ describe('Sacd', function () {
 
       await sacd.connect(grantor).setPermissions(C.MOCK_PERMISSIONS, grantee.address, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
 
-      // C.MOCK_PERMISSIONS 816 1 1 0 0 1 1 0 0 0 0
-      // Test               819 1 1 0 0 1 1 0 0 1 1
+      // C.MOCK_PERMISSIONS 816 11 00 11 00 00
+      // Test               819 11 00 11 00 11
       expect(await sacd.hasPermissions(grantee.address, 819)).to.be.false
     })
     it('Should return true if it has permission', async () => {
