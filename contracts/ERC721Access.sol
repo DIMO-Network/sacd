@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 
 // TODO Documentation, explaing this contract represents a token Id and can have multiple grantees
-contract Sacd {
+contract ERC721Access {
   struct PermissionRecord {
     uint256 permissions;
     uint256 expiration;

@@ -4,16 +4,16 @@ import hre from 'hardhat'
 
 import * as C from './constants'
 
-describe('Sacd', function () {
+describe('ERC721Access', function () {
   async function setup() {
     const [owner, grantor, grantee, otherAccount] = await hre.ethers.getSigners()
     const DEFAULT_EXPIRATION = BigInt((await time.latest()) + time.duration.years(1))
 
     const mockErc721Factory = await hre.ethers.getContractFactory('MockERC721')
-    const sacdFactory = await hre.ethers.getContractFactory('Sacd')
+    const erc721AccessFactory = await hre.ethers.getContractFactory('ERC721Access')
 
     const mockErc721 = await mockErc721Factory.deploy()
-    const sacd = await sacdFactory.deploy()
+    const sacd = await erc721AccessFactory.deploy()
 
     await mockErc721.mint(grantor.address)
 

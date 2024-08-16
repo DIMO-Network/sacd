@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 // TODO Documentation
-interface ISacd {
+interface IERC721Access {
   function initialize(address _asset, uint256 _tokenId, address _currentTokenIdOwner) external;
 
   function setPermissions(

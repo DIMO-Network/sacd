@@ -4,13 +4,13 @@ pragma solidity ^0.8.24;
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {Clones} from '@openzeppelin/contracts/proxy/Clones.sol';
 
-import {ISacd} from './interfaces/ISacd.sol';
-import {Sacd} from './Sacd.sol';
+import {IERC721Access} from './interfaces/IERC721Access.sol';
+import {ERC721Access} from './ERC721Access.sol';
 
 // TODO Documentation
 // TODO Make it upgradeable
-contract SacdFactory {
-  address public sacdTemplate;
+contract SacdManager {
+  address public erc721AccessTemplate;
   mapping(address asset => mapping(uint256 tokenId => address sacd)) public sacds;
 
   event SacdCreated(address indexed sacd, address indexed asset, uint256 indexed tokenId);
@@ -18,8 +18,8 @@ contract SacdFactory {
   error Unauthorized(address addr);
   error InvalidTokenId(address asset, uint256 tokenId);
 
-  constructor(address _sacdTemplate) {
-    sacdTemplate = _sacdTemplate;
+  constructor(address _erc721AccessTemplate) {
+    erc721AccessTemplate = _erc721AccessTemplate;
   }
 
   /**
@@ -38,9 +38,9 @@ contract SacdFactory {
         revert Unauthorized(tx.origin);
       }
 
-      sacd = Clones.clone(sacdTemplate);
+      sacd = Clones.clone(erc721AccessTemplate);
       sacds[asset][tokenId] = sacd;
-      ISacd(sacd).initialize(asset, tokenId, tokenIdOwner);
+      IERC721Access(sacd).initialize(asset, tokenId, tokenIdOwner);
 
       emit SacdCreated(sacd, asset, tokenId);
     } catch {
@@ -75,15 +75,15 @@ contract SacdFactory {
         revert Unauthorized(tx.origin);
       }
 
-      sacd = Clones.clone(sacdTemplate);
+      sacd = Clones.clone(erc721AccessTemplate);
       sacds[asset][tokenId] = sacd;
-      ISacd(sacd).initialize(asset, tokenId, tokenIdOwner);
+      IERC721Access(sacd).initialize(asset, tokenId, tokenIdOwner);
 
       emit SacdCreated(sacd, asset, tokenId);
 
       // TODO maybe not all must be != 0
       if (permissions != 0 && grantee != address(0) && expiration != 0 && bytes(source).length > 0) {
-        ISacd(sacd).setPermissions(permissions, grantee, expiration, source);
+        IERC721Access(sacd).setPermissions(permissions, grantee, expiration, source);
       }
     } catch {
       revert InvalidTokenId(asset, tokenId);
@@ -107,7 +107,7 @@ contract SacdFactory {
     if (sacd == address(0)) {
       return false;
     }
-    return ISacd(sacd).hasPermission(grantee, permissionIndex);
+    return IERC721Access(sacd).hasPermission(grantee, permissionIndex);
   }
 
   /**
@@ -127,7 +127,7 @@ contract SacdFactory {
     if (sacd == address(0)) {
       return false;
     }
-    return ISacd(sacd).hasPermissions(grantee, permissions);
+    return IERC721Access(sacd).hasPermissions(grantee, permissions);
   }
 
   // TODO Documentation

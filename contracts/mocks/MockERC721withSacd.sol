@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 
-import '../interfaces/ISacdFactory.sol';
+import '../interfaces/ISacdManager.sol';
 
 /**
  * @title MockERC721withSacd
@@ -11,10 +11,10 @@ import '../interfaces/ISacdFactory.sol';
  */
 contract MockERC721withSacd is ERC721 {
   uint256 tokenCount;
-  address sacdFactory;
+  address sacdManager;
 
-  constructor(address _sacdFactory) ERC721('Mock DIMO', 'MD') {
-    sacdFactory = _sacdFactory;
+  constructor(address _sacdManager) ERC721('Mock DIMO', 'MD') {
+    sacdManager = _sacdManager;
   }
 
   function mint(address account) external {
@@ -26,7 +26,7 @@ contract MockERC721withSacd is ERC721 {
   }
 
   function _update(address to, uint256 tokenId, address auth) internal override returns (address) {
-    ISacdFactory(sacdFactory).onTransfer(address(this), tokenId);
+    ISacdManager(sacdManager).onTransfer(address(this), tokenId);
     return super._update(to, tokenId, auth);
   }
 }

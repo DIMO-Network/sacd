@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 // TODO Documentation
-interface ISacdFactory {
+interface ISacdManager {
   function createSacd(address asset, uint256 tokenId) external returns (address sacd);
 
   function createSacd(
