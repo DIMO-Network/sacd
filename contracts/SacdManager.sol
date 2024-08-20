@@ -2,54 +2,38 @@
 pragma solidity ^0.8.24;
 
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
-import {Clones} from '@openzeppelin/contracts/proxy/Clones.sol';
-
-import {IERC721Access} from './interfaces/IERC721Access.sol';
-import {ERC721Access} from './ERC721Access.sol';
 
 // TODO Documentation
 // TODO Make it upgradeable
-contract SacdManager {
-  address public erc721AccessTemplate;
+contract Sacd {
+  struct PermissionRecord {
+    uint256 permissions;
+    uint256 expiration;
+    string source;
+  }
+
   mapping(address asset => mapping(uint256 tokenId => address sacd)) public sacds;
+  mapping(address asset => mapping(uint256 tokenId => uint256 version)) public tokenIdToVersion;
+  mapping(address asset => mapping(uint256 tokenId => mapping(uint256 version => mapping(address grantee => PermissionRecord))))
+    public permissionRecords;
 
-  event SacdCreated(address indexed sacd, address indexed asset, uint256 indexed tokenId);
+  event PermissionsSet(
+    address indexed asset,
+    uint256 indexed tokenId,
+    uint256 permissions,
+    address indexed grantee,
+    uint256 expiration,
+    string source
+  );
 
+  error ZeroAddress();
   error Unauthorized(address addr);
   error InvalidTokenId(address asset, uint256 tokenId);
 
-  constructor(address _erc721AccessTemplate) {
-    erc721AccessTemplate = _erc721AccessTemplate;
-  }
+  constructor() {}
 
   /**
-   * @notice Creates a new SACD if not defined for the token ID
-   * @dev The caller must be the owner of the token
-   * @param asset The contract address
-   * @param tokenId Token Id associated with the permissions
-   */
-  function createSacd(address asset, uint256 tokenId) external returns (address sacd) {
-    sacd = sacds[asset][tokenId];
-    if (sacd != address(0)) return sacd;
-
-    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
-      // TODO Just for testing, it will be replaced soon
-      if (tokenIdOwner != tx.origin) {
-        revert Unauthorized(tx.origin);
-      }
-
-      sacd = Clones.clone(erc721AccessTemplate);
-      sacds[asset][tokenId] = sacd;
-      IERC721Access(sacd).initialize(asset, tokenId, tokenIdOwner);
-
-      emit SacdCreated(sacd, asset, tokenId);
-    } catch {
-      revert InvalidTokenId(asset, tokenId);
-    }
-  }
-
-  /**
-   * @notice Creates a new SACD if not defined for the token ID and sets a permission record to a grantee
+   * @notice Sets a permission record to a grantee
    * @dev The caller must be the owner of the token
    * @param asset The contract address
    * @param tokenId Token Id associated with the permissions
@@ -58,33 +42,28 @@ contract SacdManager {
    * @param expiration Expiration of the permissions
    * @param source The URI source associated with the permissions
    */
-  function createSacd(
+  function setPermissions(
     address asset,
     uint256 tokenId,
     address grantee,
     uint256 permissions,
     uint256 expiration,
     string calldata source
-  ) external returns (address sacd) {
-    sacd = sacds[asset][tokenId];
-    if (sacd != address(0)) return sacd;
-
+  ) external {
     try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
       // TODO Just for testing, it will be replaced soon
       if (tokenIdOwner != tx.origin) {
         revert Unauthorized(tx.origin);
       }
 
-      sacd = Clones.clone(erc721AccessTemplate);
-      sacds[asset][tokenId] = sacd;
-      IERC721Access(sacd).initialize(asset, tokenId, tokenIdOwner);
-
-      emit SacdCreated(sacd, asset, tokenId);
-
-      // TODO maybe not all must be != 0
-      if (permissions != 0 && grantee != address(0) && expiration != 0 && bytes(source).length > 0) {
-        IERC721Access(sacd).setPermissions(permissions, grantee, expiration, source);
+      if (grantee == address(0)) {
+        revert ZeroAddress();
       }
+
+      uint256 tokenIdVersion = tokenIdToVersion[asset][tokenId];
+      permissionRecords[asset][tokenId][tokenIdVersion][grantee] = PermissionRecord(permissions, expiration, source);
+
+      emit PermissionsSet(asset, tokenId, permissions, grantee, expiration, source);
     } catch {
       revert InvalidTokenId(asset, tokenId);
     }
@@ -103,11 +82,13 @@ contract SacdManager {
     address grantee,
     uint8 permissionIndex
   ) external view returns (bool) {
-    address sacd = sacds[asset][tokenId];
-    if (sacd == address(0)) {
+    uint256 tokenIdVersion = tokenIdToVersion[asset][tokenId];
+    PermissionRecord memory pr = permissionRecords[asset][tokenId][tokenIdVersion][grantee];
+
+    if (pr.expiration <= block.timestamp) {
       return false;
     }
-    return IERC721Access(sacd).hasPermission(grantee, permissionIndex);
+    return (pr.permissions >> (2 * permissionIndex)) & 3 == 3;
   }
 
   /**
@@ -123,19 +104,25 @@ contract SacdManager {
     address grantee,
     uint256 permissions
   ) external view returns (bool) {
-    address sacd = sacds[asset][tokenId];
-    if (sacd == address(0)) {
+    uint256 tokenIdVersion = tokenIdToVersion[asset][tokenId];
+    PermissionRecord memory pr = permissionRecords[asset][tokenId][tokenIdVersion][grantee];
+
+    if (pr.expiration <= block.timestamp) {
       return false;
     }
-    return IERC721Access(sacd).hasPermissions(grantee, permissions);
+    return (pr.permissions & permissions) == permissions;
   }
 
-  // TODO Documentation
+  /**
+   * @notice When a user transfers their token, the permissions must be reset
+   * @dev Increases the version to reset the permissions
+   * @param asset The asset contract address
+   * @param tokenId The transferred token ID
+   */
   function onTransfer(address asset, uint256 tokenId) external {
     if (msg.sender != asset) {
       revert Unauthorized(msg.sender);
     }
-
-    sacds[asset][tokenId] = address(0);
+    tokenIdToVersion[asset][tokenId]++;
   }
 }
