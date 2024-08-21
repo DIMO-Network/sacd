@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 // TODO Documentation
-interface ISacdManager {
+interface ISacd {
   function setSacd(
     address asset,
     uint256 tokenId,
