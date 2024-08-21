@@ -311,22 +311,24 @@ describe('Sacd', function () {
     })
   })
 
-  // describe('onTransfer', () => {
-  //   it('Should set SACD to address(0) when token ID is transferred', async () => {
-  //     const { mockErc721, sacd, grantor, otherAccount } = await loadFixture(setup)
-  //     const mockErc721Address = await mockErc721.getAddress()
+  describe('onTransfer', () => {
+    it('Should increment token version when token ID is transferred', async () => {
+      const { mockErc721, sacd, grantor, grantee, otherAccount, DEFAULT_EXPIRATION } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
 
-  //     await sacd.connect(grantor)['createSacd(address,uint256)'](mockErc721Address, 1n)
+      await sacd
+        .connect(grantor)
+        .setPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
 
-  //     const sacdAddressBefore = await sacd.sacds(mockErc721Address, 1n)
+      const tokenVersionBefore = await sacd.tokenIdToVersion(mockErc721Address, 1n)
 
-  //     expect(sacdAddressBefore).to.not.equal(hre.ethers.ZeroAddress)
+      expect(tokenVersionBefore).to.equal(1)
 
-  //     await mockErc721.connect(grantor).transferFrom(grantor.address, otherAccount.address, 1n)
+      await mockErc721.connect(grantor).transferFrom(grantor.address, otherAccount.address, 1n)
 
-  //     const sacdAddressAfter = await sacd.sacds(mockErc721Address, 1n)
+      const tokenVersionAfter = await sacd.tokenIdToVersion(mockErc721Address, 1n)
 
-  //     expect(sacdAddressAfter).to.equal(hre.ethers.ZeroAddress)
-  //   })
-  // })
+      expect(tokenVersionAfter).to.equal(2n)
+    })
+  })
 })
