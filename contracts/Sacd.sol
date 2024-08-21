@@ -7,8 +7,8 @@ import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
  * @title Service Access Contract Definition (SACD)
  * @notice This contract manages permission records associated with specific assets (ERC721 tokens).
  * It allows the owner of a token to grant and manage permissions to other addresses (grantees),
- * and these permissions are tied to specific ERC721. When an token is transferred, the permissions
- * associated with it are reset.
+ * and these permissions are tied to specific ERC721. When a token is transferred, the permissions
+ * associated with it are invalidated.
  */
 contract Sacd {
   struct PermissionRecord {
@@ -76,10 +76,12 @@ contract Sacd {
 
   /**
    * @notice Checks if a user has a permission
+   * @dev The permission is identified by its relative index in the byte array
    * @param asset The contract address
    * @param tokenId Token Id associated with the permissions
    * @param grantee The address to be checked
    * @param permissionIndex The relative index of the permission
+   * @return bool Returns true if the grantee has the specified permission and it has not expired
    */
   function hasPermission(
     address asset,
@@ -102,6 +104,7 @@ contract Sacd {
    * @param tokenId Token Id associated with the permissions
    * @param grantee The address to be checked
    * @param permissions The uint256 that represents the byte array of permissions
+   * @return bool Returns true if the grantee has all the specified permissions and they have not expired
    */
   function hasPermissions(
     address asset,
@@ -120,7 +123,8 @@ contract Sacd {
 
   /**
    * @notice When a user transfers their token, the permissions must be reset
-   * @dev Increases the version to reset the permissions
+   * @dev This function should be called by the ERC721 contract when a transfer occurs.
+   * It increments the version to invalidate old permissions.
    * @param asset The asset contract address
    * @param tokenId The transferred token ID
    */
