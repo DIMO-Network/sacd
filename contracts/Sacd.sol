@@ -17,7 +17,6 @@ contract Sacd {
     string source;
   }
 
-  mapping(address asset => mapping(uint256 tokenId => address sacd)) public sacds;
   mapping(address asset => mapping(uint256 tokenId => uint256 version)) public tokenIdToVersion;
   mapping(address asset => mapping(uint256 tokenId => mapping(uint256 version => mapping(address grantee => PermissionRecord))))
     public permissionRecords;
