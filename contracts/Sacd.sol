@@ -55,9 +55,8 @@ contract Sacd {
     string calldata source
   ) external {
     try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
-      // TODO Just for testing, it will be replaced soon
-      if (tokenIdOwner != tx.origin) {
-        revert Unauthorized(tx.origin);
+      if (tokenIdOwner != msg.sender) {
+        revert Unauthorized(msg.sender);
       }
 
       if (grantee == address(0)) {
