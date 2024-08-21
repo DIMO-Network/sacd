@@ -311,6 +311,73 @@ describe('Sacd', function () {
     })
   })
 
+  describe('getPermissions', () => {
+    it('Should return 0 if token Id does not match', async () => {
+      const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
+
+      await sacd
+        .connect(grantor)
+        .setPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+
+      expect(await sacd.getPermissions(mockErc721Address, 2n, grantee.address, C.MOCK_PERMISSIONS)).to.equal(0)
+    })
+    it('Should return 0 if grantee does not match', async () => {
+      const { mockErc721, sacd, grantor, grantee, otherAccount, DEFAULT_EXPIRATION } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
+
+      await sacd
+        .connect(grantor)
+        .setPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+
+      expect(await sacd.getPermissions(mockErc721Address, 1n, otherAccount.address, C.MOCK_PERMISSIONS)).to.equal(0)
+    })
+    it('Should return 0 if permission is already expired', async () => {
+      const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
+
+      await sacd
+        .connect(grantor)
+        .setPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+
+      await time.increase(time.duration.years(5))
+
+      expect(await sacd.getPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.equal(0)
+    })
+    it('Should correctly return intersected permissions', async () => {
+      const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
+
+      await sacd
+        .connect(grantor)
+        .setPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+
+      // C.MOCK_PERMISSIONS 816 11 00 11 00 00
+      // Test               771 11 00 00 00 11
+      // Result             768 11 00 00 00 00
+      expect(await sacd.getPermissions(mockErc721Address, 1n, grantee.address, 771)).to.equal(768)
+    })
+
+    context('on transfer', () => {
+      it('Should return 0 if when token ID is transferred', async () => {
+        const { mockErc721, sacd, grantor, grantee, otherAccount, DEFAULT_EXPIRATION } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+
+        await sacd
+          .connect(grantor)
+          .setPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+
+        expect(await sacd.getPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.equal(
+          C.MOCK_PERMISSIONS
+        )
+
+        await mockErc721.connect(grantor).transferFrom(grantor.address, otherAccount.address, 1n)
+
+        expect(await sacd.getPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.equal(0)
+      })
+    })
+  })
+
   describe('onTransfer', () => {
     it('Should increment token version when token ID is transferred', async () => {
       const { mockErc721, sacd, grantor, grantee, otherAccount, DEFAULT_EXPIRATION } = await loadFixture(setup)
