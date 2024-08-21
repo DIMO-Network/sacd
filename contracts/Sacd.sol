@@ -3,8 +3,13 @@ pragma solidity ^0.8.24;
 
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 
-// TODO Documentation
-// TODO Make it upgradeable
+/**
+ * @title Service Access Contract Definition (SACD)
+ * @notice This contract manages permission records associated with specific assets (ERC721 tokens).
+ * It allows the owner of a token to grant and manage permissions to other addresses (grantees),
+ * and these permissions are tied to specific ERC721. When an token is transferred, the permissions
+ * associated with it are reset.
+ */
 contract Sacd {
   struct PermissionRecord {
     uint256 permissions;
