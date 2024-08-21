@@ -1,7 +1,6 @@
 import { time, loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import { expect } from 'chai'
 import hre from 'hardhat'
-import { EventLog } from 'ethers'
 
 import * as C from './constants'
 
@@ -13,7 +12,7 @@ describe('Sacd', function () {
     const mockErc721Factory = await hre.ethers.getContractFactory('MockERC721withSacd')
     const sacdFactory = await hre.ethers.getContractFactory('Sacd')
 
-    const sacd = await sacdFactory.deploy()
+    const sacd = await sacdFactory.deploy(owner.address, [])
     const mockErc721 = await mockErc721Factory.deploy(await sacd.getAddress())
 
     await mockErc721.mint(grantor.address)

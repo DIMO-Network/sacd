@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.24;
 
+import {Context} from '@openzeppelin/contracts/utils/Context.sol';
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {Ownable2Step} from '@openzeppelin/contracts/access/Ownable2Step.sol';
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
+
+import {ERC2771Context} from './ERC2771Context.sol';
 
 /**
  * @title Service Access Contract Definition (SACD)
@@ -10,7 +15,7 @@ import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
  * and these permissions are tied to specific a ERC721 token. When a token is transferred,
  * the permissions associated with it are invalidated
  */
-contract Sacd {
+contract Sacd is Ownable2Step, ERC2771Context {
   struct PermissionRecord {
     uint256 permissions;
     uint256 expiration;
@@ -35,7 +40,11 @@ contract Sacd {
   error Unauthorized(address addr);
   error InvalidTokenId(address asset, uint256 tokenId);
 
-  constructor() {}
+  constructor(address initialOwnener, address[] memory _trustedForwarders) Ownable(initialOwnener) {
+    for (uint256 i = 0; i < _trustedForwarders.length; i++) {
+      trustedForwarders[_trustedForwarders[i]] = true;
+    }
+  }
 
   /**
    * @notice Sets a permission record to a grantee
@@ -56,9 +65,9 @@ contract Sacd {
     string calldata source
   ) external {
     try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
-      // TODO Just for testing, it will be replaced soon
-      if (tokenIdOwner != tx.origin) {
-        revert Unauthorized(tx.origin);
+      address sender = _msgSender();
+      if (tokenIdOwner != sender) {
+        revert Unauthorized(sender);
       }
 
       if (grantee == address(0)) {
@@ -157,5 +166,17 @@ contract Sacd {
       revert Unauthorized(msg.sender);
     }
     tokenIdToVersion[asset][tokenId]++;
+  }
+
+  function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address) {
+    return ERC2771Context._msgSender();
+  }
+
+  function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
+    return ERC2771Context._msgData();
+  }
+
+  function _contextSuffixLength() internal view virtual override(Context, ERC2771Context) returns (uint256) {
+    return ERC2771Context._contextSuffixLength();
   }
 }
