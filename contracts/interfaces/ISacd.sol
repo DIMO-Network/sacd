@@ -1,11 +1,14 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.24;
 
-// TODO Documentation
-interface ISacdManager {
-  function createSacd(address asset, uint256 tokenId) external returns (address sacd);
-
-  function createSacd(
+/**
+ * @title ISacd Interface
+ * @dev Interface for the Service Access Contract Definition (SACD)
+ * This interface defines the functions for setting, checking, and managing permissions
+ * associated with specific ERC721 tokens
+ */
+interface ISacd {
+  function setSacd(
     address asset,
     uint256 tokenId,
     address grantee,
@@ -27,6 +30,13 @@ interface ISacdManager {
     address grantee,
     uint256 permissions
   ) external view returns (bool);
+
+  function getPermissions(
+    address asset,
+    uint256 tokenId,
+    address grantee,
+    uint256 permissions
+  ) external view returns (uint256);
 
   function onTransfer(address asset, uint256 tokenId) external;
 }
