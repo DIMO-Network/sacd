@@ -55,7 +55,7 @@ contract Sacd {
     string calldata source
   ) external {
     try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
-      if (tokenIdOwner != msg.sender) {
+      if (tokenIdOwner != msg.sender && asset != msg.sender) {
         revert Unauthorized(msg.sender);
       }
 
