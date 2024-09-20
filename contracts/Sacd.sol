@@ -38,7 +38,7 @@ contract Sacd {
 
   /**
    * @notice Sets a permission record to a grantee
-   * @dev The caller must be the owner of the token
+   * @dev The caller must be the owner of the token or the asset contract
    * @param asset The contract address of the ERC721
    * @param tokenId Token ID associated with the permissions
    * @param permissions The uint256 that represents the byte array of permissions
