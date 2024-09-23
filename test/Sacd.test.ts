@@ -23,7 +23,7 @@ describe('Sacd', function () {
 
   describe('setPermissions', () => {
     context('Error handling', () => {
-      it('Should revert if caller is not the token Id owner', async () => {
+      it('Should revert if caller is not the token Id owner or asset contract', async () => {
         const { mockErc721, sacd, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
 
         await expect(
@@ -94,7 +94,7 @@ describe('Sacd', function () {
     })
 
     context('State', () => {
-      it('Should correctly set new permissions', async () => {
+      it('Should correctly set new permissions when caller is the token owner', async () => {
         const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
         const mockErc721Address = await mockErc721.getAddress()
 
@@ -103,6 +103,22 @@ describe('Sacd', function () {
           .setPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
 
         const permissionRecord = await sacd.permissionRecords(mockErc721Address, 1n, 1n, grantee.address)
+
+        expect(permissionRecord.permissions).to.equal(C.MOCK_PERMISSIONS)
+        expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
+        expect(permissionRecord.source).to.equal(C.MOCK_SOURCE)
+      })
+      it('Should correctly set new permissions when caller is the asset contract', async () => {
+        const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+        await mockErc721.connect(grantor).mintWithSacd(grantor.address, {
+          grantee: grantee.address,
+          permissions: C.MOCK_PERMISSIONS,
+          expiration: DEFAULT_EXPIRATION,
+          source: C.MOCK_SOURCE,
+        })
+
+        const permissionRecord = await sacd.permissionRecords(mockErc721Address, 2n, 1n, grantee.address)
 
         expect(permissionRecord.permissions).to.equal(C.MOCK_PERMISSIONS)
         expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)

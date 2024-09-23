@@ -10,6 +10,13 @@ import '../interfaces/ISacd.sol';
  * @dev Mocks a generic ERC721 to be used in tests
  */
 contract MockERC721withSacd is ERC721 {
+  struct SacdInput {
+    address grantee;
+    uint256 permissions;
+    uint256 expiration;
+    string source;
+  }
+
   uint256 tokenCount;
   address sacd;
 
@@ -19,6 +26,18 @@ contract MockERC721withSacd is ERC721 {
 
   function mint(address account) external {
     _mint(account, ++tokenCount);
+  }
+
+  function mintWithSacd(address account, SacdInput calldata sacdInput) external {
+    _mint(account, ++tokenCount);
+    ISacd(sacd).setPermissions(
+      address(this),
+      tokenCount,
+      sacdInput.grantee,
+      sacdInput.permissions,
+      sacdInput.expiration,
+      sacdInput.source
+    );
   }
 
   function burn(uint256 tokenId) external {
