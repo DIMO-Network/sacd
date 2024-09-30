@@ -2,6 +2,9 @@
 pragma solidity ^0.8.24;
 
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
+import '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
+import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
+import '@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol';
 
 /**
  * @title Service Access Contract Definition (SACD)
@@ -10,16 +13,21 @@ import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
  * and these permissions are tied to specific a ERC721 token. When a token is transferred,
  * the permissions associated with it are invalidated
  */
-contract Sacd {
+contract Sacd is Initializable, AccessControlUpgradeable, UUPSUpgradeable {
   struct PermissionRecord {
     uint256 permissions;
     uint256 expiration;
     string source;
   }
+  struct SacdStorage {
+    mapping(address asset => mapping(uint256 tokenId => uint256 version)) tokenIdToVersion;
+    mapping(address asset => mapping(uint256 tokenId => mapping(uint256 version => mapping(address grantee => PermissionRecord)))) permissionRecords;
+  }
 
-  mapping(address asset => mapping(uint256 tokenId => uint256 version)) public tokenIdToVersion;
-  mapping(address asset => mapping(uint256 tokenId => mapping(uint256 version => mapping(address grantee => PermissionRecord))))
-    public permissionRecords;
+  bytes32 constant UPGRADER_ROLE = keccak256('UPGRADER_ROLE');
+
+  // keccak256(abi.encode(uint256(keccak256("Sacd.storage")) - 1)) & ~bytes32(uint256(0xff))
+  bytes32 private constant SACD_STORAGE = 0x20aa246ca08ba235ee1e06ff6016f518804d64da710b8279d7124e598d8d5200;
 
   event PermissionsSet(
     address indexed asset,
@@ -34,7 +42,18 @@ contract Sacd {
   error Unauthorized(address addr);
   error InvalidTokenId(address asset, uint256 tokenId);
 
-  constructor() {}
+  /// @custom:oz-upgrades-unsafe-allow constructor
+  constructor() {
+    _disableInitializers();
+  }
+
+  // TODO Documentation
+  function initialize() external initializer {
+    __AccessControl_init();
+    __UUPSUpgradeable_init();
+
+    _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+  }
 
   /**
    * @notice Sets a permission record to a grantee
@@ -63,8 +82,10 @@ contract Sacd {
         revert ZeroAddress();
       }
 
-      uint256 tokenIdVersion = tokenIdToVersion[asset][tokenId];
-      permissionRecords[asset][tokenId][tokenIdVersion][grantee] = PermissionRecord(permissions, expiration, source);
+      SacdStorage storage $ = _getSacdStorage();
+
+      uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
+      $.permissionRecords[asset][tokenId][tokenIdVersion][grantee] = PermissionRecord(permissions, expiration, source);
 
       emit PermissionsSet(asset, tokenId, permissions, grantee, expiration, source);
     } catch {
@@ -87,8 +108,10 @@ contract Sacd {
     address grantee,
     uint8 permissionIndex
   ) external view returns (bool) {
-    uint256 tokenIdVersion = tokenIdToVersion[asset][tokenId];
-    PermissionRecord memory pr = permissionRecords[asset][tokenId][tokenIdVersion][grantee];
+    SacdStorage storage $ = _getSacdStorage();
+
+    uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
+    PermissionRecord memory pr = $.permissionRecords[asset][tokenId][tokenIdVersion][grantee];
 
     if (pr.expiration <= block.timestamp) {
       return false;
@@ -110,8 +133,10 @@ contract Sacd {
     address grantee,
     uint256 permissions
   ) external view returns (bool) {
-    uint256 tokenIdVersion = tokenIdToVersion[asset][tokenId];
-    PermissionRecord memory pr = permissionRecords[asset][tokenId][tokenIdVersion][grantee];
+    SacdStorage storage $ = _getSacdStorage();
+
+    uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
+    PermissionRecord memory pr = $.permissionRecords[asset][tokenId][tokenIdVersion][grantee];
 
     if (pr.expiration <= block.timestamp) {
       return false;
@@ -134,8 +159,10 @@ contract Sacd {
     address grantee,
     uint256 permissions
   ) external view returns (uint256) {
-    uint256 tokenIdVersion = tokenIdToVersion[asset][tokenId];
-    PermissionRecord memory pr = permissionRecords[asset][tokenId][tokenIdVersion][grantee];
+    SacdStorage storage $ = _getSacdStorage();
+
+    uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
+    PermissionRecord memory pr = $.permissionRecords[asset][tokenId][tokenIdVersion][grantee];
 
     if (pr.expiration <= block.timestamp) {
       return 0;
@@ -154,6 +181,45 @@ contract Sacd {
     if (msg.sender != asset) {
       revert Unauthorized(msg.sender);
     }
-    tokenIdToVersion[asset][tokenId]++;
+    _getSacdStorage().tokenIdToVersion[asset][tokenId]++;
+  }
+
+  // TODO Documentation
+  function tokenIdToVersion(address asset, uint256 tokenId) external view returns (uint256 version) {
+    version = _getSacdStorage().tokenIdToVersion[asset][tokenId];
+  }
+
+  // TODO Documentation
+  function permissionRecords(
+    address asset,
+    uint256 tokenId,
+    uint256 version,
+    address grantee
+  ) external view returns (PermissionRecord memory permissionRecord) {
+    permissionRecord = _getSacdStorage().permissionRecords[asset][tokenId][version][grantee];
+  }
+
+  // TODO Documentation
+  function currentPermissionRecord(
+    address asset,
+    uint256 tokenId,
+    address grantee
+  ) external view returns (PermissionRecord memory permissionRecord) {
+    SacdStorage storage $ = _getSacdStorage();
+
+    uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
+    permissionRecord = $.permissionRecords[asset][tokenId][tokenIdVersion][grantee];
+  }
+
+  // TODO Documentation
+  function _authorizeUpgrade(address newImplementation) internal override onlyRole(UPGRADER_ROLE) {}
+
+  /**
+   * @dev Returns a pointer to the storage namespace
+   */
+  function _getSacdStorage() private pure returns (SacdStorage storage $) {
+    assembly {
+      $.slot := SACD_STORAGE
+    }
   }
 }
