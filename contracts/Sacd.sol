@@ -47,7 +47,10 @@ contract Sacd is Initializable, AccessControlUpgradeable, UUPSUpgradeable {
     _disableInitializers();
   }
 
-  // TODO Documentation
+  /**
+   * @notice Initializes the contract
+   * @dev Sets default admin role to msg.sender
+   */
   function initialize() external initializer {
     __AccessControl_init();
     __UUPSUpgradeable_init();
@@ -184,12 +187,22 @@ contract Sacd is Initializable, AccessControlUpgradeable, UUPSUpgradeable {
     _getSacdStorage().tokenIdToVersion[asset][tokenId]++;
   }
 
-  // TODO Documentation
+  /**
+   * @notice Returns the current token ID version of a specified asset
+   * @param asset The asset contract address
+   * @param tokenId The token ID
+   */
   function tokenIdToVersion(address asset, uint256 tokenId) external view returns (uint256 version) {
     version = _getSacdStorage().tokenIdToVersion[asset][tokenId];
   }
 
-  // TODO Documentation
+  /**
+   * @notice Return a permission record associated with the given parameters
+   * @param asset The asset contract address
+   * @param tokenId The token ID
+   * @param version The token ID version
+   * @param grantee The address to be checked
+   */
   function permissionRecords(
     address asset,
     uint256 tokenId,
@@ -199,7 +212,12 @@ contract Sacd is Initializable, AccessControlUpgradeable, UUPSUpgradeable {
     permissionRecord = _getSacdStorage().permissionRecords[asset][tokenId][version][grantee];
   }
 
-  // TODO Documentation
+  /**
+   * @notice Return the current permission record associated with the given parameters
+   * @param asset The asset contract address
+   * @param tokenId The token ID
+   * @param grantee The address to be checked
+   */
   function currentPermissionRecord(
     address asset,
     uint256 tokenId,
@@ -211,7 +229,11 @@ contract Sacd is Initializable, AccessControlUpgradeable, UUPSUpgradeable {
     permissionRecord = $.permissionRecords[asset][tokenId][tokenIdVersion][grantee];
   }
 
-  // TODO Documentation
+  /**
+   * @notice Internal function to authorize contract upgrade
+   * @dev Caller must have the upgrader role
+   * @param newImplementation New contract implementation address
+   */
   function _authorizeUpgrade(address newImplementation) internal override onlyRole(UPGRADER_ROLE) {}
 
   /**
