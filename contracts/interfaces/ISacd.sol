@@ -8,6 +8,12 @@ pragma solidity ^0.8.24;
  * associated with specific ERC721 tokens
  */
 interface ISacd {
+  struct PermissionRecord {
+    uint256 permissions;
+    uint256 expiration;
+    string source;
+  }
+
   function setPermissions(
     address asset,
     uint256 tokenId,
@@ -39,4 +45,19 @@ interface ISacd {
   ) external view returns (uint256);
 
   function onTransfer(address asset, uint256 tokenId) external;
+
+  function tokenIdToVersion(address asset, uint256 tokenId) external view returns (uint256 version);
+
+  function permissionRecords(
+    address asset,
+    uint256 tokenId,
+    uint256 version,
+    address grantee
+  ) external view returns (PermissionRecord memory permissionRecord);
+
+  function currentPermissionRecord(
+    address asset,
+    uint256 tokenId,
+    address grantee
+  ) external view returns (PermissionRecord memory permissionRecord);
 }

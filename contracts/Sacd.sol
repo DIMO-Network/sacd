@@ -6,6 +6,8 @@ import '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
 import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol';
 
+import './interfaces/ISacd.sol';
+
 /**
  * @title Service Access Contract Definition (SACD)
  * @notice This contract manages permission records associated with specific ERC721 tokens.
@@ -13,12 +15,7 @@ import '@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol'
  * and these permissions are tied to specific a ERC721 token. When a token is transferred,
  * the permissions associated with it are invalidated
  */
-contract Sacd is Initializable, AccessControlUpgradeable, UUPSUpgradeable {
-  struct PermissionRecord {
-    uint256 permissions;
-    uint256 expiration;
-    string source;
-  }
+contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable {
   struct SacdStorage {
     mapping(address asset => mapping(uint256 tokenId => uint256 version)) tokenIdToVersion;
     mapping(address asset => mapping(uint256 tokenId => mapping(uint256 version => mapping(address grantee => PermissionRecord)))) permissionRecords;
