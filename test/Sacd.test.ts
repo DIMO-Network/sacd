@@ -1,9 +1,10 @@
 import { time, loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import { expect } from 'chai'
-import hre from 'hardhat'
-import { EventLog } from 'ethers'
+import hre, { ignition } from 'hardhat'
 
 import * as C from './constants'
+import SacdModule from '../ignition/modules/Sacd'
+import type { Sacd } from '../typechain-types'
 
 describe('Sacd', function () {
   async function setup() {
@@ -11,9 +12,8 @@ describe('Sacd', function () {
     const DEFAULT_EXPIRATION = BigInt((await time.latest()) + time.duration.years(1))
 
     const mockErc721Factory = await hre.ethers.getContractFactory('MockERC721withSacd')
-    const sacdFactory = await hre.ethers.getContractFactory('Sacd')
 
-    const sacd = await sacdFactory.deploy()
+    const sacd = (await ignition.deploy(SacdModule)).sacd as unknown as Sacd
     const mockErc721 = await mockErc721Factory.deploy(await sacd.getAddress())
 
     await mockErc721.mint(grantor.address)
