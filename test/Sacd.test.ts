@@ -126,7 +126,7 @@ describe('Sacd', function () {
       })
     })
 
-    context('Events', () => {
+    context('Events and callbacks', () => {
       it('Should emit PermissionsSet with correct params', async () => {
         const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
         const mockErc721Address = await mockErc721.getAddress()
@@ -145,6 +145,43 @@ describe('Sacd', function () {
         )
           .to.emit(sacd, 'PermissionsSet')
           .withArgs(mockErc721Address, 1n, C.MOCK_PERMISSIONS, grantee.address, DEFAULT_EXPIRATION, C.MOCK_SOURCE)
+      })
+
+      it('Should call onSetPermissions with correct params', async () => {
+        const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+
+        await expect(
+          sacd
+            .connect(grantor)
+            .setPermissions(
+              mockErc721Address,
+              1n,
+              grantee.address,
+              C.MOCK_PERMISSIONS,
+              DEFAULT_EXPIRATION,
+              C.MOCK_SOURCE
+            )
+        )
+          .to.emit(mockErc721, 'MockPermissionsSet')
+          .withArgs(1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION)
+      })
+
+      it('Should work even if NFT does not implement onSetPermissions', async () => {
+        const [, grantor, grantee] = await hre.ethers.getSigners()
+        const mockErc721Factory = await hre.ethers.getContractFactory('MockERC721')
+
+        const sacd = (await ignition.deploy(SacdModule)).sacd as unknown as Sacd
+        const mockErc721 = await mockErc721Factory.deploy()
+        await mockErc721.mint(grantor.address)
+
+        await expect(
+          sacd
+            .connect(grantor)
+            .setPermissions(await mockErc721.getAddress(), 1n, grantee.address, C.MOCK_PERMISSIONS, 0n, C.MOCK_SOURCE)
+        )
+          .to.emit(sacd, 'PermissionsSet')
+          .withArgs(await mockErc721.getAddress(), 1n, C.MOCK_PERMISSIONS, grantee.address, 0n, C.MOCK_SOURCE)
       })
     })
 

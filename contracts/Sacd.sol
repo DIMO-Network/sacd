@@ -7,6 +7,7 @@ import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol';
 
 import './interfaces/ISacd.sol';
+import './interfaces/ISacdListener.sol';
 
 /**
  * @title Service Access Contract Definition (SACD)
@@ -88,6 +89,10 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
       $.permissionRecords[asset][tokenId][tokenIdVersion][grantee] = PermissionRecord(permissions, expiration, source);
 
       emit PermissionsSet(asset, tokenId, permissions, grantee, expiration, source);
+
+      try ISacdListener(asset).onSetPermissions(tokenId, grantee, permissions, expiration) {} catch {
+        // Ignore if the asset does not implement onSetPermissions
+      }
     } catch {
       revert InvalidTokenId(asset, tokenId);
     }
