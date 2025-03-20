@@ -1,0 +1,46 @@
+{
+    "specversion": "1.0",
+    "timestamp": "0000-00-00T00:00:00Z",
+    "type": "dimo.sacd",
+    "data": {
+        "grantor": {
+            "address": "0x0000000000000000000000000000000000000000",
+            "name": "",
+            "additionalInfo": {
+                "email": ""
+            }
+        },
+        "grantee": {
+            "address": "0x0000000000000000000000000000000000000000",
+            "name": "",
+            "additionalInfo": {}
+        },
+        "effectiveAt": "0000-00-00T00:00:00Z",
+        "expiresAt": "0000-00-00T00:00:00Z",
+        "additionalDates": {},
+        "agreement": [
+            {
+                "type": "<type>",
+                "asset": "did:<assetType>:<chainId>:<contractAddress>_<tokenId>",
+                "<type>": {},
+                "purpose": "",
+                "attachments": [
+                    {
+                        "name": "",
+                        "description": "",
+                        "contentType": "",
+                        "uri": ""
+                    }
+                ],
+                "signatures": [
+                    {
+                        "signer": "0x0000000000000000000000000000000000000000",
+                        "signature": "0xabc123...",
+                        "timestamp": "0000-00-00T00:00:00Z"
+                    }
+                ]
+            }
+        ]
+    },
+    "extensions": {}
+}

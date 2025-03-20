@@ -1,0 +1,56 @@
+{
+    "specversion": "1.0",
+    "timestamp": "2025-03-11T14:30:00Z",
+    "type": "dimo.sacd",
+    "data": {
+        "grantor": {
+            "address": "0x1110000000000000000000000000000000000000",
+            "name": "Optional Human Readable Name",
+            "additionalInfo": {}
+        },
+        "grantee": {
+            "address": "0x2220000000000000000000000000000000000000",
+            "name": "Optional Human Readable Name",
+            "additionalInfo": {}
+        },
+        "effectiveAt": "2025-03-11T14:30:00Z",
+        "expiresAt": "2030-12-20T05:20:45Z",
+        "additionalDates": {},
+        "agreements": [
+            {
+                "type": "permission",
+                "asset": "did:nft:137:0x3330000000000000000000000000000000000000_31415",
+                "permissions": [
+                    {
+                        "name": "commands",
+                        "description": "Permission to send commands to the vehicle"
+                    },
+                    {
+                        "name": "location:View:Current",
+                        "description": "Permission to view current location data"
+                    },
+                    {
+                        "name": "location:View:History",
+                        "description": "Permission to view historical location data"
+                    }
+                ],
+                "attachments": [
+                    {
+                        "name": "Legal Agreement",
+                        "description": "Signed legal document",
+                        "contentType": "application/pdf",
+                        "uri": "ipfs://Qm..."
+                    }
+                ],
+                "signatures": [
+                    {
+                        "signer": "0x1110000000000000000000000000000000000000",
+                        "signature": "0x...",
+                        "timestamp": "2025-03-07T12:30:00Z"
+                    }
+                ]
+            }
+        ],
+        "extensions": {}
+    }
+}
