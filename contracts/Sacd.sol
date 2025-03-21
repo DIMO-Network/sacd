@@ -108,6 +108,14 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     address grantee,
     uint8 permissionIndex
   ) external view returns (bool) {
+    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
+      if (tokenIdOwner == grantee) {
+        return true;
+      }
+    } catch {
+      return false;
+    }
+
     SacdStorage storage $ = _getSacdStorage();
 
     uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
@@ -133,6 +141,14 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     address grantee,
     uint256 permissions
   ) external view returns (bool) {
+    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
+      if (tokenIdOwner == grantee) {
+        return true;
+      }
+    } catch {
+      return false;
+    }
+
     SacdStorage storage $ = _getSacdStorage();
 
     uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];

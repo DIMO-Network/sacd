@@ -183,6 +183,12 @@ describe('Sacd', function () {
   })
 
   describe('hasPermission', () => {
+    it('Should return false if token Id does not exist', async () => {
+      const { mockErc721, sacd, grantee } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
+
+      expect(await sacd.hasPermission(mockErc721Address, 99n, grantee.address, 0)).to.be.false
+    })
     it('Should return false if token Id does not match', async () => {
       const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
       const mockErc721Address = await mockErc721.getAddress()
@@ -234,6 +240,12 @@ describe('Sacd', function () {
 
       expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.true
     })
+    it('Should return true if grantee is the token owner', async () => {
+      const { mockErc721, sacd, grantor } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
+
+      expect(await sacd.hasPermission(mockErc721Address, 1n, grantor.address, 4)).to.be.true
+    })
 
     context('on transfer', () => {
       it('Should return false if when token ID is transferred', async () => {
@@ -250,10 +262,26 @@ describe('Sacd', function () {
 
         expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.false
       })
+      it('Should return false for the former token ID owner if when token ID is transferred', async () => {
+        const { mockErc721, sacd, grantor, otherAccount } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+
+        expect(await sacd.hasPermission(mockErc721Address, 1n, grantor.address, 4)).to.be.true
+
+        await mockErc721.connect(grantor).transferFrom(grantor.address, otherAccount.address, 1n)
+
+        expect(await sacd.hasPermission(mockErc721Address, 1n, grantor.address, 4)).to.be.false
+      })
     })
   })
 
   describe('hasPermissions', () => {
+    it('Should return false if token Id does not exist', async () => {
+      const { mockErc721, sacd, grantee } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
+
+      expect(await sacd.hasPermissions(mockErc721Address, 99n, grantee.address, C.MOCK_PERMISSIONS)).to.be.false
+    })
     it('Should return false if token Id does not match', async () => {
       const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
       const mockErc721Address = await mockErc721.getAddress()
@@ -308,6 +336,12 @@ describe('Sacd', function () {
 
       expect(await sacd.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.be.true
     })
+    it('Should return true if grantee is the token owner', async () => {
+      const { mockErc721, sacd, grantor } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
+
+      expect(await sacd.hasPermissions(mockErc721Address, 1n, grantor.address, C.MOCK_PERMISSIONS)).to.be.true
+    })
 
     context('on transfer', () => {
       it('Should return false if when token ID is transferred', async () => {
@@ -323,6 +357,16 @@ describe('Sacd', function () {
         await mockErc721.connect(grantor).transferFrom(grantor.address, otherAccount.address, 1n)
 
         expect(await sacd.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.be.false
+      })
+      it('Should return false for the former token ID owner if when token ID is transferred', async () => {
+        const { mockErc721, sacd, grantor, otherAccount } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+
+        expect(await sacd.hasPermissions(mockErc721Address, 1n, grantor.address, C.MOCK_PERMISSIONS)).to.be.true
+
+        await mockErc721.connect(grantor).transferFrom(grantor.address, otherAccount.address, 1n)
+
+        expect(await sacd.hasPermissions(mockErc721Address, 1n, grantor.address, C.MOCK_PERMISSIONS)).to.be.false
       })
     })
   })
