@@ -94,6 +94,20 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   }
 
   /**
+   * @notice When a user transfers their token, the permissions must be reset
+   * @dev This function should be called by the ERC721 contract when a transfer occurs.
+   * It increments the version to invalidate old permissions.
+   * @param asset The asset contract address
+   * @param tokenId The transferred token ID
+   */
+  function onTransfer(address asset, uint256 tokenId) external {
+    if (msg.sender != asset) {
+      revert Unauthorized(msg.sender);
+    }
+    _getSacdStorage().tokenIdToVersion[asset][tokenId]++;
+  }
+
+  /**
    * @notice Checks if a user has a permission
    * @dev The permission is identified by its relative index in the byte array
    * @dev The owner of the token always has all permissions
@@ -196,20 +210,6 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
       return 0;
     }
     return pr.permissions & permissions;
-  }
-
-  /**
-   * @notice When a user transfers their token, the permissions must be reset
-   * @dev This function should be called by the ERC721 contract when a transfer occurs.
-   * It increments the version to invalidate old permissions.
-   * @param asset The asset contract address
-   * @param tokenId The transferred token ID
-   */
-  function onTransfer(address asset, uint256 tokenId) external {
-    if (msg.sender != asset) {
-      revert Unauthorized(msg.sender);
-    }
-    _getSacdStorage().tokenIdToVersion[asset][tokenId]++;
   }
 
   /**
