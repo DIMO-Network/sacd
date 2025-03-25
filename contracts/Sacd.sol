@@ -94,13 +94,28 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   }
 
   /**
+   * @notice When a user transfers their token, the permissions must be reset
+   * @dev This function should be called by the ERC721 contract when a transfer occurs.
+   * It increments the version to invalidate old permissions.
+   * @param asset The asset contract address
+   * @param tokenId The transferred token ID
+   */
+  function onTransfer(address asset, uint256 tokenId) external {
+    if (msg.sender != asset) {
+      revert Unauthorized(msg.sender);
+    }
+    _getSacdStorage().tokenIdToVersion[asset][tokenId]++;
+  }
+
+  /**
    * @notice Checks if a user has a permission
    * @dev The permission is identified by its relative index in the byte array
+   * @dev The owner of the token always has all permissions
    * @param asset The contract address of the ERC721
    * @param tokenId Token ID associated with the permissions
    * @param grantee The address to be checked
    * @param permissionIndex The relative index of the permission
-   * @return bool Returns true if the grantee has the specified permission and it has not expired
+   * @return bool Returns true if the grantee has the specified permission and it has not expired, or if the grantee is the token owner
    */
   function hasPermission(
     address asset,
@@ -108,6 +123,14 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     address grantee,
     uint8 permissionIndex
   ) external view returns (bool) {
+    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
+      if (tokenIdOwner == grantee) {
+        return true;
+      }
+    } catch {
+      return false;
+    }
+
     SacdStorage storage $ = _getSacdStorage();
 
     uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
@@ -121,11 +144,12 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
 
   /**
    * @notice Checks if a user has a set of permissions
+   * @dev The owner of the token always has all permissions
    * @param asset The contract address of the ERC721
    * @param tokenId Token ID associated with the permissions
    * @param grantee The address to be checked
    * @param permissions The uint256 that represents the byte array of permissions
-   * @return bool Returns true if the grantee has all the specified permissions and they have not expired
+   * @return bool Returns true if the grantee has all the specified permissions and they have not expired, or if the grantee is the token owner
    */
   function hasPermissions(
     address asset,
@@ -133,6 +157,14 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     address grantee,
     uint256 permissions
   ) external view returns (bool) {
+    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
+      if (tokenIdOwner == grantee) {
+        return true;
+      }
+    } catch {
+      return false;
+    }
+
     SacdStorage storage $ = _getSacdStorage();
 
     uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
@@ -146,12 +178,14 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
 
   /**
    * @notice Retrieves valid permissions for a grantee
-   * @dev Returns the intersection of the grantee's permissions and the requested permissions
-   * @param asset The contract address of the ERC721
-   * @param tokenId Token ID associated with the permissions
-   * @param grantee The address to be checked
-   * @param permissions The uint256 that represents the byte array of permissions to be checked
-   * @return uint256 Returns a uint256 that represents the valid permissions
+   * @dev Returns the intersection of the grantee's permissions and the requested permissions.
+   *      If the grantee is the token owner, all requested permissions are considered valid.
+   *      If the token doesn't exist or the permissions have expired, no permissions are returned.
+   * @param asset The contract address of the ERC721 token
+   * @param tokenId The ID of the token for which permissions are being checked
+   * @param grantee The address of the account whose permissions are being retrieved
+   * @param permissions A bitmask representing the permissions to check against
+   * @return uint256 A bitmask representing the valid permissions for the grantee
    */
   function getPermissions(
     address asset,
@@ -159,6 +193,14 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     address grantee,
     uint256 permissions
   ) external view returns (uint256) {
+    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
+      if (tokenIdOwner == grantee) {
+        return permissions;
+      }
+    } catch {
+      return uint256(0);
+    }
+
     SacdStorage storage $ = _getSacdStorage();
 
     uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
@@ -168,20 +210,6 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
       return 0;
     }
     return pr.permissions & permissions;
-  }
-
-  /**
-   * @notice When a user transfers their token, the permissions must be reset
-   * @dev This function should be called by the ERC721 contract when a transfer occurs.
-   * It increments the version to invalidate old permissions.
-   * @param asset The asset contract address
-   * @param tokenId The transferred token ID
-   */
-  function onTransfer(address asset, uint256 tokenId) external {
-    if (msg.sender != asset) {
-      revert Unauthorized(msg.sender);
-    }
-    _getSacdStorage().tokenIdToVersion[asset][tokenId]++;
   }
 
   /**
