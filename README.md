@@ -29,14 +29,20 @@ The SACD JSON follows a consistent structure, as seen in the template:
     "effectiveAt": "0000-00-00T00:00:00Z",
     "expiresAt": "0000-00-00T00:00:00Z",
     "additionalDates": {},
-    "agreement": [
+    "agreements": [
       {
         "type": "",
         "asset": "did:::",
         "": {},
         "purpose": "",
         "attachments": [],
-        "signatures": []
+        "signatures": [
+          {
+            "signer": "0x1110000000000000000000000000000000000000",
+            "signature": "0x...",
+            "timestamp": "2025-03-07T12:30:00Z"
+          }
+        ]
       }
     ],
     "extensions": {}
@@ -45,15 +51,17 @@ The SACD JSON follows a consistent structure, as seen in the template:
 ```
 
 Key top-level fields include:
+
 * `specversion`: Specifies the version of the SACD specification being used. Currently, it is "1.0".
 * `timestamp`: The timestamp of when the SACD was created.
 * `type`: Identifies the document as a "dimo.sacd".
 * `data`: Contains the core information about the agreement.
 
 Within the `data` field, the following are typically found:
+
 * `grantor`: Details about the party granting access or providing the service. This includes their wallet address, an optional human-readable name, and additional information.
 * `grantee`: Details about the party receiving access or the service. Similar to the grantor, this includes their wallet address, an optional name, and additional information.
-* `effectiveAt`: The date and time when the agreement becomes active.
+* `effectiveAt`: The date and time when the agreement becomes effective.
 * `expiresAt`: The date and time when the agreement expires.
 * `additionalDates`: A section to include any other relevant dates.
 * `agreement`: An array that can contain one or more specific agreement clauses, such as those related to payments or permissions. Each element in this array specifies a type of agreement and its details.
@@ -88,18 +96,23 @@ This documentation should provide a foundational understanding of the SACD JSON 
 ### NFT DID Format
 
 The DID (Decentralized Identifier) follows the format:
+
 ```
-did:nft:<chainId>:<contractAddress>_<tokenId>
+did:<type>:<chainId>:<contractAddress>[_<tokenId>]
 ```
 
-Example: did:nft:137:0xbA5738a18d83D41847dfFbDC6101d37C69c9B0cF_3
+Examples:
+```
+did:nft:137:0xbA5738a18d83D41847dfFbDC6101d37C69c9B0cF_3
+did:erc20:137:0xe261d618a959afffd53168cd07d12e37b26761db
+```
 
 Where:
 
-* `did:nft`: is the prefix that identifies the asset type (e.g. nft, erc20, fiat)
-* `<chainId>` is the numeric ID of the blockchain (e.g., 137 for Polygon)
-* `<contractAddress>` is the 0x address of the asset
-* `<tokenId>` is the numeric ID of the specific token
+- `did:<type>`: is the prefix that identifies the asset type (e.g. nft, erc20, fiat)
+- `<chainId>` is the numeric ID of the blockchain (e.g., 137 for Polygon)
+- `<contractAddress>` is the 0x address of the asset
+- `<tokenId>` is the numeric ID of the specific token (required for NFTs, omitted otherwise)
 
 ## Deploy
 
@@ -120,6 +133,7 @@ npx hardhat ignition deployments
 ```
 
 output
+
 ```
 chain-31337
 chain-80002

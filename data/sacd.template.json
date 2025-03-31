@@ -18,7 +18,7 @@
         "effectiveAt": "0000-00-00T00:00:00Z",
         "expiresAt": "0000-00-00T00:00:00Z",
         "additionalDates": {},
-        "agreement": [
+        "agreements": [
             {
                 "type": "<type>",
                 "asset": "did:<assetType>:<chainId>:<contractAddress>_<tokenId>",
