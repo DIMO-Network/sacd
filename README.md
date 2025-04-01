@@ -31,11 +31,18 @@ The SACD JSON follows a consistent structure, as seen in the template:
     "additionalDates": {},
     "agreements": [
       {
-        "type": "",
+        "type": "<type>",
         "asset": "did:::",
-        "": {},
+        "<type>": {},
         "purpose": "",
-        "attachments": [],
+        "attachments": [
+          {
+            "name": "",
+            "description": "",
+            "contentType": "",
+            "uri": ""
+          }
+        ],
         "signatures": [
           {
             "signer": "0x1110000000000000000000000000000000000000",
@@ -59,28 +66,30 @@ Key top-level fields include:
 
 Within the `data` field, the following are typically found:
 
-* `grantor`: Details about the party granting access or providing the service. This includes their wallet address, an optional human-readable name, and additional information.
-* `grantee`: Details about the party receiving access or the service. Similar to the grantor, this includes their wallet address, an optional name, and additional information.
+* `grantor`: The entity initiating the agreement by granting access to an asset or offering an asset for exchange ("initiating end of things"). In the DIMO ecosystem, this is typically a vehicle or data owner granting permissions, but the framework is flexible. This includes their wallet address, an optional human-readable name, and additional information.
+* `grantee`: The grantee is the entity that receives access to an asset or receives an asset in an exchange ("receiving end of things"). Often, within the DIMO ecosystem, the grantee will be a service provider or another user. However, the SACD is designed to be generic, and the grantee could also be another type of entity depending on the nature of the agreement. Similar to the grantor, this includes their wallet address, an optional name, and additional information.
 * `effectiveAt`: The date and time when the agreement becomes effective.
 * `expiresAt`: The date and time when the agreement expires.
 * `additionalDates`: A section to include any other relevant dates.
-* `agreement`: An array that can contain one or more specific agreement clauses, such as those related to payments or permissions. Each element in this array specifies a type of agreement and its details.
+* `agreements`: An array that can contain one or more specific agreement clauses, such as those related to payments or permissions. Each element in this array specifies a type of agreement and its details.
+  * `type`: The agreeement type (e.g. permission, payment)
+  * `asset`: A DID identifying the asset, such as a specific a NFT or ERC-20 token (e.g., did:nft:137:0x4440000000000000000000000000000000000000_123).
+  * `permissions` or `payments`: An array containing the specific details of the agreements. The specific format is defined in the use cases below.
+  * `attachments`: An array of documents related to the agreement, each with a name, description, contentType, and uri.
+  * `signatures`: An array of signatures from the involved parties, including the signer's address, the signature itself, and a timestamp.
 * `extensions`: A section for adding any custom or non-standard fields relevant to a specific use case.
 
 ### Use Case: Permissions
 
 When the type within the agreement array is set to "permission", the structure defines the access rights granted to a grantee for a specific asset. Relevant fields within this agreement type (as seen in [`sacd.permission.example.json`](data/sacd.permission.example.json)) include:
 
-* `asset`: A DID identifying the asset to which permissions are being granted, such as a specific NFT (e.g., did:nft:137:0x3330000000000000000000000000000000000000_31415).
 * `permissions`: An array detailing the specific permissions being granted. Each permission typically includes a name (e.g., "commands", "location:View:Current") and a human-readable description.
-* `attachments`: An array of documents related to the permission agreement, each with a name, description, contentType, and uri (e.g., for a legal agreement).
-* `signatures`: An array of signatures from the involved parties, including the signer's address, the signature itself, and a timestamp.
+* `attachments`: An array of documents related to the permission agreement (e.g., for a legal agreement).
 
 ### Use Case: Payments
 
 When the type within the agreement array is set to "payment", the structure defines the terms of a financial transaction. Relevant fields within this agreement type (as seen in [`sacd.payment.example.json`](sata/sacd.payment.example.json)) include:
 
-* `asset`: A DID identifying the payment asset, such as a specific ERC-20 token (e.g., did:erc20:137:0x4440000000000000000000000000000000000000).
 * `payment`: An object containing the payment details:
     * `amount`: The amount to be paid (e.g., "125000000000000000000000").
     * `recurrence`: The frequency of payment (e.g., "monthly", "one-time").
@@ -88,8 +97,7 @@ When the type within the agreement array is set to "payment", the structure defi
         * `initialPayment`: The initial payment amount.
         * `paymentMethod`: The method of payment (e.g., "direct transfer").
 * `purpose`: A description of what the payment is for (e.g., "Subscription service for vehicle data").
-* `attachments`: An array of documents related to the payment agreement, each with a name, description, contentType, and uri (e.g., for a service agreement or payment schedule).
-* `signatures`: An array of signatures from the involved parties, including the signer's address, the signature itself, and a timestamp.
+* `attachments`: An array of documents related to the payment agreement (e.g., for a service agreement or payment schedule).
 
 This documentation should provide a foundational understanding of the SACD JSON format and its usage for defining payment and permission agreements within the DIMO ecosystem. More complex agreements may include additional fields within the agreement section or utilize the extensions field for specific requirements.
 

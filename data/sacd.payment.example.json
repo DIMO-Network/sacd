@@ -20,7 +20,7 @@
         "additionalDates": {
             "nextPaymentDue": "2025-04-11T00:00:00Z"
         },
-        "agreement": [
+        "agreements": [
             {
                 "type": "payment",
                 "asset": "did:erc20:137:0x4440000000000000000000000000000000000000",
