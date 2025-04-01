@@ -83,7 +83,7 @@ Within the `data` field, the following are typically found:
 
 When the type within the agreement array is set to "permission", the structure defines the access rights granted to a grantee for a specific asset. Relevant fields within this agreement type (as seen in [`sacd.permission.example.json`](data/sacd.permission.example.json)) include:
 
-* `permissions`: An array detailing the specific permissions being granted. Each permission typically includes a name (e.g., "commands", "location:View:Current") and a human-readable description.
+* `permissions`: An array detailing the specific permissions being granted. Each permission typically includes a name (e.g., "commands", "location:approximate") and a human-readable description.
 * `attachments`: An array of documents related to the permission agreement (e.g., for a legal agreement).
 
 ### Use Case: Payments
@@ -106,7 +106,7 @@ This documentation should provide a foundational understanding of the SACD JSON 
 The DID (Decentralized Identifier) follows the format:
 
 ```
-did:<type>:<chainId>:<contractAddress>[_<tokenId>]
+did:<key>:<chainId>:<contractAddress>[_<tokenId>]
 ```
 
 Examples:
@@ -117,7 +117,7 @@ did:erc20:137:0xe261d618a959afffd53168cd07d12e37b26761db
 
 Where:
 
-- `did:<type>`: is the prefix that identifies the asset type (e.g. nft, erc20, fiat)
+- `did:<key>`: is the prefix that identifies the asset type (e.g. nft, erc20, fiat)
 - `<chainId>` is the numeric ID of the blockchain (e.g., 137 for Polygon)
 - `<contractAddress>` is the 0x address of the asset
 - `<tokenId>` is the numeric ID of the specific token (required for NFTs, omitted otherwise)
