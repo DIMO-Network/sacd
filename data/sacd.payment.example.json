@@ -1,0 +1,71 @@
+{
+    "specversion": "1.0",
+    "timestamp": "2025-03-11T15:45:00Z",
+    "type": "dimo.sacd",
+    "data": {
+        "grantor": {
+            "address": "0x1110000000000000000000000000000000000000",
+            "name": "Alice Dev",
+            "additionalInfo": {
+                "email": "alice@dev.example"
+            }
+        },
+        "grantee": {
+            "address": "0x2220000000000000000000000000000000000000",
+            "name": "Bob Node",
+            "additionalInfo": {}
+        },
+        "effectiveAt": "2025-03-11T15:45:00Z",
+        "expiresAt": "2026-03-10T23:59:59Z",
+        "additionalDates": {
+            "nextPaymentDue": "2025-04-11T00:00:00Z"
+        },
+        "agreements": [
+            {
+                "type": "payment",
+                "asset": "did:erc20:137:0x4440000000000000000000000000000000000000",
+                "payment": {
+                    "amount": "125000000000000000000000",
+                    "recurrence": "monthly",
+                    "terms": {
+                        "initialPayment": "1000000000000000000000",
+                        "paymentMethod": "direct transfer"
+                    }
+                },
+                "purpose": "Subscription service for vehicle data",
+                "attachments": [
+                    {
+                        "name": "Service Agreement",
+                        "description": "Full terms of service",
+                        "contentType": "application/pdf",
+                        "uri": "ipfs://QmXyzAbC123..."
+                    },
+                    {
+                        "name": "Payment Schedule",
+                        "description": "Detailed payment timeline",
+                        "contentType": "application/json",
+                        "uri": "ipfs://QmAbcXyz456..."
+                    }
+                ],
+                "signatures": [
+                    {
+                        "signer": "0x1110000000000000000000000000000000000000",
+                        "signature": "0xabc123...",
+                        "timestamp": "2025-03-11T15:40:00Z"
+                    },
+                    {
+                        "signer": "0x2220000000000000000000000000000000000000",
+                        "signature": "0xdef456...",
+                        "timestamp": "2025-03-11T15:42:00Z"
+                    }
+                ]
+            }
+        ]
+    },
+    "extensions": {
+        "invoicing": {
+            "invoiceFrequency": "monthly",
+            "invoiceRecipient": "billing@corp.example"
+        }
+    }
+}
