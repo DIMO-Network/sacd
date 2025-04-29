@@ -5,13 +5,11 @@
     "data": {
         "grantor": {
             "address": "0x1110000000000000000000000000000000000000",
-            "name": "Optional Human Readable Name",
-            "additionalInfo": {}
+            "name": "Optional Human Readable Name"
         },
         "grantee": {
             "address": "0x2220000000000000000000000000000000000000",
-            "name": "Optional Human Readable Name",
-            "additionalInfo": {}
+            "name": "Optional Human Readable Name"
         },
         "effectiveAt": "2025-03-11T14:30:00Z",
         "expiresAt": "2030-12-20T05:20:45Z",

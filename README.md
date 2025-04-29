@@ -18,13 +18,11 @@ The SACD JSON follows a consistent structure, as seen in the template:
   "data": {
     "grantor": {
       "address": "0x0000000000000000000000000000000000000000",
-      "name": "",
-      "additionalInfo": {}
+      "name": ""
     },
     "grantee": {
       "address": "0x0000000000000000000000000000000000000000",
-      "name": "",
-      "additionalInfo": {}
+      "name": ""
     },
     "effectiveAt": "0000-00-00T00:00:00Z",
     "expiresAt": "0000-00-00T00:00:00Z",
@@ -60,7 +58,7 @@ The SACD JSON follows a consistent structure, as seen in the template:
 Key top-level fields include:
 
 * `specversion`: Specifies the version of the SACD specification being used. Currently, it is "1.0".
-* `timestamp`: The timestamp of when the SACD was created.
+* `timestamp`: The timestamp of when the SACD was created. Format [RFC3339](https://datatracker.ietf.org/doc/html/rfc3339)
 * `type`: Identifies the document as a "dimo.sacd".
 * `data`: Contains the core information about the agreement.
 
@@ -103,24 +101,7 @@ This documentation should provide a foundational understanding of the SACD JSON 
 
 ### NFT DID Format
 
-The DID (Decentralized Identifier) follows the format:
-
-```
-did:<key>:<chainId>:<contractAddress>[_<tokenId>]
-```
-
-Examples:
-```
-did:nft:137:0xbA5738a18d83D41847dfFbDC6101d37C69c9B0cF_3
-did:erc20:137:0xe261d618a959afffd53168cd07d12e37b26761db
-```
-
-Where:
-
-- `did:<key>`: is the prefix that identifies the asset type (e.g. nft, erc20, fiat)
-- `<chainId>` is the numeric ID of the blockchain (e.g., 137 for Polygon)
-- `<contractAddress>` is the 0x address of the asset
-- `<tokenId>` is the numeric ID of the specific token (required for NFTs, omitted otherwise)
+For detailed information about the DID format used in DIMO, see the [Decentralized Identifier (DID) Formats](https://github.com/DIMO-Network/cloudevent?tab=readme-ov-file#decentralized-identifier-did-formats).
 
 ## Deploy
 
