@@ -1,0 +1,37 @@
+{
+    "specversion": "1.0",
+    "timestamp": "2025-03-11T14:30:00Z",
+    "type": "dimo.sacd",
+    "data": {
+        "grantor": {
+            "address": "0x1110000000000000000000000000000000000000",
+            "name": "Optional Human Readable Name"
+        },
+        "grantee": {
+            "address": "0x2220000000000000000000000000000000000000",
+            "name": "Optional Human Readable Name"
+        },
+        "effectiveAt": "2025-03-11T14:30:00Z",
+        "expiresAt": "2030-12-20T05:20:45Z",
+        "asset": "did:nft:137:0x3330000000000000000000000000000000000000_31415",
+        "additionalDates": {},
+        "agreements": [
+            {
+                "type": "cloudevent", 
+                "eventType": "dimo.attestation",
+                "source": "0x3330000000000000000000000000000000000000",
+                "ids": ["unique-attestation-id-1", "unique-attestation-id-2"],
+                "effectiveAt": "2025-03-11T14:30:00Z",
+                "expiresAt": "2030-12-20T05:20:45Z",
+                "signatures": [
+                    {
+                        "signer": "0x1110000000000000000000000000000000000000",
+                        "signature": "0x...",
+                        "timestamp": "2025-03-07T12:30:00Z"
+                    }
+                ]
+            }
+        ],
+        "extensions": {}
+    }
+}
