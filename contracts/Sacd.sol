@@ -19,6 +19,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   struct SacdStorage {
     mapping(address asset => mapping(uint256 tokenId => uint256 version)) tokenIdToVersion;
     mapping(address asset => mapping(uint256 tokenId => mapping(uint256 version => mapping(address grantee => PermissionRecord)))) permissionRecords;
+    mapping(address asset => mapping(address grantor => mapping(address grantee => PaymentRecord))) paymentRecords;
   }
 
   bytes32 constant UPGRADER_ROLE = keccak256('UPGRADER_ROLE');
@@ -31,6 +32,14 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     uint256 indexed tokenId,
     uint256 permissions,
     address indexed grantee,
+    uint256 expiration,
+    string source
+  );
+  event PaymentSet(
+    address indexed asset,
+    address indexed grantor,
+    address indexed grantee,
+    uint256 amount,
     uint256 expiration,
     string source
   );
@@ -91,6 +100,31 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     } catch {
       revert InvalidTokenId(asset, tokenId);
     }
+  }
+
+  // TODO Documentation
+  function setPayment(
+    address asset,
+    address grantee,
+    uint256 amount,
+    uint256 expiration,
+    string calldata currency,
+    string calldata source
+  ) external {
+    if (grantee == address(0)) {
+      revert ZeroAddress();
+    }
+
+    SacdStorage storage $ = _getSacdStorage();
+
+    $.paymentRecords[asset][msg.sender][grantee] = PaymentRecord({
+      amount: amount,
+      expiration: expiration,
+      currency: currency,
+      source: source
+    });
+
+    emit PaymentSet(asset, msg.sender, grantee, amount, expiration, source);
   }
 
   /**
@@ -252,6 +286,15 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
 
     uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
     permissionRecord = $.permissionRecords[asset][tokenId][tokenIdVersion][grantee];
+  }
+
+  // TODO Documentation
+  function paymentRecords(
+    address asset,
+    address grantor,
+    address grantee
+  ) external view returns (PaymentRecord memory paymentRecord) {
+    paymentRecord = _getSacdStorage().paymentRecords[asset][grantor][grantee];
   }
 
   /**
