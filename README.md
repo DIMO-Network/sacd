@@ -4,7 +4,7 @@
 
 This document provides a basic overview of the SACD JSON format, which is used to define agreements for exchanging services and assets within the DIMO ecosystem. SACDs ensure that involved parties have a mutually agreed-upon understanding of the exchange and its scope, including any compensation. These agreements are designed to be human-readable and can represent various types of agreements, including permissions and payments.
 
-The [`sacd.template.json`](data/sacd.template.json) provides a generic structure for SACD JSON files. Example SACD files for payments ([`sacd.payment.example.json`](data/sacd.payment.example.json)) and permissions ([`sacd.permission.example.json`](sacd.permission.example.json)) demonstrate how this template is used for specific use cases.
+The [`sacd.template.json`](data/sacd.template.json) provides a generic structure for SACD JSON files. Example SACD files for payments ([`sacd.payment.example.json`](data/sacd.payment.example.json)) and permissions ([`sacd.permission.example.json`](data/sacd.permission.example.json)) demonstrate how this template is used for specific use cases.
 
 ### Overview
 
