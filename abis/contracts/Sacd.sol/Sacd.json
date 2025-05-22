@@ -140,13 +140,13 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "grantor",
+        "name": "grantee",
         "type": "address"
       },
       {
         "indexed": true,
         "internalType": "address",
-        "name": "grantee",
+        "name": "grantor",
         "type": "address"
       },
       {
@@ -571,12 +571,12 @@
       },
       {
         "internalType": "address",
-        "name": "grantor",
+        "name": "grantee",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "grantee",
+        "name": "grantor",
         "type": "address"
       }
     ],
@@ -722,7 +722,7 @@
       },
       {
         "internalType": "address",
-        "name": "grantee",
+        "name": "grantor",
         "type": "address"
       },
       {

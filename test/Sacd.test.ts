@@ -184,14 +184,14 @@ describe('Sacd', function () {
     })
   })
 
-  describe.only('setPayment', () => {
+  describe('setPayment', () => {
     context('Error handling', () => {
-      it('Should revert if grantee is address(0)', async () => {
-        const { mockErc20, sacd, grantor, DEFAULT_EXPIRATION } = await loadFixture(setup)
+      it('Should revert if grantor is address(0)', async () => {
+        const { mockErc20, sacd, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
 
         await expect(
           sacd
-            .connect(grantor)
+            .connect(grantee)
             .setPayment(
               await mockErc20.getAddress(),
               hre.ethers.ZeroAddress,
@@ -211,10 +211,10 @@ describe('Sacd', function () {
           const mockErc20Address = await mockErc20.getAddress()
 
           await sacd
-            .connect(grantor)
-            .setPayment(mockErc20Address, grantee.address, C.MOCK_PAYMENT_AMOUNT, DEFAULT_EXPIRATION, '', C.MOCK_SOURCE)
+            .connect(grantee)
+            .setPayment(mockErc20Address, grantor.address, C.MOCK_PAYMENT_AMOUNT, DEFAULT_EXPIRATION, '', C.MOCK_SOURCE)
 
-          const paymentRecord = await sacd.paymentRecords(mockErc20Address, grantor.address, grantee.address)
+          const paymentRecord = await sacd.paymentRecords(mockErc20Address, grantee.address, grantor.address)
 
           expect(paymentRecord.amount).to.equal(C.MOCK_PAYMENT_AMOUNT)
           expect(paymentRecord.expiration).to.equal(DEFAULT_EXPIRATION)
@@ -230,10 +230,10 @@ describe('Sacd', function () {
 
           await expect(
             sacd
-              .connect(grantor)
+              .connect(grantee)
               .setPayment(
                 mockErc20Address,
-                grantee.address,
+                grantor.address,
                 C.MOCK_PAYMENT_AMOUNT,
                 DEFAULT_EXPIRATION,
                 '',
@@ -243,8 +243,8 @@ describe('Sacd', function () {
             .to.emit(sacd, 'PaymentSet')
             .withArgs(
               mockErc20Address,
-              grantor.address,
               grantee.address,
+              grantor.address,
               C.MOCK_PAYMENT_AMOUNT,
               DEFAULT_EXPIRATION,
               C.MOCK_SOURCE
@@ -259,17 +259,17 @@ describe('Sacd', function () {
           const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
 
           await sacd
-            .connect(grantor)
+            .connect(grantee)
             .setPayment(
               hre.ethers.ZeroAddress,
-              grantee.address,
+              grantor.address,
               C.MOCK_PAYMENT_AMOUNT,
               DEFAULT_EXPIRATION,
               C.MOCK_PAYMENT_CURRENCY,
               C.MOCK_SOURCE
             )
 
-          const paymentRecord = await sacd.paymentRecords(hre.ethers.ZeroAddress, grantor.address, grantee.address)
+          const paymentRecord = await sacd.paymentRecords(hre.ethers.ZeroAddress, grantee.address, grantor.address)
 
           expect(paymentRecord.amount).to.equal(C.MOCK_PAYMENT_AMOUNT)
           expect(paymentRecord.expiration).to.equal(DEFAULT_EXPIRATION)
@@ -284,10 +284,10 @@ describe('Sacd', function () {
 
           await expect(
             sacd
-              .connect(grantor)
+              .connect(grantee)
               .setPayment(
                 hre.ethers.ZeroAddress,
-                grantee.address,
+                grantor.address,
                 C.MOCK_PAYMENT_AMOUNT,
                 DEFAULT_EXPIRATION,
                 C.MOCK_PAYMENT_CURRENCY,
@@ -297,8 +297,8 @@ describe('Sacd', function () {
             .to.emit(sacd, 'PaymentSet')
             .withArgs(
               hre.ethers.ZeroAddress,
-              grantor.address,
               grantee.address,
+              grantor.address,
               C.MOCK_PAYMENT_AMOUNT,
               DEFAULT_EXPIRATION,
               C.MOCK_SOURCE

@@ -19,7 +19,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   struct SacdStorage {
     mapping(address asset => mapping(uint256 tokenId => uint256 version)) tokenIdToVersion;
     mapping(address asset => mapping(uint256 tokenId => mapping(uint256 version => mapping(address grantee => PermissionRecord)))) permissionRecords;
-    mapping(address asset => mapping(address grantor => mapping(address grantee => PaymentRecord))) paymentRecords;
+    mapping(address asset => mapping(address grantee => mapping(address grantor => PaymentRecord))) paymentRecords;
   }
 
   bytes32 constant UPGRADER_ROLE = keccak256('UPGRADER_ROLE');
@@ -37,8 +37,8 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   );
   event PaymentSet(
     address indexed asset,
-    address indexed grantor,
     address indexed grantee,
+    address indexed grantor,
     uint256 amount,
     uint256 expiration,
     string source
@@ -105,26 +105,26 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   // TODO Documentation
   function setPayment(
     address asset,
-    address grantee,
+    address grantor,
     uint256 amount,
     uint256 expiration,
     string calldata currency,
     string calldata source
   ) external {
-    if (grantee == address(0)) {
+    if (grantor == address(0)) {
       revert ZeroAddress();
     }
 
     SacdStorage storage $ = _getSacdStorage();
 
-    $.paymentRecords[asset][msg.sender][grantee] = PaymentRecord({
+    $.paymentRecords[asset][msg.sender][grantor] = PaymentRecord({
       amount: amount,
       expiration: expiration,
       currency: currency,
       source: source
     });
 
-    emit PaymentSet(asset, msg.sender, grantee, amount, expiration, source);
+    emit PaymentSet(asset, msg.sender, grantor, amount, expiration, source);
   }
 
   /**
@@ -291,10 +291,10 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   // TODO Documentation
   function paymentRecords(
     address asset,
-    address grantor,
-    address grantee
+    address grantee,
+    address grantor
   ) external view returns (PaymentRecord memory paymentRecord) {
-    paymentRecord = _getSacdStorage().paymentRecords[asset][grantor][grantee];
+    paymentRecord = _getSacdStorage().paymentRecords[asset][grantee][grantor];
   }
 
   /**
