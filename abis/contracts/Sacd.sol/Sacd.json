@@ -59,6 +59,11 @@
   },
   {
     "inputs": [],
+    "name": "InvalidCurrency",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidInitialization",
     "type": "error"
   },

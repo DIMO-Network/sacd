@@ -202,6 +202,31 @@ describe('Sacd', function () {
             )
         ).to.be.revertedWithCustomError(sacd, 'ZeroAddress')
       })
+      it('Should revert if asset is address(0) and currency is empty', async () => {
+        const { sacd, grantee, grantor, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        await expect(
+          sacd
+            .connect(grantee)
+            .setPayment(hre.ethers.ZeroAddress, grantor.address, 123n, DEFAULT_EXPIRATION, '0x000000', C.MOCK_SOURCE)
+        ).to.be.revertedWithCustomError(sacd, 'InvalidCurrency')
+      })
+      it('Should revert if asset is not address(0) and currency is not empty', async () => {
+        const { mockErc20, sacd, grantee, grantor, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        await expect(
+          sacd
+            .connect(grantee)
+            .setPayment(
+              await mockErc20.getAddress(),
+              grantor.address,
+              123n,
+              DEFAULT_EXPIRATION,
+              C.MOCK_PAYMENT_CURRENCY,
+              C.MOCK_SOURCE
+            )
+        ).to.be.revertedWithCustomError(sacd, 'InvalidCurrency')
+      })
     })
 
     context('ERC20 asset', () => {

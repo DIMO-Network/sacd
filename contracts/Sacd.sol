@@ -51,6 +51,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   error ZeroAddress();
   error Unauthorized(address addr);
   error InvalidTokenId(address asset, uint256 tokenId);
+  error InvalidCurrency();
 
   /// @custom:oz-upgrades-unsafe-allow constructor
   constructor() {
@@ -127,12 +128,16 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     if (grantor == address(0)) {
       revert ZeroAddress();
     }
+    if (asset == address(0) && currency == 0x000000) {
+      revert InvalidCurrency();
+    }
+    if (asset != address(0) && currency != 0x000000) {
+      revert InvalidCurrency();
+    }
 
     SacdStorage storage $ = _getSacdStorage();
     uint256 paymentId = $.nextPaymentId[asset][msg.sender][grantor]++;
 
-    // TODO Check currency not empty if asset is 0x00
-    // TODO Check currency empty if asset is not 0x00
     $.paymentRecords[asset][msg.sender][grantor][paymentId] = PaymentRecord({
       amount: amount,
       expiration: expiration,
