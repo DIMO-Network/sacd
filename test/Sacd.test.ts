@@ -197,7 +197,7 @@ describe('Sacd', function () {
               hre.ethers.ZeroAddress,
               123n,
               DEFAULT_EXPIRATION,
-              '',
+              '0x000000',
               C.MOCK_SOURCE
             )
         ).to.be.revertedWithCustomError(sacd, 'ZeroAddress')
@@ -212,13 +212,20 @@ describe('Sacd', function () {
 
           await sacd
             .connect(grantee)
-            .setPayment(mockErc20Address, grantor.address, C.MOCK_PAYMENT_AMOUNT, DEFAULT_EXPIRATION, '', C.MOCK_SOURCE)
+            .setPayment(
+              mockErc20Address,
+              grantor.address,
+              C.MOCK_PAYMENT_AMOUNT,
+              DEFAULT_EXPIRATION,
+              '0x000000',
+              C.MOCK_SOURCE
+            )
 
           const paymentRecord = await sacd.paymentRecords(mockErc20Address, grantee.address, grantor.address)
 
           expect(paymentRecord.amount).to.equal(C.MOCK_PAYMENT_AMOUNT)
           expect(paymentRecord.expiration).to.equal(DEFAULT_EXPIRATION)
-          expect(paymentRecord.currency).to.equal('')
+          expect(paymentRecord.currency).to.equal('0x000000')
           expect(paymentRecord.source).to.equal(C.MOCK_SOURCE)
         })
       })
@@ -236,7 +243,7 @@ describe('Sacd', function () {
                 grantor.address,
                 C.MOCK_PAYMENT_AMOUNT,
                 DEFAULT_EXPIRATION,
-                '',
+                '0x000000',
                 C.MOCK_SOURCE
               )
           )

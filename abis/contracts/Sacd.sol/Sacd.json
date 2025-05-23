@@ -590,14 +590,14 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint256",
+            "internalType": "uint64",
             "name": "expiration",
-            "type": "uint256"
+            "type": "uint64"
           },
           {
-            "internalType": "string",
+            "internalType": "bytes3",
             "name": "currency",
-            "type": "string"
+            "type": "bytes3"
           },
           {
             "internalType": "string",
@@ -731,14 +731,14 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint64",
         "name": "expiration",
-        "type": "uint256"
+        "type": "uint64"
       },
       {
-        "internalType": "string",
+        "internalType": "bytes3",
         "name": "currency",
-        "type": "string"
+        "type": "bytes3"
       },
       {
         "internalType": "string",

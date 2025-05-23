@@ -16,8 +16,8 @@ interface ISacd {
 
   struct PaymentRecord {
     uint256 amount;
-    uint256 expiration;
-    string currency;
+    uint64 expiration;
+    bytes3 currency;
     string source;
   }
 

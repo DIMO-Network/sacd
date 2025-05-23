@@ -2,12 +2,13 @@
 pragma solidity ^0.8.24;
 
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
-import '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
-import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol';
+import {Initializable} from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
+import {UUPSUpgradeable} from '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
+import {AccessControlUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol';
 
 import './interfaces/ISacd.sol';
 
+// TODO Update docs
 /**
  * @title Service Access Contract Definition (SACD)
  * @notice This contract manages permission records associated with specific ERC721 tokens.
@@ -102,13 +103,22 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     }
   }
 
-  // TODO Documentation
+  /**
+   * @notice Sets a payment record from the caller to a grantor
+   * @dev Creates or updates a payment record associated with an asset, the caller (grantee), and a grantor
+   * @param asset The asset contract address
+   * @param grantor The address that receives the payment
+   * @param amount The payment amount
+   * @param expiration Timestamp when the payment record expires
+   * @param currency The currency code or identifier for the payment
+   * @param source The URI source associated with the payment
+   */
   function setPayment(
     address asset,
     address grantor,
     uint256 amount,
-    uint256 expiration,
-    string calldata currency,
+    uint64 expiration,
+    bytes3 currency,
     string calldata source
   ) external {
     if (grantor == address(0)) {
@@ -117,6 +127,8 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
 
     SacdStorage storage $ = _getSacdStorage();
 
+    // TODO Check currency not empty if asset is 0x00
+    // TODO Check currency empty if asset is not 0x00
     $.paymentRecords[asset][msg.sender][grantor] = PaymentRecord({
       amount: amount,
       expiration: expiration,
@@ -288,7 +300,13 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     permissionRecord = $.permissionRecords[asset][tokenId][tokenIdVersion][grantee];
   }
 
-  // TODO Documentation
+  /**
+   * @notice Returns a payment record associated with the given parameters
+   * @param asset The asset contract address
+   * @param grantee The address that makes the payment
+   * @param grantor The address that receives the payment
+   * @return paymentRecord The payment record containing amount, expiration, currency, and source
+   */
   function paymentRecords(
     address asset,
     address grantee,
