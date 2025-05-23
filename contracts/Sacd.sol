@@ -8,19 +8,19 @@ import {AccessControlUpgradeable} from '@openzeppelin/contracts-upgradeable/acce
 
 import './interfaces/ISacd.sol';
 
-// TODO Update docs
 /**
  * @title Service Access Contract Definition (SACD)
- * @notice This contract manages permission records associated with specific ERC721 tokens.
- * It allows the owner of a token to grant and manage permissions to other addresses (grantees),
- * and these permissions are tied to specific a ERC721 token. When a token is transferred,
- * the permissions associated with it are invalidated
+ * @notice This contract manages permission records associated with specific ERC721 tokens
+ * and payment records between users. It allows the owner of a token to grant and manage
+ * permissions to other addresses (grantees), and these permissions are tied to a specific
+ * ERC721 token. When a token is transferred, the permissions associated with it are invalidated.
+ * The contract also tracks payment records between grantees and grantors, supporting both
+ * asset-specific and fiat currency payments with expiration timestamps.
  */
 contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable {
   struct SacdStorage {
     mapping(address asset => mapping(uint256 tokenId => uint256 version)) tokenIdToVersion;
     mapping(address asset => mapping(uint256 tokenId => mapping(uint256 version => mapping(address grantee => PermissionRecord)))) permissionRecords;
-    // mapping(address asset => mapping(address grantee => mapping(address grantor => PaymentRecord))) paymentRecords;
     mapping(address asset => mapping(address grantee => mapping(address grantor => mapping(uint256 paymentId => PaymentRecord)))) paymentRecords;
     // Track the next payment ID for each (asset, grantee, grantor) combination
     mapping(address asset => mapping(address grantee => mapping(address grantor => uint256))) nextPaymentId;
@@ -109,13 +109,18 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
 
   /**
    * @notice Sets a payment record from the caller to a grantor
-   * @dev Creates or updates a payment record associated with an asset, the caller (grantee), and a grantor
-   * @param asset The asset contract address
+   * @dev Creates a new payment record and increments the payment ID counter.
+   *      Either asset or currency must be specified, but not both.
+   *      Asset address(0) is used for fiat payments.
+   * @param asset The asset contract address. Use address(0) for non-asset specific payments
    * @param grantor The address that receives the payment
    * @param amount The payment amount
    * @param expiration Timestamp when the payment record expires
-   * @param currency The currency code or identifier for the payment
-   * @param source The URI source associated with the payment
+   * @param currency The currency code (3 bytes) for the payment. Use 0x000000 for asset-specific payments
+   * @param source The URI source associated with the payment, typically containing payment details
+   * @custom:throws ZeroAddress If grantor address is zero
+   * @custom:throws InvalidCurrency If both asset and currency are zero or if both are non-zero
+   * @custom:emits PaymentSet When a payment record is successfully created
    */
   function setPayment(
     address asset,
@@ -309,13 +314,13 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     permissionRecord = $.permissionRecords[asset][tokenId][tokenIdVersion][grantee];
   }
 
-  // TODO Documentation
   /**
-   * @notice Returns a payment record associated with the given parameters
-   * @param asset The asset contract address
-   * @param grantee The address that makes the payment
-   * @param grantor The address that receives the payment
-   * @return paymentRecord The payment record containing amount, expiration, currency, and source
+   * @notice Retrieves a specific payment record based on the provided identifiers
+   * @param asset The asset contract address. For non-asset specific payments, this will be address(0)
+   * @param grantee The address that made the payment
+   * @param grantor The address that received the payment
+   * @param paymentId The unique identifier for the specific payment record
+   * @return paymentRecord The payment record containing amount, expiration, currency, and source information
    */
   function paymentRecords(
     address asset,
@@ -326,7 +331,15 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     paymentRecord = _getSacdStorage().paymentRecords[asset][grantee][grantor][paymentId];
   }
 
-  // TODO Documentation
+  /**
+   * @notice Retrieves the most recent payment record between a grantee and grantor
+   * @dev Returns the latest payment record based on the nextPaymentId counter.
+   *      If no payment records exist (nextPaymentId is 0), returns an empty record.
+   * @param asset The asset contract address. For non-asset specific payments, this will be address(0)
+   * @param grantee The address that made the payment
+   * @param grantor The address that received the payment
+   * @return paymentRecord The most recent payment record containing amount, expiration, currency, and source information
+   */
   function currentPaymentRecord(
     address asset,
     address grantee,
@@ -338,7 +351,13 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     paymentRecord = _getSacdStorage().paymentRecords[asset][grantee][grantor][paymentId - 1];
   }
 
-  // TODO Documentation
+  /**
+   * @notice Returns the next payment ID for a specific asset, grantee, and grantor combination
+   * @param asset The asset contract address. For non-asset specific payments, this will be address(0)
+   * @param grantee The address that makes payments
+   * @param grantor The address that receives payments
+   * @return paymentId The next available payment ID for the specified combination
+   */
   function nextPaymentId(address asset, address grantee, address grantor) external view returns (uint256 paymentId) {
     paymentId = _getSacdStorage().nextPaymentId[asset][grantee][grantor];
   }
