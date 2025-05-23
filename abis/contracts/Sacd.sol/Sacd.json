@@ -336,6 +336,57 @@
         "type": "address"
       },
       {
+        "internalType": "address",
+        "name": "grantee",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "grantor",
+        "type": "address"
+      }
+    ],
+    "name": "currentPaymentRecord",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiration",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes3",
+            "name": "currency",
+            "type": "bytes3"
+          },
+          {
+            "internalType": "string",
+            "name": "source",
+            "type": "string"
+          }
+        ],
+        "internalType": "struct ISacd.PaymentRecord",
+        "name": "paymentRecord",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "asset",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
@@ -552,6 +603,35 @@
         "type": "address"
       },
       {
+        "internalType": "address",
+        "name": "grantee",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "grantor",
+        "type": "address"
+      }
+    ],
+    "name": "nextPaymentId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "paymentId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "asset",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
@@ -578,6 +658,11 @@
         "internalType": "address",
         "name": "grantor",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paymentId",
+        "type": "uint256"
       }
     ],
     "name": "paymentRecords",

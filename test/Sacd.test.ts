@@ -221,7 +221,7 @@ describe('Sacd', function () {
               C.MOCK_SOURCE
             )
 
-          const paymentRecord = await sacd.paymentRecords(mockErc20Address, grantee.address, grantor.address)
+          const paymentRecord = await sacd.currentPaymentRecord(mockErc20Address, grantee.address, grantor.address)
 
           expect(paymentRecord.amount).to.equal(C.MOCK_PAYMENT_AMOUNT)
           expect(paymentRecord.expiration).to.equal(DEFAULT_EXPIRATION)
@@ -276,7 +276,11 @@ describe('Sacd', function () {
               C.MOCK_SOURCE
             )
 
-          const paymentRecord = await sacd.paymentRecords(hre.ethers.ZeroAddress, grantee.address, grantor.address)
+          const paymentRecord = await sacd.currentPaymentRecord(
+            hre.ethers.ZeroAddress,
+            grantee.address,
+            grantor.address
+          )
 
           expect(paymentRecord.amount).to.equal(C.MOCK_PAYMENT_AMOUNT)
           expect(paymentRecord.expiration).to.equal(DEFAULT_EXPIRATION)

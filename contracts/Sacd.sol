@@ -20,7 +20,10 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   struct SacdStorage {
     mapping(address asset => mapping(uint256 tokenId => uint256 version)) tokenIdToVersion;
     mapping(address asset => mapping(uint256 tokenId => mapping(uint256 version => mapping(address grantee => PermissionRecord)))) permissionRecords;
-    mapping(address asset => mapping(address grantee => mapping(address grantor => PaymentRecord))) paymentRecords;
+    // mapping(address asset => mapping(address grantee => mapping(address grantor => PaymentRecord))) paymentRecords;
+    mapping(address asset => mapping(address grantee => mapping(address grantor => mapping(uint256 paymentId => PaymentRecord)))) paymentRecords;
+    // Track the next payment ID for each (asset, grantee, grantor) combination
+    mapping(address asset => mapping(address grantee => mapping(address grantor => uint256))) nextPaymentId;
   }
 
   bytes32 constant UPGRADER_ROLE = keccak256('UPGRADER_ROLE');
@@ -126,10 +129,11 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     }
 
     SacdStorage storage $ = _getSacdStorage();
+    uint256 paymentId = $.nextPaymentId[asset][msg.sender][grantor]++;
 
     // TODO Check currency not empty if asset is 0x00
     // TODO Check currency empty if asset is not 0x00
-    $.paymentRecords[asset][msg.sender][grantor] = PaymentRecord({
+    $.paymentRecords[asset][msg.sender][grantor][paymentId] = PaymentRecord({
       amount: amount,
       expiration: expiration,
       currency: currency,
@@ -300,6 +304,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     permissionRecord = $.permissionRecords[asset][tokenId][tokenIdVersion][grantee];
   }
 
+  // TODO Documentation
   /**
    * @notice Returns a payment record associated with the given parameters
    * @param asset The asset contract address
@@ -310,9 +315,27 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   function paymentRecords(
     address asset,
     address grantee,
+    address grantor,
+    uint256 paymentId
+  ) external view returns (PaymentRecord memory paymentRecord) {
+    paymentRecord = _getSacdStorage().paymentRecords[asset][grantee][grantor][paymentId];
+  }
+
+  // TODO Documentation
+  function currentPaymentRecord(
+    address asset,
+    address grantee,
     address grantor
   ) external view returns (PaymentRecord memory paymentRecord) {
-    paymentRecord = _getSacdStorage().paymentRecords[asset][grantee][grantor];
+    SacdStorage storage $ = _getSacdStorage();
+    uint256 paymentId = $.nextPaymentId[asset][grantee][grantor];
+    if (paymentId == 0) return paymentRecord;
+    paymentRecord = _getSacdStorage().paymentRecords[asset][grantee][grantor][paymentId - 1];
+  }
+
+  // TODO Documentation
+  function nextPaymentId(address asset, address grantee, address grantor) external view returns (uint256 paymentId) {
+    paymentId = _getSacdStorage().nextPaymentId[asset][grantee][grantor];
   }
 
   /**
