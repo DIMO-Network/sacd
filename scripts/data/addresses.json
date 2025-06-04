@@ -1,0 +1,26 @@
+{
+    "polygon": {
+        "Sacd": {
+            "proxy": "0x3c152B5d96769661008Ff404224d6530FCAC766d",
+            "implementation": "0xd72c42ccef82435e2273693873143a01e0b5ec41"
+        }
+    },
+    "amoy": {
+        "Sacd": {
+            "proxy": "0x4E5F9320b1c7cB3DE5ebDD760aD67375B66cF8a3",
+            "implementation": "0x275615aa7Ef34100a556Cecd05fD055e262C1386"
+        }
+    },
+    "hardhat": {
+        "Sacd": {
+            "proxy": "",
+            "implementation": ""
+        }
+    },
+    "localhost": {
+        "Sacd": {
+            "proxy": "",
+            "implementation": ""
+        }
+    }
+}
