@@ -14,6 +14,13 @@ interface ISacd {
     string source;
   }
 
+  struct PaymentRecord {
+    uint256 amount;
+    uint64 expiration;
+    bytes3 currency;
+    string source;
+  }
+
   function setPermissions(
     address asset,
     uint256 tokenId,
