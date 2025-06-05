@@ -21,7 +21,7 @@
         "agreements": [
             {
                 "type": "<type>",
-                "asset": "did:<assetType>:<chainId>:<contractAddress>_<tokenId>",
+                "asset": "did:<assetType>:<chainId>:<contractAddress>:<tokenId>",
                 "<type>": {},
                 "purpose": "",
                 "attachments": [
@@ -32,15 +32,24 @@
                         "uri": ""
                     }
                 ],
-                "signatures": [
+                "extensions": {}
+            },
+            {
+                "type": "<type>",
+                "asset": "did:<assetType>:<chainId>:<contractAddress>:<tokenId>",
+                "<type>": {},
+                "purpose": "",
+                "attachments": [
                     {
-                        "signer": "0x0000000000000000000000000000000000000000",
-                        "signature": "0xabc123...",
-                        "timestamp": "0000-00-00T00:00:00Z"
+                        "name": "",
+                        "description": "",
+                        "contentType": "",
+                        "uri": ""
                     }
-                ]
+                ],
+                "extensions": {}
             }
         ]
     },
-    "extensions": {}
+    "signature": ""
 }

@@ -4,12 +4,12 @@
     "type": "dimo.sacd",
     "data": {
         "grantor": {
-            "address": "0x1110000000000000000000000000000000000000",
-            "name": "Optional Human Readable Name"
+            "address": "0xC008EF40B0b42AAD7e34879EB024385024f753ea",
+            "name": "Alice"
         },
         "grantee": {
-            "address": "0x2220000000000000000000000000000000000000",
-            "name": "Optional Human Readable Name"
+            "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+            "name": "Bob"
         },
         "effectiveAt": "2025-03-11T14:30:00Z",
         "expiresAt": "2030-12-20T05:20:45Z",
@@ -17,38 +17,25 @@
         "agreements": [
             {
                 "type": "permission",
-                "asset": "did:nft:137:0x3330000000000000000000000000000000000000_31415",
+                "asset": "did:erc721:80002:0x45fbCD3ef7361d156e8b16F5538AE36DEdf61Da8:928",
                 "permissions": [
                     {
-                        "name": "commands",
+                        "name": "privilege:ExecuteCommands",
                         "description": "Permission to send commands to the vehicle"
                     },
                     {
-                        "name": "location:approximate",
+                        "name": "privilege:GetApproximateLocation",
                         "description": "Permission to view current location data"
                     },
                     {
-                        "name": "location:history",
+                        "name": "privilege:GetNonLocationHistory",
                         "description": "Permission to view historical location data"
                     }
                 ],
-                "attachments": [
-                    {
-                        "name": "Legal Agreement",
-                        "description": "Signed legal document",
-                        "contentType": "application/pdf",
-                        "uri": "ipfs://Qm..."
-                    }
-                ],
-                "signatures": [
-                    {
-                        "signer": "0x1110000000000000000000000000000000000000",
-                        "signature": "0x...",
-                        "timestamp": "2025-03-07T12:30:00Z"
-                    }
-                ]
+                "attachments": [],
+                "extensions": {}
             }
-        ],
-        "extensions": {}
-    }
+        ]
+    },
+    "signature": "0x001d950319acc81f4df85e33456a494073a845bf3937f7f32426d9b6bb244f937e9063dbdeac773457684be70de8776c237ef0dac2b73ce9d8aeb9512d7e534e1c"
 }

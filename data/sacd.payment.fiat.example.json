@@ -1,34 +1,34 @@
 {
     "specversion": "1.0",
-    "timestamp": "2025-03-11T15:45:00Z",
+    "timestamp": "2025-03-11T14:30:00Z",
     "type": "dimo.sacd",
     "data": {
         "grantor": {
-            "address": "0x1110000000000000000000000000000000000000",
-            "name": "Alice Dev",
+            "address": "0xC008EF40B0b42AAD7e34879EB024385024f753ea",
+            "name": "Alice",
             "additionalInfo": {
                 "email": "alice@dev.example"
             }
         },
         "grantee": {
-            "address": "0x2220000000000000000000000000000000000000",
-            "name": "Bob Node",
+            "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+            "name": "Bob",
             "additionalInfo": {}
         },
-        "effectiveAt": "2025-03-11T15:45:00Z",
-        "expiresAt": "2026-03-10T23:59:59Z",
+        "effectiveAt": "2025-03-11T14:30:00Z",
+        "expiresAt": "2030-12-20T05:20:45Z",
         "additionalDates": {
             "nextPaymentDue": "2025-04-11T00:00:00Z"
         },
         "agreements": [
             {
                 "type": "payment",
-                "asset": "did:erc20:137:0x4440000000000000000000000000000000000000",
+                "asset": "did:fiat:USD",
                 "payment": {
-                    "amount": "125000000000000000000000",
+                    "amount": "125000.00",
                     "recurrence": "monthly",
                     "terms": {
-                        "initialPayment": "1000000000000000000000",
+                        "initialPayment": "1000.00",
                         "paymentMethod": "direct transfer"
                     }
                 },
@@ -47,25 +47,14 @@
                         "uri": "ipfs://QmAbcXyz456..."
                     }
                 ],
-                "signatures": [
-                    {
-                        "signer": "0x1110000000000000000000000000000000000000",
-                        "signature": "0xabc123...",
-                        "timestamp": "2025-03-11T15:40:00Z"
-                    },
-                    {
-                        "signer": "0x2220000000000000000000000000000000000000",
-                        "signature": "0xdef456...",
-                        "timestamp": "2025-03-11T15:42:00Z"
+                "extensions": {
+                    "invoicing": {
+                        "invoiceFrequency": "monthly",
+                        "invoiceRecipient": "billing@corp.example"
                     }
-                ]
+                }
             }
         ]
     },
-    "extensions": {
-        "invoicing": {
-            "invoiceFrequency": "monthly",
-            "invoiceRecipient": "billing@corp.example"
-        }
-    }
+    "signature": "0x865c540546db7777f904fd6cccb07ed21cb43fabec4a0064d9512dc50a3512fc3f224bedafbfdf8ad30eaefc8b3c60f20a7e0191ef1dcffc59cbc2b8c8f75a0b1c"
 }
