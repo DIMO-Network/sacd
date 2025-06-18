@@ -14,9 +14,12 @@ async function signPayload(payload: Payload, privateKey: `0x${string}`): Promise
   try {
     const dataJson = JSON.stringify(payload.data)
 
+    const prefix = `\x19Ethereum Signed Message:\n${dataJson.length}`
+    const prefixedMessage = prefix + dataJson
+
     // Convert to bytes and compute Keccak256 hash
-    const dataBytes = ethers.toUtf8Bytes(dataJson)
-    const msgHash = ethers.keccak256(dataBytes)
+    const messageBytes = ethers.toUtf8Bytes(prefixedMessage)
+    const msgHash = ethers.keccak256(messageBytes)
 
     // Sign the hash directly
     const signingKey = new ethers.SigningKey(privateKey)
@@ -42,9 +45,13 @@ function verifySignature(payload: Payload, expectedAddress: string): boolean {
 
     const dataJson = JSON.stringify(payload.data)
 
+    // Add Ethereum Signed Message prefix (same as signing process)
+    const prefix = `\x19Ethereum Signed Message:\n${dataJson.length}`
+    const prefixedMessage = prefix + dataJson
+
     // Convert to bytes and compute Keccak256 hash
-    const dataBytes = ethers.toUtf8Bytes(dataJson)
-    const msgHash = ethers.keccak256(dataBytes)
+    const messageBytes = ethers.toUtf8Bytes(prefixedMessage)
+    const msgHash = ethers.keccak256(messageBytes)
 
     // Recover the signer's address from the signature
     const recoveredAddress = ethers.recoverAddress(msgHash, signature)
@@ -98,7 +105,7 @@ async function main() {
   }
 
   // Choose file path to sign
-  const fileName = 'sacd.permission.example.json'
+  const fileName = 'sacd.full.example.json'
   const filePath = path.resolve(__dirname, '..', 'data', fileName)
 
   console.log(`\nReading payload from: ${fileName}`)

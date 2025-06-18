@@ -23,6 +23,7 @@
                 "type": "cloudevent",
                 "eventType": "dimo.attestation",
                 "source": "0xC008EF40B0b42AAD7e34879EB024385024f753ea",
+                "asset": "did:erc721:80002:0x45fbCD3ef7361d156e8b16F5538AE36DEdf61Da8:928",
                 "ids": [
                     "unique-attestation-id-1",
                     "unique-attestation-id-2"
@@ -119,5 +120,5 @@
             }
         ]
     },
-    "signature": "0xc87b3f89d3a55c2456a443498523cc5f6263ce7f3336deaa475bb1351403037c3485114768466468fdefa2a811a2948994784ec4faaf29756c0daa95907cd5641c"
+    "signature": "0xfbdf8f20720ed3a17d4295b2d2c87faaf75c8eb60638aab907be081013d963b7355b48aae2d27e05d8b5e5d5586180ad68f90cecbc46e426d71139d2873bce771c"
 }
