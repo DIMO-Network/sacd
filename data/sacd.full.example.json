@@ -1,0 +1,124 @@
+{
+    "specversion": "1.0",
+    "timestamp": "2025-03-11T14:30:00Z",
+    "type": "dimo.sacd",
+    "data": {
+        "grantor": {
+            "address": "0xC008EF40B0b42AAD7e34879EB024385024f753ea",
+            "name": "Alice",
+            "additionalInfo": {
+                "email": "alice@dev.example"
+            }
+        },
+        "grantee": {
+            "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+            "name": "Bob",
+            "additionalInfo": {}
+        },
+        "effectiveAt": "2025-03-11T14:30:00Z",
+        "expiresAt": "2030-12-20T05:20:45Z",
+        "additionalDates": {},
+        "agreements": [
+            {
+                "type": "cloudevent",
+                "eventType": "dimo.attestation",
+                "source": "0xC008EF40B0b42AAD7e34879EB024385024f753ea",
+                "asset": "did:erc721:80002:0x45fbCD3ef7361d156e8b16F5538AE36DEdf61Da8:928",
+                "ids": [
+                    "unique-attestation-id-1",
+                    "unique-attestation-id-2"
+                ],
+                "effectiveAt": "2022-03-11T14:30:00Z",
+                "expiresAt": "2030-12-20T05:20:45Z",
+                "extensions": {}
+            },
+            {
+                "type": "payment",
+                "asset": "did:erc20:80002:0x21cFE003997fB7c2B3cfe5cf71e7833B7B2eCe10",
+                "payment": {
+                    "amount": "125000000000000000000000",
+                    "recurrence": "monthly",
+                    "terms": {
+                        "initialPayment": "1000000000000000000000",
+                        "paymentMethod": "direct transfer"
+                    }
+                },
+                "purpose": "Subscription service for vehicle data",
+                "attachments": [
+                    {
+                        "name": "Service Agreement",
+                        "description": "Full terms of service",
+                        "contentType": "application/pdf",
+                        "uri": "ipfs://QmXyzAbC123..."
+                    },
+                    {
+                        "name": "Payment Schedule",
+                        "description": "Detailed payment timeline",
+                        "contentType": "application/json",
+                        "uri": "ipfs://QmAbcXyz456..."
+                    }
+                ],
+                "extensions": {
+                    "invoicing": {
+                        "invoiceFrequency": "monthly",
+                        "invoiceRecipient": "billing@corp.example"
+                    }
+                }
+            },
+            {
+                "type": "payment",
+                "asset": "did:fiat:USD",
+                "payment": {
+                    "amount": "125000.00",
+                    "recurrence": "monthly",
+                    "terms": {
+                        "initialPayment": "1000.00",
+                        "paymentMethod": "direct transfer"
+                    }
+                },
+                "purpose": "Subscription service for vehicle data",
+                "attachments": [
+                    {
+                        "name": "Service Agreement",
+                        "description": "Full terms of service",
+                        "contentType": "application/pdf",
+                        "uri": "ipfs://QmXyzAbC123..."
+                    },
+                    {
+                        "name": "Payment Schedule",
+                        "description": "Detailed payment timeline",
+                        "contentType": "application/json",
+                        "uri": "ipfs://QmAbcXyz456..."
+                    }
+                ],
+                "extensions": {
+                    "invoicing": {
+                        "invoiceFrequency": "monthly",
+                        "invoiceRecipient": "billing@corp.example"
+                    }
+                }
+            },
+            {
+                "type": "permission",
+                "asset": "did:erc721:80002:0x45fbCD3ef7361d156e8b16F5538AE36DEdf61Da8:928",
+                "permissions": [
+                    {
+                        "name": "privilege:ExecuteCommands",
+                        "description": "Permission to send commands to the vehicle"
+                    },
+                    {
+                        "name": "privilege:GetApproximateLocation",
+                        "description": "Permission to view current location data"
+                    },
+                    {
+                        "name": "privilege:GetNonLocationHistory",
+                        "description": "Permission to view historical location data"
+                    }
+                ],
+                "attachments": [],
+                "extensions": {}
+            }
+        ]
+    },
+    "signature": "0xfbdf8f20720ed3a17d4295b2d2c87faaf75c8eb60638aab907be081013d963b7355b48aae2d27e05d8b5e5d5586180ad68f90cecbc46e426d71139d2873bce771c"
+}

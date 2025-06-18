@@ -1,0 +1,60 @@
+{
+    "specversion": "1.0",
+    "timestamp": "2025-03-11T14:30:00Z",
+    "type": "dimo.sacd",
+    "data": {
+        "grantor": {
+            "address": "0xC008EF40B0b42AAD7e34879EB024385024f753ea",
+            "name": "Alice",
+            "additionalInfo": {
+                "email": "alice@dev.example"
+            }
+        },
+        "grantee": {
+            "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+            "name": "Bob",
+            "additionalInfo": {}
+        },
+        "effectiveAt": "2025-03-11T14:30:00Z",
+        "expiresAt": "2030-12-20T05:20:45Z",
+        "additionalDates": {
+            "nextPaymentDue": "2025-04-11T00:00:00Z"
+        },
+        "agreements": [
+            {
+                "type": "payment",
+                "asset": "did:fiat:USD",
+                "payment": {
+                    "amount": "125000.00",
+                    "recurrence": "monthly",
+                    "terms": {
+                        "initialPayment": "1000.00",
+                        "paymentMethod": "direct transfer"
+                    }
+                },
+                "purpose": "Subscription service for vehicle data",
+                "attachments": [
+                    {
+                        "name": "Service Agreement",
+                        "description": "Full terms of service",
+                        "contentType": "application/pdf",
+                        "uri": "ipfs://QmXyzAbC123..."
+                    },
+                    {
+                        "name": "Payment Schedule",
+                        "description": "Detailed payment timeline",
+                        "contentType": "application/json",
+                        "uri": "ipfs://QmAbcXyz456..."
+                    }
+                ],
+                "extensions": {
+                    "invoicing": {
+                        "invoiceFrequency": "monthly",
+                        "invoiceRecipient": "billing@corp.example"
+                    }
+                }
+            }
+        ]
+    },
+    "signature": "0x0f9ee7b664c98d00380238e073051da233e3fdd3602f12d8c0e5dfca1893cfe978b9c308a596a7f5133ff6f5fa09a034c388eeb9ad7ea9b50f665a10fc8dc9271b"
+}
