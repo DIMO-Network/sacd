@@ -2,7 +2,7 @@
     "polygon": {
         "Sacd": {
             "proxy": "0x3c152B5d96769661008Ff404224d6530FCAC766d",
-            "implementation": "0xd72c42ccef82435e2273693873143a01e0b5ec41"
+            "implementation": "0x801AD772783A541F783cC3C5f3e7f33FB6d708e4"
         }
     },
     "amoy": {

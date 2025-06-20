@@ -61,10 +61,10 @@ async function main() {
   let { name } = await ethers.provider.getNetwork()
 
   if (name === 'localhost') {
-    name = 'amoy'
-    // 0x62b98e019e0d3e4A1Ad8C786202e09017Bd995e1 Prod account
+    name = 'polygon'
+    // 0xCED3c922200559128930180d3f0bfFd4d9f4F123 Prod account
     // 0xC008EF40B0b42AAD7e34879EB024385024f753ea Shared dev account
-    deployer = await ethers.getImpersonatedSigner('0xC008EF40B0b42AAD7e34879EB024385024f753ea')
+    deployer = await ethers.getImpersonatedSigner('0xCED3c922200559128930180d3f0bfFd4d9f4F123')
 
     await user1.sendTransaction({
       to: deployer.address,
