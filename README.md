@@ -22,7 +22,7 @@ The SACD JSON follows a consistent structure, as seen in the template:
 ```json
 {
   "specversion": "1.0",
-  "timestamp": "0000-00-00T00:00:00Z",
+  "time": "0000-00-00T00:00:00Z",
   "type": "dimo.sacd",
   "data": {
     "grantor": {
@@ -61,7 +61,7 @@ The SACD JSON follows a consistent structure, as seen in the template:
 Key top-level fields include:
 
 - `specversion`: Specifies the version of the SACD specification being used. Currently, it is "1.0".
-- `timestamp`: The timestamp of when the SACD was created. Format [RFC3339](https://datatracker.ietf.org/doc/html/rfc3339)
+- `time`: The time of when the SACD was created. Format [RFC3339](https://datatracker.ietf.org/doc/html/rfc3339)
 - `type`: Identifies the document as a "dimo.sacd".
 - `data`: Contains the core information about the agreement.
 
@@ -142,8 +142,8 @@ When the type within the agreement array is set to "attestation", the structure 
   - `eventType`: The specific type of attestation event (e.g., "dimo.attestation")
   - `source`: The entity making the attestation (e.g., "0xC008EF40B0b42AAD7e34879EB024385024f753ea")
   - `ids`: An array of unique identifiers for the attestations being referenced
-  - `effectiveAt`: The timestamp when the attestation becomes valid (ISO 8601 format)
-  - `expiresAt`: The timestamp when the attestation expires (ISO 8601 format)
+  - `effectiveAt`: The time when the attestation becomes valid (ISO 8601 format)
+  - `expiresAt`: The time when the attestation expires (ISO 8601 format)
 - `attachments`: An array of documents related to the attestation (e.g., certificates, verification documents)
 
 ### Complex Use Cases

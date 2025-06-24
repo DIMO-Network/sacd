@@ -4,7 +4,7 @@ import { ethers } from 'hardhat'
 
 interface Payload {
   specversion: string
-  timestamp: string
+  time: string
   type: string
   data: { [key: string]: any }
   signature?: `0x${string}`
@@ -74,7 +74,7 @@ function readPayloadFromFile(filePath: string): Payload {
     if (!jsonData.data && typeof jsonData === 'object') {
       return {
         specversion: '',
-        timestamp: '',
+        time: '',
         type: '',
         data: jsonData,
       }
