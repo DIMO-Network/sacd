@@ -1,5 +1,9 @@
 {
+    "id": "unique-event-identifier",
+    "source": "0xC008EF40B0b42AAD7e34879EB024385024f753ea",
+    "producer": "did:ethr:80002:0xC008EF40B0b42AAD7e34879EB024385024f753ea",
     "specversion": "1.0",
+    "subject": "did:erc721:80002:0x45fbCD3ef7361d156e8b16F5538AE36DEdf61Da8:928",
     "time": "2025-03-11T14:30:00Z",
     "type": "dimo.sacd",
     "data": {
