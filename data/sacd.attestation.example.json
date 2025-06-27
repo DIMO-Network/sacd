@@ -13,13 +13,13 @@
         },
         "effectiveAt": "2025-03-11T14:30:00Z",
         "expiresAt": "2030-12-20T05:20:45Z",
-        "asset": "did:erc721:80002:0x45fbCD3ef7361d156e8b16F5538AE36DEdf61Da8:928",
         "additionalDates": {},
         "agreements": [
             {
                 "type": "cloudevent",
                 "eventType": "dimo.attestation",
-                "source": "0xC008EF40B0b42AAD7e34879EB024385024f753ea",
+                "source": "0x07B584f6a7125491C991ca2a45ab9e641B1CeE1b",
+                "asset": "did:erc721:80002:0x45fbCD3ef7361d156e8b16F5538AE36DEdf61Da8:928",
                 "ids": [
                     "unique-attestation-id-1",
                     "unique-attestation-id-2"
@@ -30,5 +30,5 @@
             }
         ]
     },
-    "signature": "0xed26c937572e598c8025a4dcead187459f6ae9b0cdf13a7e488a7b9e89cc3d2d002af136f03cfa397d043d0ab0aed628b55dcf34bdb419f34f486444a64a221d1b"
+    "signature": "0xf8d66cefa3103cf5dde200e8758b108969e93e7702d867ada6aaba9c1ccbcb8958e0d2c2c174ff7b707ceebf9ef0818d613deafe33de040c614a0505fe4b610f1c"
 }
