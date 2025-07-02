@@ -185,3 +185,13 @@ chain-137
 ```
 npx hardhat ignition verify chain-<id>
 ```
+
+### Go ABI
+
+To regenerate the Go bindings for, e.g., [the devices API](https://github.com/DIMO-Network/devices-api/blob/main/internal/contracts/registry.go), you would run
+
+```sh
+abigen --abi abis/contracts/Sacd.sol/Sacd.json --out sacd.go --pkg sacd --type Sacd
+```
+
+and copy over that file.
