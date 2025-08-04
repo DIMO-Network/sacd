@@ -99,11 +99,16 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     // Early return if no template contract set
     if (templateContract == address(0)) return true;
 
-    // Make external call to template contract
-    try ITemplate(templateContract).isTemplateActive(templateId) returns (bool isActive) {
-      return isActive;
+    // Check if template exists by trying to get its owner
+    try ITemplate(templateContract).ownerOf(templateId) returns (address) {
+      // If owner exists, check if template is active
+      try ITemplate(templateContract).isTemplateActive(templateId) returns (bool isActive) {
+        return isActive;
+      } catch {
+        return true; // Fail-safe: assume active if call fails
+      }
     } catch {
-      return true; // Fail-safe: assume active if call fails
+      return false; // Template doesn't exist
     }
   }
 
@@ -143,7 +148,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
         address templateContract = $.templateContract;
 
         if (templateContract != address(0)) {
-          try ITemplate(templateContract).getTemplate(templateId) returns (ITemplate.Template memory template) {
+          try ITemplate(templateContract).getTemplate(templateId) returns (ITemplate.TemplateData memory template) {
             if (template.permissions != permissions) {
               revert TemplatePermissionsMismatch(templateId, template.permissions, permissions);
             }

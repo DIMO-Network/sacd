@@ -268,7 +268,7 @@ await template.createTemplate(
 // Get template data
 const templateData = await template.getTemplate(templateId);
 const permissions = templateData.permissions;
-const finalSource = templateData.ipfsUrl + "&source=custom-source";
+const finalSource = templateData.templateURI;
 
 // Call SACD directly with template data
 await sacd.setPermissions(

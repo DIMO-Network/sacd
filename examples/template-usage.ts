@@ -38,9 +38,9 @@ async function main() {
   // Example 1: Create a template
   console.log('\n=== Creating Template ===')
   const templatePermissions = 0x12345678
-  const templateIpfsUrl = 'ipfs://QmExampleTemplate123'
+  const templateURI = 'ipfs://QmExampleTemplate123'
 
-  const tx1 = await template.createTemplate(templatePermissions, templateIpfsUrl)
+  const tx1 = await template.createTemplate(templatePermissions, templateURI)
   const receipt1 = await tx1.wait()
 
   // Get the template ID from the event
@@ -58,13 +58,12 @@ async function main() {
 
   // Example 2: Get template data for SACD creation
   console.log('\n=== Getting Template Data ===')
-  const customSource = 'example-source'
   const templateData = await template.getTemplate(templateId)
   const permissions = templateData.permissions
-  const finalSource = templateData.ipfsUrl + '&source=' + customSource
+  const finalSource = templateData.templateURI
 
   console.log('Template permissions:', permissions.toString(16))
-  console.log('Combined source:', finalSource)
+  console.log('Template URI:', finalSource)
 
   // Example 3: Create a mock ERC721 token for demonstration
   console.log('\n=== Creating Mock ERC721 ===')
@@ -87,7 +86,7 @@ async function main() {
   // Method 1: Get template data and call SACD directly
   const templateDataForSacd = await template.getTemplate(templateId)
   const templatePermissionsForSacd = templateDataForSacd.permissions
-  const templateSource = templateDataForSacd.ipfsUrl + '&source=direct-method'
+  const templateSource = templateDataForSacd.templateURI
 
   await sacd
     .connect(user1)
@@ -102,21 +101,22 @@ async function main() {
   const hasPermissions = await sacd.hasPermissions(asset, tokenId, grantee, templatePermissionsForSacd)
   console.log('Permissions verified:', hasPermissions)
 
-  // Example 5: List templates by creator
+  // Example 5: List templates by creator using ERC721 functions
   console.log('\n=== Listing Templates by Creator ===')
-  const creatorTemplates = await template.getTemplatesByCreator(deployer.address)
-  console.log(
-    'Templates created by deployer:',
-    creatorTemplates.map((id) => id.toString())
-  )
+  const creatorBalance = await template.balanceOf(deployer.address)
+  console.log('Templates owned by deployer:', creatorBalance.toString())
+
+  // Since we know we created template ID 1, we can check if deployer owns it
+  const templateOwner = await template.ownerOf(1)
+  console.log('Template 1 owner:', templateOwner)
 
   // Example 6: Get template details
   console.log('\n=== Template Details ===')
   const templateDetails = await template.getTemplate(templateId)
   console.log('Template ID:', templateDetails.templateId.toString())
-  console.log('Creator:', templateDetails.creator)
+  console.log('Owner:', templateDetails.owner)
   console.log('Permissions:', templateDetails.permissions.toString(16))
-  console.log('IPFS URL:', templateDetails.ipfsUrl)
+  console.log('Template URI:', templateDetails.templateURI)
   console.log('Is Active:', templateDetails.isActive)
   console.log('Created At:', new Date(Number(templateDetails.createdAt) * 1000).toISOString())
 

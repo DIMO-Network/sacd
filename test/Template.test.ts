@@ -47,35 +47,35 @@ describe('Template Contract', function () {
   describe('Template Management', function () {
     it('Should create a template successfully', async function () {
       const permissions = 0x12345678
-      const ipfsUrl = 'ipfs://QmTest123'
+      const templateURI = 'ipfs://QmTest123'
 
-      await expect(template.createTemplate(permissions, ipfsUrl))
+      await expect(template.createTemplate(permissions, templateURI))
         .to.emit(template, 'TemplateCreated')
-        .withArgs(1, owner.address, permissions, ipfsUrl)
+        .withArgs(1, owner.address, permissions, templateURI)
 
       const templateData = await template.getTemplate(1)
       expect(templateData.templateId).to.equal(1)
-      expect(templateData.creator).to.equal(owner.address)
+      expect(templateData.owner).to.equal(owner.address)
       expect(templateData.permissions).to.equal(permissions)
-      expect(templateData.ipfsUrl).to.equal(ipfsUrl)
+      expect(templateData.templateURI).to.equal(templateURI)
       expect(templateData.isActive).to.be.true
     })
 
     it('Should not allow non-managers to create templates', async function () {
       const permissions = 0x12345678
-      const ipfsUrl = 'ipfs://QmTest123'
+      const templateURI = 'ipfs://QmTest123'
 
-      await expect(template.connect(user1).createTemplate(permissions, ipfsUrl)).to.be.revertedWithCustomError(
+      await expect(template.connect(user1).createTemplate(permissions, templateURI)).to.be.revertedWithCustomError(
         template,
         'AccessControlUnauthorizedAccount'
       )
     })
 
-    it('Should not create template with empty IPFS URL', async function () {
+    it('Should not create template with empty template URI', async function () {
       const permissions = 0x12345678
-      const ipfsUrl = ''
+      const templateURI = ''
 
-      await expect(template.createTemplate(permissions, ipfsUrl)).to.be.revertedWithCustomError(
+      await expect(template.createTemplate(permissions, templateURI)).to.be.revertedWithCustomError(
         template,
         'InvalidTemplateData'
       )
@@ -84,37 +84,14 @@ describe('Template Contract', function () {
     it('Should deactivate template successfully', async function () {
       // Create template first
       const permissions = 0x12345678
-      const ipfsUrl = 'ipfs://QmTest123'
-      await template.createTemplate(permissions, ipfsUrl)
+      const templateURI = 'ipfs://QmTest123'
+      await template.createTemplate(permissions, templateURI)
 
       // Deactivate template
       await expect(template.deactivateTemplate(1)).to.emit(template, 'TemplateDeactivated').withArgs(1, owner.address)
 
       const templateData = await template.getTemplate(1)
       expect(templateData.isActive).to.be.false
-    })
-
-    it('Should get templates by creator', async function () {
-      // Create multiple templates
-      await template.createTemplate(0x11111111, 'ipfs://QmTest1')
-      await template.createTemplate(0x22222222, 'ipfs://QmTest2')
-      await template.createTemplate(0x33333333, 'ipfs://QmTest3')
-
-      const creatorTemplates = await template.getTemplatesByCreator(owner.address)
-      expect(creatorTemplates).to.have.length(3)
-      expect(creatorTemplates[0]).to.equal(1)
-      expect(creatorTemplates[1]).to.equal(2)
-      expect(creatorTemplates[2]).to.equal(3)
-    })
-
-    it('Should get template count', async function () {
-      expect(await template.getTemplateCount()).to.equal(0)
-
-      await template.createTemplate(0x11111111, 'ipfs://QmTest1')
-      expect(await template.getTemplateCount()).to.equal(1)
-
-      await template.createTemplate(0x22222222, 'ipfs://QmTest2')
-      expect(await template.getTemplateCount()).to.equal(2)
     })
 
     it('Should check if template is active', async function () {
@@ -124,6 +101,83 @@ describe('Template Contract', function () {
 
       await template.deactivateTemplate(1)
       expect(await template.isTemplateActive(1)).to.be.false
+    })
+  })
+
+  describe('ERC721 Functionality', function () {
+    it('Should mint NFT when creating template', async function () {
+      const permissions = 0x12345678
+      const templateURI = 'ipfs://QmTest123'
+
+      await template.createTemplate(permissions, templateURI)
+
+      // Check that NFT was minted to creator
+      expect(await template.ownerOf(1)).to.equal(owner.address)
+      expect(await template.balanceOf(owner.address)).to.equal(1)
+    })
+
+    it('Should return correct tokenURI for IPFS URLs', async function () {
+      const permissions = 0x12345678
+      const templateURI = 'ipfs://QmTest123'
+
+      await template.createTemplate(permissions, templateURI)
+
+      // Check tokenURI returns the DIMO assets URL with IPFS URL
+      expect(await template.tokenURI(1)).to.equal('https://assets.dimo.org/' + templateURI)
+    })
+
+    it('Should return correct totalSupply', async function () {
+      // Initially no templates
+      expect(await template.totalSupply()).to.equal(0)
+
+      // Create templates
+      await template.createTemplate(0x11111111, 'ipfs://QmTest1')
+      expect(await template.totalSupply()).to.equal(1)
+
+      await template.createTemplate(0x22222222, 'ipfs://QmTest2')
+      expect(await template.totalSupply()).to.equal(2)
+    })
+
+    it('Should allow NFT transfer', async function () {
+      const permissions = 0x12345678
+      const ipfsUrl = 'ipfs://QmTest123'
+
+      await template.createTemplate(permissions, ipfsUrl)
+
+      // Transfer NFT to user1
+      await template.transferFrom(owner.address, user1.address, 1)
+
+      // Check ownership changed
+      expect(await template.ownerOf(1)).to.equal(user1.address)
+      expect(await template.balanceOf(owner.address)).to.equal(0)
+      expect(await template.balanceOf(user1.address)).to.equal(1)
+    })
+
+    it('Should revert tokenURI for non-existent template', async function () {
+      await expect(template.tokenURI(999)).to.be.revertedWithCustomError(template, 'TemplateNotFound')
+    })
+
+    it('Should return DIMO assets URL format for IPFS tokenURI', async function () {
+      const permissions = 0x12345678
+      const templateURI = 'ipfs://QmTest123'
+
+      await template.createTemplate(permissions, templateURI)
+
+      const tokenURI = await template.tokenURI(1)
+      expect(tokenURI).to.equal('https://assets.dimo.org/ipfs://QmTest123')
+      expect(tokenURI).to.include('https://assets.dimo.org/')
+      expect(tokenURI).to.include(templateURI)
+    })
+
+    it('Should return templateURI as-is for non-IPFS URLs', async function () {
+      const permissions = 0x12345678
+      const templateURI = 'https://example.com/template.json'
+
+      await template.createTemplate(permissions, templateURI)
+
+      const tokenURI = await template.tokenURI(1)
+      expect(tokenURI).to.equal(templateURI)
+      expect(tokenURI).to.not.include('https://assets.dimo.org/')
     })
   })
 
@@ -146,7 +200,7 @@ describe('Template Contract', function () {
       // Get template data directly
       const templateData = await template.getTemplate(templateId)
       const permissions = templateData.permissions
-      const finalSource = templateData.ipfsUrl + '&source=template-status-test'
+      const finalSource = templateData.templateURI
 
       // Call SACD with template ID
       await sacd

@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
 import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol';
+import '@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
 
 import './interfaces/ITemplate.sol';
@@ -14,12 +15,11 @@ import './interfaces/ITemplate.sol';
  * Templates include predefined bit arrays (permissions) and IPFS URLs to templatable JSON documents.
  * Each template is associated with a creator's public key and can be used to create SACD permissions.
  */
-contract Template is ITemplate, Initializable, AccessControlUpgradeable, UUPSUpgradeable {
+contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, ERC721Upgradeable {
   using Strings for uint256;
 
   struct TemplateStorage {
-    mapping(uint256 => Template) templates;
-    mapping(address => uint256[]) creatorTemplates;
+    mapping(uint256 => TemplateData) templates;
     uint256 templateCounter;
   }
 
@@ -28,6 +28,26 @@ contract Template is ITemplate, Initializable, AccessControlUpgradeable, UUPSUpg
 
   // keccak256(abi.encode(uint256(keccak256("Template.storage")) - 1)) & ~bytes32(uint256(0xff))
   bytes32 private constant TEMPLATE_STORAGE = 0x20aa246ca08ba235ee1e06ff6016f518804d64da710b8279d7124e598d8d5201;
+
+  // Events
+  event TemplateCreated(uint256 indexed templateId, address indexed creator, uint256 permissions, string ipfsUrl);
+  event TemplateDeactivated(uint256 indexed templateId, address indexed creator);
+
+  // Structs
+  struct TemplateData {
+    uint256 templateId;
+    address owner;
+    uint256 permissions;
+    string templateURI;
+    bool isActive;
+    uint256 createdAt;
+  }
+
+  // Errors
+  error TemplateNotFound(uint256 templateId);
+  error UnauthorizedTemplateAccess(address caller, uint256 templateId);
+  error InvalidTemplateData();
+  error TemplateAlreadyExists(uint256 templateId);
 
   /// @custom:oz-upgrades-unsafe-allow constructor
   constructor() {
@@ -41,23 +61,24 @@ contract Template is ITemplate, Initializable, AccessControlUpgradeable, UUPSUpg
   function initialize() external initializer {
     __AccessControl_init();
     __UUPSUpgradeable_init();
+    __ERC721_init('Template', 'TMPL');
 
     _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     _grantRole(TEMPLATE_MANAGER_ROLE, msg.sender);
   }
 
   /**
-   * @notice Creates a new template with predefined permissions and IPFS URL
+   * @notice Creates a new template with predefined permissions and template URI
    * @dev Only template managers can create templates
    * @param permissions The uint256 that represents the byte array of permissions
-   * @param ipfsUrl The IPFS URL to the templatable JSON document
+   * @param templateURI The URI to the templatable JSON document
    * @return templateId The unique identifier for the created template
    */
   function createTemplate(
     uint256 permissions,
-    string calldata ipfsUrl
+    string calldata templateURI
   ) external onlyRole(TEMPLATE_MANAGER_ROLE) returns (uint256 templateId) {
-    if (bytes(ipfsUrl).length == 0) {
+    if (bytes(templateURI).length == 0) {
       revert InvalidTemplateData();
     }
 
@@ -65,19 +86,21 @@ contract Template is ITemplate, Initializable, AccessControlUpgradeable, UUPSUpg
 
     templateId = ++$.templateCounter;
 
-    Template memory newTemplate = Template({
+    TemplateData memory newTemplate = TemplateData({
       templateId: templateId,
-      creator: msg.sender,
+      owner: msg.sender,
       permissions: permissions,
-      ipfsUrl: ipfsUrl,
+      templateURI: templateURI,
       isActive: true,
       createdAt: block.timestamp
     });
 
     $.templates[templateId] = newTemplate;
-    $.creatorTemplates[msg.sender].push(templateId);
 
-    emit TemplateCreated(templateId, msg.sender, permissions, ipfsUrl);
+    // Mint NFT to the creator
+    _mint(msg.sender, templateId);
+
+    emit TemplateCreated(templateId, msg.sender, permissions, templateURI);
   }
 
   /**
@@ -86,15 +109,16 @@ contract Template is ITemplate, Initializable, AccessControlUpgradeable, UUPSUpg
    * @param templateId The ID of the template to deactivate
    */
   function deactivateTemplate(uint256 templateId) external {
-    TemplateStorage storage $ = _getTemplateStorage();
-    Template storage template = $.templates[templateId];
-
-    if (template.creator == address(0)) {
-      revert TemplateNotFound(templateId);
+    // Check if caller owns the template NFT
+    if (ownerOf(templateId) != msg.sender) {
+      revert UnauthorizedTemplateAccess(msg.sender, templateId);
     }
 
-    if (template.creator != msg.sender) {
-      revert UnauthorizedTemplateAccess(msg.sender, templateId);
+    TemplateStorage storage $ = _getTemplateStorage();
+    TemplateData storage template = $.templates[templateId];
+
+    if (template.owner == address(0)) {
+      revert TemplateNotFound(templateId);
     }
 
     template.isActive = false;
@@ -107,33 +131,15 @@ contract Template is ITemplate, Initializable, AccessControlUpgradeable, UUPSUpg
    * @param templateId The ID of the template to retrieve
    * @return The template data
    */
-  function getTemplate(uint256 templateId) external view returns (Template memory) {
+  function getTemplate(uint256 templateId) external view returns (TemplateData memory) {
     TemplateStorage storage $ = _getTemplateStorage();
-    Template memory template = $.templates[templateId];
+    TemplateData memory template = $.templates[templateId];
 
-    if (template.creator == address(0)) {
+    if (template.owner == address(0)) {
       revert TemplateNotFound(templateId);
     }
 
     return template;
-  }
-
-  /**
-   * @notice Gets all template IDs created by a specific address
-   * @param creator The address of the template creator
-   * @return Array of template IDs
-   */
-  function getTemplatesByCreator(address creator) external view returns (uint256[] memory) {
-    TemplateStorage storage $ = _getTemplateStorage();
-    return $.creatorTemplates[creator];
-  }
-
-  /**
-   * @notice Gets the total number of templates created
-   * @return The total template count
-   */
-  function getTemplateCount() external view returns (uint256) {
-    return _getTemplateStorage().templateCounter;
   }
 
   /**
@@ -143,8 +149,60 @@ contract Template is ITemplate, Initializable, AccessControlUpgradeable, UUPSUpg
    */
   function isTemplateActive(uint256 templateId) external view returns (bool) {
     TemplateStorage storage $ = _getTemplateStorage();
-    Template memory template = $.templates[templateId];
-    return template.creator != address(0) && template.isActive;
+    TemplateData memory template = $.templates[templateId];
+
+    // Check if template exists and is active
+    if (template.owner == address(0)) {
+      return false;
+    }
+
+    return template.isActive;
+  }
+
+  /**
+   * @notice Returns the token URI for a given template ID
+   * @dev Overrides ERC721 tokenURI function
+   * @param tokenId The template ID
+   * @return The token URI
+   */
+  function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+    TemplateStorage storage $ = _getTemplateStorage();
+    TemplateData memory template = $.templates[tokenId];
+
+    if (template.owner == address(0)) {
+      revert TemplateNotFound(tokenId);
+    }
+
+    // If template URI starts with ipfs://, prepend DIMO assets URL
+    if (bytes(template.templateURI).length >= 7) {
+      string memory prefix = _substring(template.templateURI, 0, 7);
+      if (keccak256(abi.encodePacked(prefix)) == keccak256(abi.encodePacked('ipfs://'))) {
+        return string.concat('https://assets.dimo.org/', template.templateURI);
+      }
+    }
+
+    // Otherwise return the template URI as-is
+    return template.templateURI;
+  }
+
+  /**
+   * @notice Returns the total supply of templates
+   * @dev Overrides ERC721 totalSupply function
+   * @return The total number of templates
+   */
+  function totalSupply() public view virtual returns (uint256) {
+    return _getTemplateStorage().templateCounter;
+  }
+
+  /**
+   * @notice Override supportsInterface to handle multiple inheritance
+   * @param interfaceId The interface ID to check
+   * @return True if the interface is supported
+   */
+  function supportsInterface(
+    bytes4 interfaceId
+  ) public view virtual override(AccessControlUpgradeable, ERC721Upgradeable) returns (bool) {
+    return AccessControlUpgradeable.supportsInterface(interfaceId) || ERC721Upgradeable.supportsInterface(interfaceId);
   }
 
   /**
@@ -161,5 +219,17 @@ contract Template is ITemplate, Initializable, AccessControlUpgradeable, UUPSUpg
     assembly {
       $.slot := TEMPLATE_STORAGE
     }
+  }
+
+  /**
+   * @dev Helper function to extract substring
+   */
+  function _substring(string memory str, uint256 startIndex, uint256 endIndex) private pure returns (string memory) {
+    bytes memory strBytes = bytes(str);
+    bytes memory result = new bytes(endIndex - startIndex);
+    for (uint256 i = startIndex; i < endIndex; i++) {
+      result[i - startIndex] = strBytes[i];
+    }
+    return string(result);
   }
 }
