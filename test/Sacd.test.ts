@@ -12,13 +12,15 @@ describe('Sacd', function () {
     const DEFAULT_EXPIRATION = BigInt((await time.latest()) + time.duration.years(1))
 
     const mockErc721Factory = await hre.ethers.getContractFactory('MockERC721withSacd')
+    const mockErc20Factory = await hre.ethers.getContractFactory('MockERC20')
 
     const sacd = (await ignition.deploy(SacdModule)).sacd as unknown as Sacd
     const mockErc721 = await mockErc721Factory.deploy(await sacd.getAddress())
+    const mockErc20 = await mockErc20Factory.deploy()
 
     await mockErc721.mint(grantor.address)
 
-    return { owner, grantor, grantee, otherAccount, mockErc721, sacd, DEFAULT_EXPIRATION }
+    return { owner, grantor, grantee, otherAccount, mockErc721, mockErc20, sacd, DEFAULT_EXPIRATION }
   }
 
   describe('setPermissions', () => {
@@ -219,7 +221,173 @@ describe('Sacd', function () {
     })
   })
 
+  describe('setPayment', () => {
+    context('Error handling', () => {
+      it('Should revert if grantor is address(0)', async () => {
+        const { mockErc20, sacd, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        await expect(
+          sacd
+            .connect(grantee)
+            .setPayment(
+              await mockErc20.getAddress(),
+              hre.ethers.ZeroAddress,
+              123n,
+              DEFAULT_EXPIRATION,
+              '0x000000',
+              C.MOCK_SOURCE
+            )
+        ).to.be.revertedWithCustomError(sacd, 'ZeroAddress')
+      })
+      it('Should revert if asset is address(0) and currency is empty', async () => {
+        const { sacd, grantee, grantor, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        await expect(
+          sacd
+            .connect(grantee)
+            .setPayment(hre.ethers.ZeroAddress, grantor.address, 123n, DEFAULT_EXPIRATION, '0x000000', C.MOCK_SOURCE)
+        ).to.be.revertedWithCustomError(sacd, 'InvalidCurrency')
+      })
+      it('Should revert if asset is not address(0) and currency is not empty', async () => {
+        const { mockErc20, sacd, grantee, grantor, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        await expect(
+          sacd
+            .connect(grantee)
+            .setPayment(
+              await mockErc20.getAddress(),
+              grantor.address,
+              123n,
+              DEFAULT_EXPIRATION,
+              C.MOCK_PAYMENT_CURRENCY,
+              C.MOCK_SOURCE
+            )
+        ).to.be.revertedWithCustomError(sacd, 'InvalidCurrency')
+      })
+    })
+
+    context('ERC20 asset', () => {
+      context('State', () => {
+        it('Should correctly set payment infos', async () => {
+          const { mockErc20, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+          const mockErc20Address = await mockErc20.getAddress()
+
+          await sacd
+            .connect(grantee)
+            .setPayment(
+              mockErc20Address,
+              grantor.address,
+              C.MOCK_PAYMENT_AMOUNT,
+              DEFAULT_EXPIRATION,
+              '0x000000',
+              C.MOCK_SOURCE
+            )
+
+          const paymentRecord = await sacd.currentPaymentRecord(mockErc20Address, grantee.address, grantor.address)
+
+          expect(paymentRecord.amount).to.equal(C.MOCK_PAYMENT_AMOUNT)
+          expect(paymentRecord.expiration).to.equal(DEFAULT_EXPIRATION)
+          expect(paymentRecord.currency).to.equal('0x000000')
+          expect(paymentRecord.source).to.equal(C.MOCK_SOURCE)
+        })
+      })
+
+      context('Events', () => {
+        it('Should emit PaymentSet with correct params', async () => {
+          const { mockErc20, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+          const mockErc20Address = await mockErc20.getAddress()
+
+          await expect(
+            sacd
+              .connect(grantee)
+              .setPayment(
+                mockErc20Address,
+                grantor.address,
+                C.MOCK_PAYMENT_AMOUNT,
+                DEFAULT_EXPIRATION,
+                '0x000000',
+                C.MOCK_SOURCE
+              )
+          )
+            .to.emit(sacd, 'PaymentSet')
+            .withArgs(
+              mockErc20Address,
+              grantee.address,
+              grantor.address,
+              C.MOCK_PAYMENT_AMOUNT,
+              DEFAULT_EXPIRATION,
+              C.MOCK_SOURCE
+            )
+        })
+      })
+    })
+
+    context('Fiat asset', () => {
+      context('State', () => {
+        it('Should correctly set payment infos', async () => {
+          const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+          await sacd
+            .connect(grantee)
+            .setPayment(
+              hre.ethers.ZeroAddress,
+              grantor.address,
+              C.MOCK_PAYMENT_AMOUNT,
+              DEFAULT_EXPIRATION,
+              C.MOCK_PAYMENT_CURRENCY,
+              C.MOCK_SOURCE
+            )
+
+          const paymentRecord = await sacd.currentPaymentRecord(
+            hre.ethers.ZeroAddress,
+            grantee.address,
+            grantor.address
+          )
+
+          expect(paymentRecord.amount).to.equal(C.MOCK_PAYMENT_AMOUNT)
+          expect(paymentRecord.expiration).to.equal(DEFAULT_EXPIRATION)
+          expect(paymentRecord.currency).to.equal(C.MOCK_PAYMENT_CURRENCY)
+          expect(paymentRecord.source).to.equal(C.MOCK_SOURCE)
+        })
+      })
+
+      context('Events', () => {
+        it('Should emit PaymentSet with correct params', async () => {
+          const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+          await expect(
+            sacd
+              .connect(grantee)
+              .setPayment(
+                hre.ethers.ZeroAddress,
+                grantor.address,
+                C.MOCK_PAYMENT_AMOUNT,
+                DEFAULT_EXPIRATION,
+                C.MOCK_PAYMENT_CURRENCY,
+                C.MOCK_SOURCE
+              )
+          )
+            .to.emit(sacd, 'PaymentSet')
+            .withArgs(
+              hre.ethers.ZeroAddress,
+              grantee.address,
+              grantor.address,
+              C.MOCK_PAYMENT_AMOUNT,
+              DEFAULT_EXPIRATION,
+              C.MOCK_SOURCE
+            )
+        })
+      })
+    })
+  })
+
   describe('hasPermission', () => {
+    it('Should return false if token Id does not exist', async () => {
+      const { mockErc721, sacd, grantee } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
+
+      expect(await sacd.hasPermission(mockErc721Address, 99n, grantee.address, 0)).to.be.false
+    })
     it('Should return false if token Id does not match', async () => {
       const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
       const mockErc721Address = await mockErc721.getAddress()
@@ -311,6 +479,12 @@ describe('Sacd', function () {
 
       expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.true
     })
+    it('Should return true if grantee is the token owner', async () => {
+      const { mockErc721, sacd, grantor } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
+
+      expect(await sacd.hasPermission(mockErc721Address, 1n, grantor.address, 4)).to.be.true
+    })
 
     context('on transfer', () => {
       it('Should return false if when token ID is transferred', async () => {
@@ -335,10 +509,26 @@ describe('Sacd', function () {
 
         expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.false
       })
+      it('Should return false for the former token ID owner if when token ID is transferred', async () => {
+        const { mockErc721, sacd, grantor, otherAccount } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+
+        expect(await sacd.hasPermission(mockErc721Address, 1n, grantor.address, 4)).to.be.true
+
+        await mockErc721.connect(grantor).transferFrom(grantor.address, otherAccount.address, 1n)
+
+        expect(await sacd.hasPermission(mockErc721Address, 1n, grantor.address, 4)).to.be.false
+      })
     })
   })
 
   describe('hasPermissions', () => {
+    it('Should return false if token Id does not exist', async () => {
+      const { mockErc721, sacd, grantee } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
+
+      expect(await sacd.hasPermissions(mockErc721Address, 99n, grantee.address, C.MOCK_PERMISSIONS)).to.be.false
+    })
     it('Should return false if token Id does not match', async () => {
       const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
       const mockErc721Address = await mockErc721.getAddress()
@@ -433,6 +623,12 @@ describe('Sacd', function () {
 
       expect(await sacd.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.be.true
     })
+    it('Should return true if grantee is the token owner', async () => {
+      const { mockErc721, sacd, grantor } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
+
+      expect(await sacd.hasPermissions(mockErc721Address, 1n, grantor.address, C.MOCK_PERMISSIONS)).to.be.true
+    })
 
     context('on transfer', () => {
       it('Should return false if when token ID is transferred', async () => {
@@ -457,10 +653,26 @@ describe('Sacd', function () {
 
         expect(await sacd.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.be.false
       })
+      it('Should return false for the former token ID owner if when token ID is transferred', async () => {
+        const { mockErc721, sacd, grantor, otherAccount } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+
+        expect(await sacd.hasPermissions(mockErc721Address, 1n, grantor.address, C.MOCK_PERMISSIONS)).to.be.true
+
+        await mockErc721.connect(grantor).transferFrom(grantor.address, otherAccount.address, 1n)
+
+        expect(await sacd.hasPermissions(mockErc721Address, 1n, grantor.address, C.MOCK_PERMISSIONS)).to.be.false
+      })
     })
   })
 
   describe('getPermissions', () => {
+    it('Should return 0 if token Id does not exist', async () => {
+      const { mockErc721, sacd, grantee } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
+
+      expect(await sacd.getPermissions(mockErc721Address, 99n, grantee.address, C.MOCK_PERMISSIONS)).to.equal(0)
+    })
     it('Should return 0 if token Id does not match', async () => {
       const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
       const mockErc721Address = await mockErc721.getAddress()
@@ -537,6 +749,14 @@ describe('Sacd', function () {
       // Test               771 11 00 00 00 11
       // Result             768 11 00 00 00 00
       expect(await sacd.getPermissions(mockErc721Address, 1n, grantee.address, 771)).to.equal(768)
+    })
+    it('Should return the input permissions if grantee is the token owner', async () => {
+      const { mockErc721, sacd, grantor } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
+
+      // Test               771 11 00 00 00 11
+      // Result             768 11 00 00 00 00
+      expect(await sacd.getPermissions(mockErc721Address, 1n, grantor.address, 771)).to.equal(771)
     })
 
     context('on transfer', () => {

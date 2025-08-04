@@ -2,25 +2,30 @@
 pragma solidity ^0.8.24;
 
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
-import '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
-import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol';
+import {Initializable} from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
+import {UUPSUpgradeable} from '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
+import {AccessControlUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol';
 
 import './interfaces/ISacd.sol';
 import './interfaces/ITemplate.sol';
 
 /**
  * @title Service Access Contract Definition (SACD)
- * @notice This contract manages permission records associated with specific ERC721 tokens.
- * It allows the owner of a token to grant and manage permissions to other addresses (grantees),
- * and these permissions are tied to specific a ERC721 token. When a token is transferred,
- * the permissions associated with it are invalidated
+ * @notice This contract manages permission records associated with specific ERC721 tokens
+ * and payment records between users. It allows the owner of a token to grant and manage
+ * permissions to other addresses (grantees), and these permissions are tied to a specific
+ * ERC721 token. When a token is transferred, the permissions associated with it are invalidated.
+ * The contract also tracks payment records between grantees and grantors, supporting both
+ * asset-specific and fiat currency payments with expiration timestamps.
  */
 contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable {
   struct SacdStorage {
     mapping(address asset => mapping(uint256 tokenId => uint256 version)) tokenIdToVersion;
     mapping(address asset => mapping(uint256 tokenId => mapping(uint256 version => mapping(address grantee => PermissionRecord)))) permissionRecords;
     address templateContract; // Address of the Template contract
+    mapping(address asset => mapping(address grantee => mapping(address grantor => mapping(uint256 paymentId => PaymentRecord)))) paymentRecords;
+    // Track the next payment ID for each (asset, grantee, grantor) combination
+    mapping(address asset => mapping(address grantee => mapping(address grantor => uint256))) nextPaymentId;
   }
 
   bytes32 constant UPGRADER_ROLE = keccak256('UPGRADER_ROLE');
@@ -36,11 +41,20 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     uint256 expiration,
     string source
   );
+  event PaymentSet(
+    address indexed asset,
+    address indexed grantee,
+    address indexed grantor,
+    uint256 amount,
+    uint256 expiration,
+    string source
+  );
 
   error ZeroAddress();
   error Unauthorized(address addr);
   error InvalidTokenId(address asset, uint256 tokenId);
   error TemplateNotActive(uint256 templateId);
+  error InvalidCurrency();
 
   /// @custom:oz-upgrades-unsafe-allow constructor
   constructor() {
@@ -138,13 +152,74 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   }
 
   /**
+   * @notice Sets a payment record from the caller to a grantor
+   * @dev Creates a new payment record and increments the payment ID counter.
+   *      Either asset or currency must be specified, but not both.
+   *      Asset address(0) is used for fiat payments.
+   * @param asset The asset contract address. Use address(0) for non-asset specific payments
+   * @param grantor The address that receives the payment
+   * @param amount The payment amount
+   * @param expiration Timestamp when the payment record expires
+   * @param currency The currency code (3 bytes) for the payment. Use 0x000000 for asset-specific payments
+   * @param source The URI source associated with the payment, typically containing payment details
+   * @custom:throws ZeroAddress If grantor address is zero
+   * @custom:throws InvalidCurrency If both asset and currency are zero or if both are non-zero
+   * @custom:emits PaymentSet When a payment record is successfully created
+   */
+  function setPayment(
+    address asset,
+    address grantor,
+    uint256 amount,
+    uint64 expiration,
+    bytes3 currency,
+    string calldata source
+  ) external {
+    if (grantor == address(0)) {
+      revert ZeroAddress();
+    }
+    if (asset == address(0) && currency == 0x000000) {
+      revert InvalidCurrency();
+    }
+    if (asset != address(0) && currency != 0x000000) {
+      revert InvalidCurrency();
+    }
+
+    SacdStorage storage $ = _getSacdStorage();
+    uint256 paymentId = $.nextPaymentId[asset][msg.sender][grantor]++;
+
+    $.paymentRecords[asset][msg.sender][grantor][paymentId] = PaymentRecord({
+      amount: amount,
+      expiration: expiration,
+      currency: currency,
+      source: source
+    });
+
+    emit PaymentSet(asset, msg.sender, grantor, amount, expiration, source);
+  }
+
+  /**
+   * @notice When a user transfers their token, the permissions must be reset
+   * @dev This function should be called by the ERC721 contract when a transfer occurs.
+   * It increments the version to invalidate old permissions.
+   * @param asset The asset contract address
+   * @param tokenId The transferred token ID
+   */
+  function onTransfer(address asset, uint256 tokenId) external {
+    if (msg.sender != asset) {
+      revert Unauthorized(msg.sender);
+    }
+    _getSacdStorage().tokenIdToVersion[asset][tokenId]++;
+  }
+
+  /**
    * @notice Checks if a user has a permission
    * @dev The permission is identified by its relative index in the byte array
+   * @dev The owner of the token always has all permissions
    * @param asset The contract address of the ERC721
    * @param tokenId Token ID associated with the permissions
    * @param grantee The address to be checked
    * @param permissionIndex The relative index of the permission
-   * @return bool Returns true if the grantee has the specified permission and it has not expired
+   * @return bool Returns true if the grantee has the specified permission and it has not expired, or if the grantee is the token owner
    */
   function hasPermission(
     address asset,
@@ -152,6 +227,14 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     address grantee,
     uint8 permissionIndex
   ) external view returns (bool) {
+    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
+      if (tokenIdOwner == grantee) {
+        return true;
+      }
+    } catch {
+      return false;
+    }
+
     SacdStorage storage $ = _getSacdStorage();
 
     uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
@@ -171,11 +254,12 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
 
   /**
    * @notice Checks if a user has a set of permissions
+   * @dev The owner of the token always has all permissions
    * @param asset The contract address of the ERC721
    * @param tokenId Token ID associated with the permissions
    * @param grantee The address to be checked
    * @param permissions The uint256 that represents the byte array of permissions
-   * @return bool Returns true if the grantee has all the specified permissions and they have not expired
+   * @return bool Returns true if the grantee has all the specified permissions and they have not expired, or if the grantee is the token owner
    */
   function hasPermissions(
     address asset,
@@ -183,6 +267,14 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     address grantee,
     uint256 permissions
   ) external view returns (bool) {
+    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
+      if (tokenIdOwner == grantee) {
+        return true;
+      }
+    } catch {
+      return false;
+    }
+
     SacdStorage storage $ = _getSacdStorage();
 
     uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
@@ -202,12 +294,14 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
 
   /**
    * @notice Retrieves valid permissions for a grantee
-   * @dev Returns the intersection of the grantee's permissions and the requested permissions
-   * @param asset The contract address of the ERC721
-   * @param tokenId Token ID associated with the permissions
-   * @param grantee The address to be checked
-   * @param permissions The uint256 that represents the byte array of permissions to be checked
-   * @return uint256 Returns a uint256 that represents the valid permissions
+   * @dev Returns the intersection of the grantee's permissions and the requested permissions.
+   *      If the grantee is the token owner, all requested permissions are considered valid.
+   *      If the token doesn't exist or the permissions have expired, no permissions are returned.
+   * @param asset The contract address of the ERC721 token
+   * @param tokenId The ID of the token for which permissions are being checked
+   * @param grantee The address of the account whose permissions are being retrieved
+   * @param permissions A bitmask representing the permissions to check against
+   * @return uint256 A bitmask representing the valid permissions for the grantee
    */
   function getPermissions(
     address asset,
@@ -215,6 +309,14 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     address grantee,
     uint256 permissions
   ) external view returns (uint256) {
+    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
+      if (tokenIdOwner == grantee) {
+        return permissions;
+      }
+    } catch {
+      return uint256(0);
+    }
+
     SacdStorage storage $ = _getSacdStorage();
 
     uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
@@ -230,20 +332,6 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     }
 
     return pr.permissions & permissions;
-  }
-
-  /**
-   * @notice When a user transfers their token, the permissions must be reset
-   * @dev This function should be called by the ERC721 contract when a transfer occurs.
-   * It increments the version to invalidate old permissions.
-   * @param asset The asset contract address
-   * @param tokenId The transferred token ID
-   */
-  function onTransfer(address asset, uint256 tokenId) external {
-    if (msg.sender != asset) {
-      revert Unauthorized(msg.sender);
-    }
-    _getSacdStorage().tokenIdToVersion[asset][tokenId]++;
   }
 
   /**
@@ -286,6 +374,54 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
 
     uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
     permissionRecord = $.permissionRecords[asset][tokenId][tokenIdVersion][grantee];
+  }
+
+  /**
+   * @notice Retrieves a specific payment record based on the provided identifiers
+   * @param asset The asset contract address. For non-asset specific payments, this will be address(0)
+   * @param grantee The address that made the payment
+   * @param grantor The address that received the payment
+   * @param paymentId The unique identifier for the specific payment record
+   * @return paymentRecord The payment record containing amount, expiration, currency, and source information
+   */
+  function paymentRecords(
+    address asset,
+    address grantee,
+    address grantor,
+    uint256 paymentId
+  ) external view returns (PaymentRecord memory paymentRecord) {
+    paymentRecord = _getSacdStorage().paymentRecords[asset][grantee][grantor][paymentId];
+  }
+
+  /**
+   * @notice Retrieves the most recent payment record between a grantee and grantor
+   * @dev Returns the latest payment record based on the nextPaymentId counter.
+   *      If no payment records exist (nextPaymentId is 0), returns an empty record.
+   * @param asset The asset contract address. For non-asset specific payments, this will be address(0)
+   * @param grantee The address that made the payment
+   * @param grantor The address that received the payment
+   * @return paymentRecord The most recent payment record containing amount, expiration, currency, and source information
+   */
+  function currentPaymentRecord(
+    address asset,
+    address grantee,
+    address grantor
+  ) external view returns (PaymentRecord memory paymentRecord) {
+    SacdStorage storage $ = _getSacdStorage();
+    uint256 paymentId = $.nextPaymentId[asset][grantee][grantor];
+    if (paymentId == 0) return paymentRecord;
+    paymentRecord = _getSacdStorage().paymentRecords[asset][grantee][grantor][paymentId - 1];
+  }
+
+  /**
+   * @notice Returns the next payment ID for a specific asset, grantee, and grantor combination
+   * @param asset The asset contract address. For non-asset specific payments, this will be address(0)
+   * @param grantee The address that makes payments
+   * @param grantor The address that receives payments
+   * @return paymentId The next available payment ID for the specified combination
+   */
+  function nextPaymentId(address asset, address grantee, address grantor) external view returns (uint256 paymentId) {
+    paymentId = _getSacdStorage().nextPaymentId[asset][grantee][grantor];
   }
 
   /**

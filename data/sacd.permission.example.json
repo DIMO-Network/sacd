@@ -1,0 +1,41 @@
+{
+    "specversion": "1.0",
+    "time": "2025-03-11T14:30:00Z",
+    "type": "dimo.sacd",
+    "data": {
+        "grantor": {
+            "address": "0xC008EF40B0b42AAD7e34879EB024385024f753ea",
+            "name": "Alice"
+        },
+        "grantee": {
+            "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+            "name": "Bob"
+        },
+        "effectiveAt": "2025-03-11T14:30:00Z",
+        "expiresAt": "2030-12-20T05:20:45Z",
+        "additionalDates": {},
+        "agreements": [
+            {
+                "type": "permission",
+                "asset": "did:erc721:80002:0x45fbCD3ef7361d156e8b16F5538AE36DEdf61Da8:928",
+                "permissions": [
+                    {
+                        "name": "privilege:ExecuteCommands",
+                        "description": "Permission to send commands to the vehicle"
+                    },
+                    {
+                        "name": "privilege:GetApproximateLocation",
+                        "description": "Permission to view current location data"
+                    },
+                    {
+                        "name": "privilege:GetNonLocationHistory",
+                        "description": "Permission to view historical location data"
+                    }
+                ],
+                "attachments": [],
+                "extensions": {}
+            }
+        ]
+    },
+    "signature": "0x9e39ab501725553945c47e4d3d4d4bdf2944e2ae3e6575a637b6f6b97cd2a5245247afae19ae1697c5db03a2350013b37f6f5e70fd15eaec9001977b7ed639061c"
+}

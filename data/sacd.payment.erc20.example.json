@@ -1,0 +1,60 @@
+{
+    "specversion": "1.0",
+    "time": "2025-03-11T14:30:00Z",
+    "type": "dimo.sacd",
+    "data": {
+        "grantor": {
+            "address": "0xC008EF40B0b42AAD7e34879EB024385024f753ea",
+            "name": "Alice",
+            "additionalInfo": {
+                "email": "alice@dev.example"
+            }
+        },
+        "grantee": {
+            "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+            "name": "Bob",
+            "additionalInfo": {}
+        },
+        "effectiveAt": "2025-03-11T14:30:00Z",
+        "expiresAt": "2030-12-20T05:20:45Z",
+        "additionalDates": {
+            "nextPaymentDue": "2025-04-11T00:00:00Z"
+        },
+        "agreements": [
+            {
+                "type": "payment",
+                "asset": "did:erc20:80002:0x21cFE003997fB7c2B3cfe5cf71e7833B7B2eCe10",
+                "payment": {
+                    "amount": "125000000000000000000000",
+                    "recurrence": "monthly",
+                    "terms": {
+                        "initialPayment": "1000000000000000000000",
+                        "paymentMethod": "direct transfer"
+                    }
+                },
+                "purpose": "Subscription service for vehicle data",
+                "attachments": [
+                    {
+                        "name": "Service Agreement",
+                        "description": "Full terms of service",
+                        "contentType": "application/pdf",
+                        "uri": "ipfs://QmXyzAbC123..."
+                    },
+                    {
+                        "name": "Payment Schedule",
+                        "description": "Detailed payment timeline",
+                        "contentType": "application/json",
+                        "uri": "ipfs://QmAbcXyz456..."
+                    }
+                ],
+                "extensions": {
+                    "invoicing": {
+                        "invoiceFrequency": "monthly",
+                        "invoiceRecipient": "billing@corp.example"
+                    }
+                }
+            }
+        ]
+    },
+    "signature": "0x9337edd7467a35c5f3505c04b9e92b791257c8b0064c05736efeda7f041b10751f0c65106c12a9bb5108abe94357372ff4882a10a21c24fbf7edaa3ef9b99ef91c"
+}
