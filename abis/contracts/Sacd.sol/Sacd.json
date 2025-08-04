@@ -89,6 +89,17 @@
     "type": "error"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "templateId",
+        "type": "uint256"
+      }
+    ],
+    "name": "TemplateNotActive",
+    "type": "error"
+  },
+  {
     "inputs": [],
     "name": "UUPSUnauthorizedCallContext",
     "type": "error"
@@ -420,6 +431,11 @@
             "internalType": "string",
             "name": "source",
             "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "templateId",
+            "type": "uint256"
           }
         ],
         "internalType": "struct ISacd.PermissionRecord",
@@ -744,6 +760,11 @@
             "internalType": "string",
             "name": "source",
             "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "templateId",
+            "type": "uint256"
           }
         ],
         "internalType": "struct ISacd.PermissionRecord",
@@ -872,9 +893,27 @@
         "internalType": "string",
         "name": "source",
         "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "templateId",
+        "type": "uint256"
       }
     ],
     "name": "setPermissions",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "templateContractAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setTemplateContract",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
