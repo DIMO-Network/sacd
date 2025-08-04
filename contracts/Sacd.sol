@@ -55,6 +55,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   error InvalidTokenId(address asset, uint256 tokenId);
   error TemplateNotActive(uint256 templateId);
   error InvalidCurrency();
+  error TemplatePermissionsMismatch(uint256 templateId, uint256 expectedPermissions, uint256 providedPermissions);
 
   /// @custom:oz-upgrades-unsafe-allow constructor
   constructor() {
@@ -135,7 +136,23 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
         revert ZeroAddress();
       }
 
+      // Validate template permissions if template is used
       SacdStorage storage $ = _getSacdStorage();
+
+      if (templateId != 0) {
+        address templateContract = $.templateContract;
+
+        if (templateContract != address(0)) {
+          try ITemplate(templateContract).getTemplate(templateId) returns (ITemplate.Template memory template) {
+            if (template.permissions != permissions) {
+              revert TemplatePermissionsMismatch(templateId, template.permissions, permissions);
+            }
+          } catch {
+            // If template contract call fails, assume template is invalid
+            revert TemplateNotActive(templateId);
+          }
+        }
+      }
 
       uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
       $.permissionRecords[asset][tokenId][tokenIdVersion][grantee] = PermissionRecord(

@@ -97,6 +97,63 @@ describe('Sacd', function () {
           .to.be.revertedWithCustomError(sacd, 'InvalidTokenId')
           .withArgs(await mockErc721.getAddress(), 2)
       })
+      it('Should revert if template permissions do not match', async () => {
+        const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        // Deploy template contract
+        const TemplateModule = await import('../ignition/modules/Template')
+        const template = (await ignition.deploy(TemplateModule.default)).template
+
+        // Set template contract in SACD
+        await sacd.setTemplateContract(await template.getAddress())
+
+        // Create a template with specific permissions
+        const templatePermissions = 0x12345678n
+        await template.createTemplate(templatePermissions, 'ipfs://test-template')
+
+        // Try to set permissions with different permissions than template
+        const differentPermissions = 0x87654321n
+        await expect(
+          sacd.connect(grantor).setPermissions(
+            await mockErc721.getAddress(),
+            1n,
+            grantee.address,
+            differentPermissions,
+            DEFAULT_EXPIRATION,
+            C.MOCK_SOURCE,
+            1n // templateId = 1
+          )
+        )
+          .to.be.revertedWithCustomError(sacd, 'TemplatePermissionsMismatch')
+          .withArgs(1n, templatePermissions, differentPermissions)
+      })
+      it('Should allow setting permissions with matching template permissions', async () => {
+        const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        // Deploy template contract
+        const TemplateModule = await import('../ignition/modules/Template')
+        const template = (await ignition.deploy(TemplateModule.default)).template
+
+        // Set template contract in SACD
+        await sacd.setTemplateContract(await template.getAddress())
+
+        // Create a template with specific permissions
+        const templatePermissions = 0x12345678n
+        await template.createTemplate(templatePermissions, 'ipfs://test-template')
+
+        // Set permissions with matching template permissions
+        await expect(
+          sacd.connect(grantor).setPermissions(
+            await mockErc721.getAddress(),
+            1n,
+            grantee.address,
+            templatePermissions,
+            DEFAULT_EXPIRATION,
+            C.MOCK_SOURCE,
+            1n // templateId = 1
+          )
+        ).to.not.be.reverted
+      })
     })
 
     context('State', () => {
