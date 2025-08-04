@@ -88,21 +88,21 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
    * @return bool Returns true if the template is active
    */
   function _isTemplateActive(uint256 templateId) internal view returns (bool) {
-    if (templateId == 0) {
-      return true; // No template used, so always active
-    }
+    // Early return for most common case (no template used)
+    if (templateId == 0) return true;
 
+    // Cache storage pointer and template contract address
     SacdStorage storage $ = _getSacdStorage();
     address templateContract = $.templateContract;
 
-    if (templateContract == address(0)) {
-      return true; // No template contract set, assume active
-    }
+    // Early return if no template contract set
+    if (templateContract == address(0)) return true;
 
+    // Make external call to template contract
     try ITemplate(templateContract).isTemplateActive(templateId) returns (bool isActive) {
       return isActive;
     } catch {
-      return true; // If template contract call fails, assume active
+      return true; // Fail-safe: assume active if call fails
     }
   }
 
