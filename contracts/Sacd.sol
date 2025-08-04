@@ -7,6 +7,7 @@ import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol';
 
 import './interfaces/ISacd.sol';
+import './interfaces/ITemplate.sol';
 
 /**
  * @title Service Access Contract Definition (SACD)
@@ -19,6 +20,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   struct SacdStorage {
     mapping(address asset => mapping(uint256 tokenId => uint256 version)) tokenIdToVersion;
     mapping(address asset => mapping(uint256 tokenId => mapping(uint256 version => mapping(address grantee => PermissionRecord)))) permissionRecords;
+    address templateContract; // Address of the Template contract
   }
 
   bytes32 constant UPGRADER_ROLE = keccak256('UPGRADER_ROLE');
@@ -38,6 +40,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   error ZeroAddress();
   error Unauthorized(address addr);
   error InvalidTokenId(address asset, uint256 tokenId);
+  error TemplateNotActive(uint256 templateId);
 
   /// @custom:oz-upgrades-unsafe-allow constructor
   constructor() {
@@ -56,6 +59,40 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   }
 
   /**
+   * @notice Sets the template contract address
+   * @dev Only admin can call this function
+   * @param templateContractAddress The address of the Template contract
+   */
+  function setTemplateContract(address templateContractAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    _getSacdStorage().templateContract = templateContractAddress;
+  }
+
+  /**
+   * @notice Checks if a template is active
+   * @dev Internal function to check template status
+   * @param templateId The ID of the template to check
+   * @return bool Returns true if the template is active
+   */
+  function _isTemplateActive(uint256 templateId) internal view returns (bool) {
+    if (templateId == 0) {
+      return true; // No template used, so always active
+    }
+
+    SacdStorage storage $ = _getSacdStorage();
+    address templateContract = $.templateContract;
+
+    if (templateContract == address(0)) {
+      return true; // No template contract set, assume active
+    }
+
+    try ITemplate(templateContract).isTemplateActive(templateId) returns (bool isActive) {
+      return isActive;
+    } catch {
+      return true; // If template contract call fails, assume active
+    }
+  }
+
+  /**
    * @notice Sets a permission record to a grantee
    * @dev The caller must be the owner of the token or the asset contract
    * @param asset The contract address of the ERC721
@@ -64,6 +101,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
    * @param grantee The address to receive the permission
    * @param expiration Expiration of the permissions
    * @param source The URI source associated with the permissions
+   * @param templateId The ID of the template used (0 if no template)
    */
   function setPermissions(
     address asset,
@@ -71,7 +109,8 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     address grantee,
     uint256 permissions,
     uint256 expiration,
-    string calldata source
+    string calldata source,
+    uint256 templateId
   ) external {
     try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
       if (tokenIdOwner != msg.sender && asset != msg.sender) {
@@ -85,7 +124,12 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
       SacdStorage storage $ = _getSacdStorage();
 
       uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
-      $.permissionRecords[asset][tokenId][tokenIdVersion][grantee] = PermissionRecord(permissions, expiration, source);
+      $.permissionRecords[asset][tokenId][tokenIdVersion][grantee] = PermissionRecord(
+        permissions,
+        expiration,
+        source,
+        templateId
+      );
 
       emit PermissionsSet(asset, tokenId, permissions, grantee, expiration, source);
     } catch {
@@ -116,6 +160,12 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     if (pr.expiration <= block.timestamp) {
       return false;
     }
+
+    // Check if template is still active
+    if (!_isTemplateActive(pr.templateId)) {
+      return false;
+    }
+
     return (pr.permissions >> (2 * permissionIndex)) & 3 == 3;
   }
 
@@ -141,6 +191,12 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     if (pr.expiration <= block.timestamp) {
       return false;
     }
+
+    // Check if template is still active
+    if (!_isTemplateActive(pr.templateId)) {
+      return false;
+    }
+
     return (pr.permissions & permissions) == permissions;
   }
 
@@ -167,6 +223,12 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     if (pr.expiration <= block.timestamp) {
       return 0;
     }
+
+    // Check if template is still active
+    if (!_isTemplateActive(pr.templateId)) {
+      return 0;
+    }
+
     return pr.permissions & permissions;
   }
 

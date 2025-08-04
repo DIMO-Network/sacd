@@ -12,6 +12,7 @@ interface ISacd {
     uint256 permissions;
     uint256 expiration;
     string source;
+    uint256 templateId; // 0 means no template was used
   }
 
   function setPermissions(
@@ -20,8 +21,11 @@ interface ISacd {
     address grantee,
     uint256 permissions,
     uint256 expiration,
-    string calldata source
+    string calldata source,
+    uint256 templateId
   ) external;
+
+  function setTemplateContract(address templateContractAddress) external;
 
   function hasPermission(
     address asset,

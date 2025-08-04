@@ -36,7 +36,8 @@ contract MockERC721withSacd is ERC721 {
       sacdInput.grantee,
       sacdInput.permissions,
       sacdInput.expiration,
-      sacdInput.source
+      sacdInput.source,
+      0 // No template used
     );
   }
 
