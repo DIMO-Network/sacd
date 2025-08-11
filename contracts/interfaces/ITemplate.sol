@@ -19,7 +19,6 @@ interface ITemplate is IERC721 {
   }
 
   event TemplateCreated(uint256 indexed templateId, address indexed creator, uint256 permissions, string ipfsUrl);
-
   event TemplateDeactivated(uint256 indexed templateId, address indexed creator);
 
   error TemplateNotFound(uint256 templateId);
@@ -34,9 +33,4 @@ interface ITemplate is IERC721 {
   function getTemplate(uint256 templateId) external view returns (TemplateData memory);
 
   function isTemplateActive(uint256 templateId) external view returns (bool);
-
-  // ERC721 functions
-  function tokenURI(uint256 tokenId) external view returns (string memory);
-
-  function totalSupply() external view returns (uint256);
 }

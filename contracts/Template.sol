@@ -15,7 +15,7 @@ import './interfaces/ITemplate.sol';
  * Templates include predefined bit arrays (permissions) and IPFS URLs to templatable JSON documents.
  * Each template is associated with a creator's public key and can be used to create SACD permissions.
  */
-contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, ERC721Upgradeable {
+contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, ERC721Upgradeable, ITemplate {
   using Strings for uint256;
 
   struct TemplateStorage {
@@ -27,27 +27,7 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
   bytes32 constant TEMPLATE_MANAGER_ROLE = keccak256('TEMPLATE_MANAGER_ROLE');
 
   // keccak256(abi.encode(uint256(keccak256("Template.storage")) - 1)) & ~bytes32(uint256(0xff))
-  bytes32 private constant TEMPLATE_STORAGE = 0x20aa246ca08ba235ee1e06ff6016f518804d64da710b8279d7124e598d8d5201;
-
-  // Events
-  event TemplateCreated(uint256 indexed templateId, address indexed creator, uint256 permissions, string ipfsUrl);
-  event TemplateDeactivated(uint256 indexed templateId, address indexed creator);
-
-  // Structs
-  struct TemplateData {
-    uint256 templateId;
-    address owner;
-    uint256 permissions;
-    string templateURI;
-    bool isActive;
-    uint256 createdAt;
-  }
-
-  // Errors
-  error TemplateNotFound(uint256 templateId);
-  error UnauthorizedTemplateAccess(address caller, uint256 templateId);
-  error InvalidTemplateData();
-  error TemplateAlreadyExists(uint256 templateId);
+  bytes32 private constant TEMPLATE_STORAGE = 0x6e0b5146e4c8d8af829e0b4f4e89995b530da6fe47704a595a78d8a3f6303800;
 
   /// @custom:oz-upgrades-unsafe-allow constructor
   constructor() {
@@ -201,7 +181,7 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
    */
   function supportsInterface(
     bytes4 interfaceId
-  ) public view virtual override(AccessControlUpgradeable, ERC721Upgradeable) returns (bool) {
+  ) public view virtual override(AccessControlUpgradeable, ERC721Upgradeable, IERC165) returns (bool) {
     return AccessControlUpgradeable.supportsInterface(interfaceId) || ERC721Upgradeable.supportsInterface(interfaceId);
   }
 

@@ -22,12 +22,13 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   struct SacdStorage {
     mapping(address asset => mapping(uint256 tokenId => uint256 version)) tokenIdToVersion;
     mapping(address asset => mapping(uint256 tokenId => mapping(uint256 version => mapping(address grantee => PermissionRecord)))) permissionRecords;
-    address templateContract; // Address of the Template contract
     mapping(address asset => mapping(address grantee => mapping(address grantor => mapping(uint256 paymentId => PaymentRecord)))) paymentRecords;
     // Track the next payment ID for each (asset, grantee, grantor) combination
     mapping(address asset => mapping(address grantee => mapping(address grantor => uint256))) nextPaymentId;
+    address templateContract; // Address of the Template contract
   }
 
+  bytes32 constant ADMIN_ROLE = keccak256('ADMIN_ROLE');
   bytes32 constant UPGRADER_ROLE = keccak256('UPGRADER_ROLE');
 
   // keccak256(abi.encode(uint256(keccak256("Sacd.storage")) - 1)) & ~bytes32(uint256(0xff))
@@ -71,6 +72,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     __UUPSUpgradeable_init();
 
     _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    _grantRole(ADMIN_ROLE, msg.sender);
   }
 
   /**
@@ -78,38 +80,8 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
    * @dev Only admin can call this function
    * @param templateContractAddress The address of the Template contract
    */
-  function setTemplateContract(address templateContractAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+  function setTemplateContract(address templateContractAddress) external onlyRole(ADMIN_ROLE) {
     _getSacdStorage().templateContract = templateContractAddress;
-  }
-
-  /**
-   * @notice Checks if a template is active
-   * @dev Internal function to check template status
-   * @param templateId The ID of the template to check
-   * @return bool Returns true if the template is active
-   */
-  function _isTemplateActive(uint256 templateId) internal view returns (bool) {
-    // Early return for most common case (no template used)
-    if (templateId == 0) return true;
-
-    // Cache storage pointer and template contract address
-    SacdStorage storage $ = _getSacdStorage();
-    address templateContract = $.templateContract;
-
-    // Early return if no template contract set
-    if (templateContract == address(0)) return true;
-
-    // Check if template exists by trying to get its owner
-    try ITemplate(templateContract).ownerOf(templateId) returns (address) {
-      // If owner exists, check if template is active
-      try ITemplate(templateContract).isTemplateActive(templateId) returns (bool isActive) {
-        return isActive;
-      } catch {
-        return true; // Fail-safe: assume active if call fails
-      }
-    } catch {
-      return false; // Template doesn't exist
-    }
   }
 
   /**
@@ -444,6 +416,36 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
    */
   function nextPaymentId(address asset, address grantee, address grantor) external view returns (uint256 paymentId) {
     paymentId = _getSacdStorage().nextPaymentId[asset][grantee][grantor];
+  }
+
+  /**
+   * @notice Checks if a template is active
+   * @dev Internal function to check template status
+   * @param templateId The ID of the template to check
+   * @return bool Returns true if the template is active
+   */
+  function _isTemplateActive(uint256 templateId) internal view returns (bool) {
+    // Early return for most common case (no template used)
+    if (templateId == 0) return true;
+
+    // Cache storage pointer and template contract address
+    SacdStorage storage $ = _getSacdStorage();
+    address templateContract = $.templateContract;
+
+    // Early return if no template contract set
+    if (templateContract == address(0)) return true;
+
+    // Check if template exists by trying to get its owner
+    try ITemplate(templateContract).ownerOf(templateId) returns (address) {
+      // If owner exists, check if template is active
+      try ITemplate(templateContract).isTemplateActive(templateId) returns (bool isActive) {
+        return isActive;
+      } catch {
+        return true; // Fail-safe: assume active if call fails
+      }
+    } catch {
+      return false; // Template doesn't exist
+    }
   }
 
   /**
