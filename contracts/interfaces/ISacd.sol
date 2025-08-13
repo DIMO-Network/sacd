@@ -11,8 +11,8 @@ interface ISacd {
   struct PermissionRecord {
     uint256 permissions;
     uint256 expiration;
-    string source;
     uint256 templateId; // 0 means no template was used
+    string source;
   }
 
   struct PaymentRecord {
@@ -28,8 +28,8 @@ interface ISacd {
     address grantee,
     uint256 permissions,
     uint256 expiration,
-    string calldata source,
-    uint256 templateId
+    uint256 templateId,
+    string calldata source
   ) external;
 
   function setTemplateContract(address templateContractAddress) external;

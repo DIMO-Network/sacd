@@ -205,7 +205,7 @@ describe('Template Contract', function () {
       // Call SACD with template ID
       await sacd
         .connect(user1)
-        .setPermissions(asset, tokenId, grantee, permissions, expiration, finalSource, templateId)
+        .setPermissions(asset, tokenId, grantee, permissions, expiration, templateId, finalSource)
 
       // Set the template contract in SACD
       await sacd.setTemplateContract(await template.getAddress())

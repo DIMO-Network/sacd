@@ -243,6 +243,12 @@
       },
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "templateId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
         "internalType": "string",
         "name": "source",
         "type": "string"
@@ -449,14 +455,14 @@
             "type": "uint256"
           },
           {
-            "internalType": "string",
-            "name": "source",
-            "type": "string"
-          },
-          {
             "internalType": "uint256",
             "name": "templateId",
             "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "source",
+            "type": "string"
           }
         ],
         "internalType": "struct ISacd.PermissionRecord",
@@ -778,14 +784,14 @@
             "type": "uint256"
           },
           {
-            "internalType": "string",
-            "name": "source",
-            "type": "string"
-          },
-          {
             "internalType": "uint256",
             "name": "templateId",
             "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "source",
+            "type": "string"
           }
         ],
         "internalType": "struct ISacd.PermissionRecord",
@@ -911,14 +917,14 @@
         "type": "uint256"
       },
       {
-        "internalType": "string",
-        "name": "source",
-        "type": "string"
-      },
-      {
         "internalType": "uint256",
         "name": "templateId",
         "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "source",
+        "type": "string"
       }
     ],
     "name": "setPermissions",

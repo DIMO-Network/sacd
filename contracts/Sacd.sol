@@ -40,6 +40,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     uint256 permissions,
     address indexed grantee,
     uint256 expiration,
+    uint256 templateId,
     string source
   );
   event PaymentSet(
@@ -92,8 +93,8 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
    * @param permissions The uint256 that represents the byte array of permissions
    * @param grantee The address to receive the permission
    * @param expiration Expiration of the permissions
-   * @param source The URI source associated with the permissions
    * @param templateId The ID of the template used (0 if no template)
+   * @param source The URI source associated with the permissions
    */
   function setPermissions(
     address asset,
@@ -101,8 +102,8 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     address grantee,
     uint256 permissions,
     uint256 expiration,
-    string calldata source,
-    uint256 templateId
+    uint256 templateId,
+    string calldata source
   ) external {
     try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
       if (tokenIdOwner != msg.sender && asset != msg.sender) {
@@ -135,11 +136,11 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
       $.permissionRecords[asset][tokenId][tokenIdVersion][grantee] = PermissionRecord(
         permissions,
         expiration,
-        source,
-        templateId
+        templateId,
+        source
       );
 
-      emit PermissionsSet(asset, tokenId, permissions, grantee, expiration, source);
+      emit PermissionsSet(asset, tokenId, permissions, grantee, expiration, templateId, source);
     } catch {
       revert InvalidTokenId(asset, tokenId);
     }
