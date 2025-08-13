@@ -4,7 +4,8 @@ import hre, { ignition } from 'hardhat'
 
 import * as C from './constants'
 import SacdModule from '../ignition/modules/Sacd'
-import type { Sacd } from '../typechain-types'
+import TemplateModule from '../ignition/modules/Template'
+import type { Sacd, Template } from '../typechain-types'
 
 describe('Sacd', function () {
   async function setup() {
@@ -14,13 +15,20 @@ describe('Sacd', function () {
     const mockErc721Factory = await hre.ethers.getContractFactory('MockERC721withSacd')
     const mockErc20Factory = await hre.ethers.getContractFactory('MockERC20')
 
+    // Deploy template contract
+    const template = (await ignition.deploy(TemplateModule)).template as unknown as Template
+
+    // Create a template with specific permissions
+    await template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, 'ipfs://test-template')
+
     const sacd = (await ignition.deploy(SacdModule)).sacd as unknown as Sacd
     const mockErc721 = await mockErc721Factory.deploy(await sacd.getAddress())
     const mockErc20 = await mockErc20Factory.deploy()
 
+    await sacd.setTemplateContract(await template.getAddress())
     await mockErc721.mint(grantor.address)
 
-    return { owner, grantor, grantee, otherAccount, mockErc721, mockErc20, sacd, DEFAULT_EXPIRATION }
+    return { owner, grantor, grantee, otherAccount, mockErc721, mockErc20, template, sacd, DEFAULT_EXPIRATION }
   }
 
   describe('setPermissions', () => {
@@ -127,73 +135,147 @@ describe('Sacd', function () {
           .to.be.revertedWithCustomError(sacd, 'TemplatePermissionsMismatch')
           .withArgs(1n, templatePermissions, differentPermissions)
       })
-      it('Should allow setting permissions with matching template permissions', async () => {
-        const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
-
-        // Deploy template contract
-        const TemplateModule = await import('../ignition/modules/Template')
-        const template = (await ignition.deploy(TemplateModule.default)).template
-
-        // Set template contract in SACD
-        await sacd.setTemplateContract(await template.getAddress())
-
-        // Create a template with specific permissions
-        const templatePermissions = 0x12345678n
-        await template.createTemplate(templatePermissions, 'ipfs://test-template')
-
-        // Set permissions with matching template permissions
-        await expect(
-          sacd.connect(grantor).setPermissions(
-            await mockErc721.getAddress(),
-            1n,
-            grantee.address,
-            templatePermissions,
-            DEFAULT_EXPIRATION,
-            1n, // templateId = 1
-            C.MOCK_SOURCE
-          )
-        ).to.not.be.reverted
-      })
     })
 
     context('State', () => {
-      it('Should correctly set new permissions when caller is the token owner', async () => {
-        const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
-        const mockErc721Address = await mockErc721.getAddress()
+      context('Caller is the token owner', () => {
+        it('Should correctly set new permissions with no template', async () => {
+          const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+          const mockErc721Address = await mockErc721.getAddress()
 
-        await sacd
-          .connect(grantor)
-          .setPermissions(
-            mockErc721Address,
-            1n,
-            grantee.address,
-            C.MOCK_PERMISSIONS,
-            DEFAULT_EXPIRATION,
-            0n,
-            C.MOCK_SOURCE
-          )
+          await sacd
+            .connect(grantor)
+            .setPermissions(
+              mockErc721Address,
+              1n,
+              grantee.address,
+              C.MOCK_PERMISSIONS,
+              DEFAULT_EXPIRATION,
+              0n,
+              C.MOCK_SOURCE
+            )
 
-        const permissionRecord = await sacd.permissionRecords(mockErc721Address, 1n, 1n, grantee.address)
+          const permissionRecord = await sacd.permissionRecords(mockErc721Address, 1n, 1n, grantee.address)
 
-        expect(permissionRecord.permissions).to.equal(C.MOCK_PERMISSIONS)
-        expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
-        expect(permissionRecord.source).to.equal(C.MOCK_SOURCE)
-      })
-      it('Should correctly set new permissions when caller is the asset contract', async () => {
-        const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
-        const mockErc721Address = await mockErc721.getAddress()
-        await mockErc721.connect(grantor).mintWithSacd(grantor.address, {
-          grantee: grantee.address,
-          permissions: C.MOCK_PERMISSIONS,
-          expiration: DEFAULT_EXPIRATION,
-          source: C.MOCK_SOURCE,
+          expect(permissionRecord.permissions).to.equal(C.MOCK_PERMISSIONS)
+          expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
+          expect(permissionRecord.templateId).to.equal(0n)
+          expect(permissionRecord.source).to.equal(C.MOCK_SOURCE)
         })
+        it('Should correclty set new permissions with matching template permissions', async () => {
+          const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+          const mockErc721Address = await mockErc721.getAddress()
 
-        const permissionRecord = await sacd.permissionRecords(mockErc721Address, 2n, 1n, grantee.address)
+          // Set permissions with matching template permissions
+          await sacd
+            .connect(grantor)
+            .setPermissions(
+              await mockErc721.getAddress(),
+              1n,
+              grantee.address,
+              C.MOCK_TEMPLATE_PERMISSIONS,
+              DEFAULT_EXPIRATION,
+              1n,
+              C.MOCK_SOURCE
+            )
 
-        expect(permissionRecord.permissions).to.equal(C.MOCK_PERMISSIONS)
-        expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
-        expect(permissionRecord.source).to.equal(C.MOCK_SOURCE)
+          const permissionRecord = await sacd.permissionRecords(mockErc721Address, 1n, 1n, grantee.address)
+
+          expect(permissionRecord.permissions).to.equal(C.MOCK_TEMPLATE_PERMISSIONS)
+          expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
+          expect(permissionRecord.templateId).to.equal(1n)
+          expect(permissionRecord.source).to.equal(C.MOCK_SOURCE)
+        })
+        it('Should correctly set new permissions with superset of template permissions', async () => {
+          const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+          const mockErc721Address = await mockErc721.getAddress()
+
+          // Append new permission
+          const sacdPermissions =
+            (3n << BigInt(C.MOCK_TEMPLATE_PERMISSIONS.toString(2).length)) | C.MOCK_TEMPLATE_PERMISSIONS
+
+          // Set permissions with matching template permissions
+          await sacd
+            .connect(grantor)
+            .setPermissions(
+              await mockErc721.getAddress(),
+              1n,
+              grantee.address,
+              sacdPermissions,
+              DEFAULT_EXPIRATION,
+              1n,
+              C.MOCK_SOURCE
+            )
+
+          const permissionRecord = await sacd.permissionRecords(mockErc721Address, 1n, 1n, grantee.address)
+
+          expect(permissionRecord.permissions).to.equal(sacdPermissions)
+          expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
+          expect(permissionRecord.templateId).to.equal(1n)
+          expect(permissionRecord.source).to.equal(C.MOCK_SOURCE)
+        })
+      })
+
+      context('Caller is the asset contract', () => {
+        it('Should correctly set new permissions with no template', async () => {
+          const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+          const mockErc721Address = await mockErc721.getAddress()
+          await mockErc721.connect(grantor).mintWithSacd(grantor.address, {
+            grantee: grantee.address,
+            permissions: C.MOCK_PERMISSIONS,
+            expiration: DEFAULT_EXPIRATION,
+            templateId: 0n,
+            source: C.MOCK_SOURCE,
+          })
+
+          const permissionRecord = await sacd.permissionRecords(mockErc721Address, 2n, 1n, grantee.address)
+
+          expect(permissionRecord.permissions).to.equal(C.MOCK_PERMISSIONS)
+          expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
+          expect(permissionRecord.templateId).to.equal(0n)
+          expect(permissionRecord.source).to.equal(C.MOCK_SOURCE)
+        })
+        it('Should correclty set new permissions with matching template permissions', async () => {
+          const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+          const mockErc721Address = await mockErc721.getAddress()
+          await mockErc721.connect(grantor).mintWithSacd(grantor.address, {
+            grantee: grantee.address,
+            permissions: C.MOCK_TEMPLATE_PERMISSIONS,
+            expiration: DEFAULT_EXPIRATION,
+            templateId: 1n,
+            source: C.MOCK_SOURCE,
+          })
+
+          const permissionRecord = await sacd.permissionRecords(mockErc721Address, 2n, 1n, grantee.address)
+
+          expect(permissionRecord.permissions).to.equal(C.MOCK_TEMPLATE_PERMISSIONS)
+          expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
+          expect(permissionRecord.templateId).to.equal(1n)
+          expect(permissionRecord.source).to.equal(C.MOCK_SOURCE)
+        })
+        it('Should correctly set new permissions with superset of template permissions', async () => {
+          const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+          const mockErc721Address = await mockErc721.getAddress()
+
+          // Append new permission
+          const sacdPermissions =
+            (3n << BigInt(C.MOCK_TEMPLATE_PERMISSIONS.toString(2).length)) | C.MOCK_TEMPLATE_PERMISSIONS
+
+          await mockErc721.connect(grantor).mintWithSacd(grantor.address, {
+            grantee: grantee.address,
+            permissions: sacdPermissions,
+            expiration: DEFAULT_EXPIRATION,
+            templateId: 1n,
+            source: C.MOCK_SOURCE,
+          })
+
+          const permissionRecord = await sacd.permissionRecords(mockErc721Address, 2n, 1n, grantee.address)
+
+          expect(permissionRecord.permissions).to.equal(sacdPermissions)
+          expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
+          expect(permissionRecord.templateId).to.equal(1n)
+          expect(permissionRecord.source).to.equal(C.MOCK_SOURCE)
+        })
       })
     })
 
