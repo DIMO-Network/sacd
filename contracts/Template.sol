@@ -21,6 +21,8 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
     mapping(uint256 => TemplateData) templates;
   }
 
+  string constant IPFS_PREFIX = 'ipfs://';
+  uint256 constant IPFS_PREFIX_LENGTH = 7;
   bytes32 constant UPGRADER_ROLE = keccak256('UPGRADER_ROLE');
   bytes32 constant TEMPLATE_MANAGER_ROLE = keccak256('TEMPLATE_MANAGER_ROLE');
 
@@ -168,10 +170,10 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
       revert TemplateNotFound(tokenId);
     }
 
-    // If template URI starts with ipfs://, prepend DIMO assets URL
-    if (bytes(template.templateURI).length >= 7) {
-      (string memory prefix, string memory suffix) = _splitAt(template.templateURI, 7);
-      if (keccak256(abi.encodePacked(prefix)) == keccak256(abi.encodePacked('ipfs://'))) {
+    // If template URI starts with IPFS_PREFIX, prepend baseURI
+    if (bytes(template.templateURI).length >= IPFS_PREFIX_LENGTH) {
+      (string memory prefix, string memory suffix) = _splitAt(template.templateURI, IPFS_PREFIX_LENGTH);
+      if (keccak256(abi.encodePacked(prefix)) == keccak256(abi.encodePacked(IPFS_PREFIX))) {
         return string.concat($.baseURI, suffix);
       }
     }
