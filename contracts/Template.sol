@@ -16,6 +16,7 @@ import './interfaces/ITemplate.sol';
  */
 contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, ERC721Upgradeable, ITemplate {
   struct TemplateStorage {
+    string baseURI;
     uint256 templateCounter;
     mapping(uint256 => TemplateData) templates;
   }
@@ -33,12 +34,14 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
 
   /**
    * @notice Initializes the contract
-   * @dev Sets default admin role to msg.sender
+   * @param baseURI_ The base URI for template metadata that will be used for token URIs
    */
-  function initialize() external initializer {
+  function initialize(string calldata baseURI_) external initializer {
     __AccessControl_init();
     __UUPSUpgradeable_init();
     __ERC721_init('Template', 'TMPL');
+
+    _getTemplateStorage().baseURI = baseURI_;
 
     _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     _grantRole(TEMPLATE_MANAGER_ROLE, msg.sender);
@@ -137,12 +140,27 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
   }
 
   /**
+   * @notice Returns the total supply of templates
+   * @return The total number of templates
+   */
+  function totalSupply() public view returns (uint256) {
+    return _getTemplateStorage().templateCounter;
+  }
+
+  /**
+   * @notice Returns the base URI used for token metadata
+   */
+  function baseURI() public view returns (string memory) {
+    return _getTemplateStorage().baseURI;
+  }
+
+  /**
    * @notice Returns the token URI for a given template ID
    * @dev Overrides ERC721 tokenURI function
    * @param tokenId The template ID
    * @return The token URI
    */
-  function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+  function tokenURI(uint256 tokenId) public view override returns (string memory) {
     TemplateStorage storage $ = _getTemplateStorage();
     TemplateData memory template = $.templates[tokenId];
 
@@ -154,21 +172,12 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
     if (bytes(template.templateURI).length >= 7) {
       (string memory prefix, string memory suffix) = _splitAt(template.templateURI, 7);
       if (keccak256(abi.encodePacked(prefix)) == keccak256(abi.encodePacked('ipfs://'))) {
-        return string.concat('https://assets.dimo.org/', suffix);
+        return string.concat($.baseURI, suffix);
       }
     }
 
     // Otherwise return the template URI as-is
     return template.templateURI;
-  }
-
-  /**
-   * @notice Returns the total supply of templates
-   * @dev Overrides ERC721 totalSupply function
-   * @return The total number of templates
-   */
-  function totalSupply() public view virtual returns (uint256) {
-    return _getTemplateStorage().templateCounter;
   }
 
   /**
@@ -178,8 +187,15 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
    */
   function supportsInterface(
     bytes4 interfaceId
-  ) public view virtual override(AccessControlUpgradeable, ERC721Upgradeable, IERC165) returns (bool) {
+  ) public view override(AccessControlUpgradeable, ERC721Upgradeable, IERC165) returns (bool) {
     return AccessControlUpgradeable.supportsInterface(interfaceId) || ERC721Upgradeable.supportsInterface(interfaceId);
+  }
+
+  /**
+   * @notice Override _baseURI
+   */
+  function _baseURI() internal view override returns (string memory) {
+    return _getTemplateStorage().baseURI;
   }
 
   /**

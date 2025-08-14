@@ -1,5 +1,6 @@
 import { ethers } from 'ethers'
 
+export const TEMPLATE_BASE_URI = 'https://assets.dimo.xyz/'
 export const MOCK_TEMPLATE_PERMISSIONS = 3888n // 11 11 00 11 00 00
 export const MOCK_PERMISSIONS = 816n // 11 00 11 00 00
 export const MOCK_TEMPLATE_CID = 'QmYA2fn8cMbVWo4v95RwcwJVyQsNtnEwHerfWR8UNtEwoE' // TODO Update when we have a actual example

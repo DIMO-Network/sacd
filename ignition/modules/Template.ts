@@ -1,11 +1,13 @@
 import { buildModule } from '@nomicfoundation/hardhat-ignition/modules'
 
+const TEMPLATE_BASE_URI = 'https://assets.dimo.xyz/'
+
 const TemplateProxyModule = buildModule('TemplateProxyModule', (m) => {
   // Deploy the implementation contract
   const implementation = m.contract('Template')
 
   // Encode the initialize function call for the contract
-  const initialize = m.encodeFunctionCall(implementation, 'initialize', [])
+  const initialize = m.encodeFunctionCall(implementation, 'initialize', [TEMPLATE_BASE_URI])
 
   // Deploy the ERC1967 Proxy, pointing to the implementation
   const proxy = m.contract('ERC1967Proxy', [implementation, initialize])

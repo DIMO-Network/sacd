@@ -33,7 +33,7 @@ describe('Template Contract', function () {
     const templateImplementation = await TemplateFactory.deploy()
     await templateImplementation.waitForDeployment()
 
-    const templateInitialize = await templateImplementation.initialize.populateTransaction()
+    const templateInitialize = await templateImplementation.initialize.populateTransaction(C.TEMPLATE_BASE_URI)
     const templateProxy = await ProxyFactory.deploy(await templateImplementation.getAddress(), templateInitialize.data)
     await templateProxy.waitForDeployment()
 
@@ -108,7 +108,7 @@ describe('Template Contract', function () {
       await template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       // Check tokenURI returns the DIMO assets URL with IPFS URL
-      expect(await template.tokenURI(1)).to.equal('https://assets.dimo.org/' + C.MOCK_TEMPLATE_CID)
+      expect(await template.tokenURI(1)).to.equal(C.TEMPLATE_BASE_URI + C.MOCK_TEMPLATE_CID)
     })
 
     it('Should return correct totalSupply', async function () {
@@ -143,7 +143,7 @@ describe('Template Contract', function () {
       await template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       const tokenURI = await template.tokenURI(1)
-      expect(tokenURI).to.equal('https://assets.dimo.org/' + C.MOCK_TEMPLATE_CID)
+      expect(tokenURI).to.equal(C.TEMPLATE_BASE_URI + C.MOCK_TEMPLATE_CID)
     })
 
     it('Should return templateURI as-is for non-IPFS URLs', async function () {
@@ -153,7 +153,7 @@ describe('Template Contract', function () {
 
       const tokenURI = await template.tokenURI(1)
       expect(tokenURI).to.equal(templateURI)
-      expect(tokenURI).to.not.include('https://assets.dimo.org/')
+      expect(tokenURI).to.not.include(C.TEMPLATE_BASE_URI)
     })
   })
 
