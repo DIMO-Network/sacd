@@ -219,10 +219,6 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
    * @return cid The extracted CID portion of the URI if valid, empty string otherwise
    */
   function _extractCIDFromURI(string memory uri) private pure returns (bool isValid, string memory cid) {
-    if (bytes(uri).length < IPFS_PREFIX_LENGTH) {
-      return (false, '');
-    }
-
     (bytes memory prefix, bytes memory cidBytes) = _splitAt(uri, IPFS_PREFIX_LENGTH);
     if (keccak256(prefix) != keccak256(IPFS_PREFIX)) {
       return (false, '');

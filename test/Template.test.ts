@@ -49,7 +49,6 @@ describe('Template', function () {
       expect(templateData.templateURI).to.equal(C.MOCK_TEMPLATE_SOURCE)
       expect(templateData.isActive).to.be.true
     })
-
     it('Should not allow non-managers to create templates', async function () {
       const { template, owner, user1 } = await loadFixture(setup)
 
@@ -67,7 +66,38 @@ describe('Template', function () {
         template.createTemplate(owner, C.MOCK_TEMPLATE_PERMISSIONS, templateURI)
       ).to.be.revertedWithCustomError(template, 'InvalidTemplateData')
     })
+    it('Should not create template with invalid CID format (46 chars but not starting with Qm)', async function () {
+      const { template, owner } = await loadFixture(setup)
 
+      // Create an invalid CID that has 46 characters but doesn't start with Qm
+      const invalidCid = 'XX' + 'a'.repeat(44) // 46 characters, starts with XX instead of Qm
+      const templateURI = 'ipfs://' + invalidCid
+
+      await expect(
+        template.createTemplate(owner, C.MOCK_TEMPLATE_PERMISSIONS, templateURI)
+      ).to.be.revertedWithCustomError(template, 'InvalidTemplateData')
+    })
+    it('Should not create template without ipfs:// prefix', async function () {
+      const { template, owner } = await loadFixture(setup)
+
+      // Use a valid CID but without the ipfs:// prefix
+      const templateURI = 'ffff:///' + C.MOCK_TEMPLATE_CID // Missing ipfs:// prefix
+
+      await expect(
+        template.createTemplate(owner, C.MOCK_TEMPLATE_PERMISSIONS, templateURI)
+      ).to.be.revertedWithCustomError(template, 'InvalidTemplateData')
+    })
+    it('Should not create template with CID of incorrect length', async function () {
+      const { template, owner } = await loadFixture(setup)
+
+      // Create a CID that starts with Qm but is too short
+      const shortCid = 'Qm' + 'a'.repeat(20) // Only 22 characters instead of 46
+      const templateURI = 'ipfs://' + shortCid
+
+      await expect(
+        template.createTemplate(owner, C.MOCK_TEMPLATE_PERMISSIONS, templateURI)
+      ).to.be.revertedWithCustomError(template, 'InvalidTemplateData')
+    })
     it('Should deactivate template successfully', async function () {
       const { template, owner } = await loadFixture(setup)
 
@@ -82,7 +112,6 @@ describe('Template', function () {
       const templateData = await template.getTemplate(C.MOCK_TEMPLATE_TOKEN_ID)
       expect(templateData.isActive).to.be.false
     })
-
     it('Should check if template is active', async function () {
       const { template, owner } = await loadFixture(setup)
       const cid = 'QmaA14Co9Q9AuNHcs6KH2ZmJ8sCTwW6ZN7TJfxNcXnrUAX'
