@@ -1,52 +1,42 @@
+import { time, loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import { expect } from 'chai'
-import { ethers } from 'hardhat'
-import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
-import { Template, Sacd, MockERC721withSacd } from '../typechain-types'
+import hre, { ignition } from 'hardhat'
 
 import * as C from './constants'
+import SacdModule from '../ignition/modules/Sacd'
+import TemplateModule from '../ignition/modules/Template'
+import type { Sacd, Template } from '../typechain-types'
 
-describe('Template Contract', function () {
-  let template: Template
-  let sacd: Sacd
-  let mockERC721: MockERC721withSacd
-  let owner: SignerWithAddress
-  let user1: SignerWithAddress
-  let user2: SignerWithAddress
+describe('Template', function () {
+  async function setup() {
+    const [owner, user1, user2, otherAccount] = await hre.ethers.getSigners()
 
-  beforeEach(async function () {
-    ;[owner, user1, user2] = await ethers.getSigners()
+    // Deploy template contract
+    const template = (await ignition.deploy(TemplateModule)).template as unknown as Template
 
-    // Deploy SACD first
-    const SacdFactory = await ethers.getContractFactory('Sacd')
-    const sacdImplementation = await SacdFactory.deploy()
-    await sacdImplementation.waitForDeployment()
+    const sacd = (await ignition.deploy(SacdModule)).sacd as unknown as Sacd
 
-    const ProxyFactory = await ethers.getContractFactory('ERC1967Proxy')
-    const sacdInitialize = await sacdImplementation.initialize.populateTransaction()
-    const sacdProxy = await ProxyFactory.deploy(await sacdImplementation.getAddress(), sacdInitialize.data)
-    await sacdProxy.waitForDeployment()
+    return { owner, user1, user2, otherAccount, template, sacd }
+  }
+  async function setupWithMint() {
+    const vars = await loadFixture(setup)
 
-    sacd = await ethers.getContractAt('Sacd', await sacdProxy.getAddress())
+    const mockErc721Factory = await hre.ethers.getContractFactory('MockERC721withSacd')
+    const mockErc20Factory = await hre.ethers.getContractFactory('MockERC20')
 
-    // Deploy Template contract
-    const TemplateFactory = await ethers.getContractFactory('Template')
-    const templateImplementation = await TemplateFactory.deploy()
-    await templateImplementation.waitForDeployment()
+    const mockErc721 = await mockErc721Factory.deploy(await vars.sacd.getAddress())
+    const mockErc20 = await mockErc20Factory.deploy()
 
-    const templateInitialize = await templateImplementation.initialize.populateTransaction(C.TEMPLATE_BASE_URI)
-    const templateProxy = await ProxyFactory.deploy(await templateImplementation.getAddress(), templateInitialize.data)
-    await templateProxy.waitForDeployment()
+    await vars.template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+    await mockErc721.mint(vars.user1.address)
 
-    template = await ethers.getContractAt('Template', await templateProxy.getAddress())
-
-    // Deploy mock ERC721
-    const MockERC721Factory = await ethers.getContractFactory('MockERC721withSacd')
-    mockERC721 = await MockERC721Factory.deploy(await sacd.getAddress())
-    await mockERC721.waitForDeployment()
-  })
+    return { ...vars, mockErc721, mockErc20 }
+  }
 
   describe('Template Management', function () {
     it('Should create a template successfully', async function () {
+      const { template, owner } = await loadFixture(setup)
+
       await expect(template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE))
         .to.emit(template, 'TemplateCreated')
         .withArgs(1, owner.address, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
@@ -60,12 +50,16 @@ describe('Template Contract', function () {
     })
 
     it('Should not allow non-managers to create templates', async function () {
+      const { template, user1 } = await loadFixture(setup)
+
       await expect(
         template.connect(user1).createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
       ).to.be.revertedWithCustomError(template, 'AccessControlUnauthorizedAccount')
     })
 
     it('Should not create template with empty template URI', async function () {
+      const { template } = await loadFixture(setup)
+
       const templateURI = ''
 
       await expect(template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, templateURI)).to.be.revertedWithCustomError(
@@ -75,6 +69,8 @@ describe('Template Contract', function () {
     })
 
     it('Should deactivate template successfully', async function () {
+      const { template, owner } = await loadFixture(setup)
+
       // Create template first
       await template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
@@ -86,6 +82,8 @@ describe('Template Contract', function () {
     })
 
     it('Should check if template is active', async function () {
+      const { template } = await loadFixture(setup)
+
       await template.createTemplate(0x11111111, 'ipfs://QmTest1')
 
       expect(await template.isTemplateActive(1)).to.be.true
@@ -97,6 +95,8 @@ describe('Template Contract', function () {
 
   describe('ERC721 Functionality', function () {
     it('Should mint NFT when creating template', async function () {
+      const { template, owner } = await loadFixture(setup)
+
       await template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       // Check that NFT was minted to creator
@@ -105,6 +105,8 @@ describe('Template Contract', function () {
     })
 
     it('Should return correct tokenURI for IPFS URLs', async function () {
+      const { template } = await loadFixture(setup)
+
       await template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       // Check tokenURI returns the DIMO assets URL with IPFS URL
@@ -112,6 +114,8 @@ describe('Template Contract', function () {
     })
 
     it('Should return correct totalSupply', async function () {
+      const { template } = await loadFixture(setup)
+
       // Initially no templates
       expect(await template.totalSupply()).to.equal(0)
 
@@ -124,6 +128,8 @@ describe('Template Contract', function () {
     })
 
     it('Should allow NFT transfer', async function () {
+      const { template, owner, user1 } = await loadFixture(setup)
+
       await template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       // Transfer NFT to user1
@@ -136,10 +142,14 @@ describe('Template Contract', function () {
     })
 
     it('Should revert tokenURI for non-existent template', async function () {
+      const { template } = await loadFixture(setup)
+
       await expect(template.tokenURI(999)).to.be.revertedWithCustomError(template, 'TemplateNotFound')
     })
 
     it('Should return DIMO assets URL format for IPFS tokenURI', async function () {
+      const { template } = await loadFixture(setup)
+
       await template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       const tokenURI = await template.tokenURI(1)
@@ -147,6 +157,8 @@ describe('Template Contract', function () {
     })
 
     it('Should return templateURI as-is for non-IPFS URLs', async function () {
+      const { template } = await loadFixture(setup)
+
       const templateURI = 'https://example.com/template.json'
 
       await template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, templateURI)
@@ -158,16 +170,10 @@ describe('Template Contract', function () {
   })
 
   describe('SACD Integration', function () {
-    beforeEach(async function () {
-      // Create a template
-      await template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
-
-      // Mint a token to user1
-      await mockERC721.mint(user1.address)
-    })
-
     it('Should check template status in SACD permissions', async function () {
-      const asset = await mockERC721.getAddress()
+      const { template, sacd, user1, user2, mockErc721 } = await loadFixture(setupWithMint)
+
+      const asset = await mockErc721.getAddress()
       const tokenId = 1
       const grantee = user2.address
       const templateId = 1
