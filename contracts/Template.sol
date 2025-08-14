@@ -5,7 +5,6 @@ import '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
 import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol';
-import '@openzeppelin/contracts/utils/Strings.sol';
 
 import './interfaces/ITemplate.sol';
 
@@ -16,11 +15,9 @@ import './interfaces/ITemplate.sol';
  * Each template is associated with a creator's public key and can be used to create SACD permissions.
  */
 contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, ERC721Upgradeable, ITemplate {
-  using Strings for uint256;
-
   struct TemplateStorage {
-    mapping(uint256 => TemplateData) templates;
     uint256 templateCounter;
+    mapping(uint256 => TemplateData) templates;
   }
 
   bytes32 constant UPGRADER_ROLE = keccak256('UPGRADER_ROLE');
@@ -155,9 +152,9 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
 
     // If template URI starts with ipfs://, prepend DIMO assets URL
     if (bytes(template.templateURI).length >= 7) {
-      string memory prefix = _substring(template.templateURI, 0, 7);
+      (string memory prefix, string memory suffix) = _splitAt(template.templateURI, 7);
       if (keccak256(abi.encodePacked(prefix)) == keccak256(abi.encodePacked('ipfs://'))) {
-        return string.concat('https://assets.dimo.org/', template.templateURI);
+        return string.concat('https://assets.dimo.org/', suffix);
       }
     }
 
@@ -202,14 +199,23 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
   }
 
   /**
-   * @dev Helper function to extract substring
+   * @dev Helper function to split a string into two parts at a specified index
+   * @param str The string to split
+   * @param splitIndex The index at which to split the string
+   * @return prefix The part of the string from index 0 to splitIndex-1
+   * @return suffix The part of the string from splitIndex to the end
    */
-  function _substring(string memory str, uint256 startIndex, uint256 endIndex) private pure returns (string memory) {
+  function _splitAt(string memory str, uint256 splitIndex) private pure returns (string memory, string memory) {
     bytes memory strBytes = bytes(str);
-    bytes memory result = new bytes(endIndex - startIndex);
-    for (uint256 i = startIndex; i < endIndex; i++) {
-      result[i - startIndex] = strBytes[i];
+    bytes memory prefixBytes = new bytes(splitIndex);
+    bytes memory suffixBytes = new bytes(strBytes.length - splitIndex);
+
+    for (uint256 i = 0; i < splitIndex; i++) {
+      prefixBytes[i] = strBytes[i];
     }
-    return string(result);
+    for (uint256 i = splitIndex; i < strBytes.length; i++) {
+      suffixBytes[i - splitIndex] = strBytes[i];
+    }
+    return (string(prefixBytes), string(suffixBytes));
   }
 }

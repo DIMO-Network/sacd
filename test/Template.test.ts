@@ -3,6 +3,8 @@ import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
 import { Template, Sacd, MockERC721withSacd } from '../typechain-types'
 
+import * as C from './constants'
+
 describe('Template Contract', function () {
   let template: Template
   let sacd: Sacd
@@ -10,10 +12,9 @@ describe('Template Contract', function () {
   let owner: SignerWithAddress
   let user1: SignerWithAddress
   let user2: SignerWithAddress
-  let user3: SignerWithAddress
 
   beforeEach(async function () {
-    ;[owner, user1, user2, user3] = await ethers.getSigners()
+    ;[owner, user1, user2] = await ethers.getSigners()
 
     // Deploy SACD first
     const SacdFactory = await ethers.getContractFactory('Sacd')
@@ -46,36 +47,28 @@ describe('Template Contract', function () {
 
   describe('Template Management', function () {
     it('Should create a template successfully', async function () {
-      const permissions = 0x12345678
-      const templateURI = 'ipfs://QmTest123'
-
-      await expect(template.createTemplate(permissions, templateURI))
+      await expect(template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE))
         .to.emit(template, 'TemplateCreated')
-        .withArgs(1, owner.address, permissions, templateURI)
+        .withArgs(1, owner.address, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       const templateData = await template.getTemplate(1)
       expect(templateData.templateId).to.equal(1)
       expect(templateData.owner).to.equal(owner.address)
-      expect(templateData.permissions).to.equal(permissions)
-      expect(templateData.templateURI).to.equal(templateURI)
+      expect(templateData.permissions).to.equal(C.MOCK_TEMPLATE_PERMISSIONS)
+      expect(templateData.templateURI).to.equal(C.MOCK_TEMPLATE_SOURCE)
       expect(templateData.isActive).to.be.true
     })
 
     it('Should not allow non-managers to create templates', async function () {
-      const permissions = 0x12345678
-      const templateURI = 'ipfs://QmTest123'
-
-      await expect(template.connect(user1).createTemplate(permissions, templateURI)).to.be.revertedWithCustomError(
-        template,
-        'AccessControlUnauthorizedAccount'
-      )
+      await expect(
+        template.connect(user1).createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+      ).to.be.revertedWithCustomError(template, 'AccessControlUnauthorizedAccount')
     })
 
     it('Should not create template with empty template URI', async function () {
-      const permissions = 0x12345678
       const templateURI = ''
 
-      await expect(template.createTemplate(permissions, templateURI)).to.be.revertedWithCustomError(
+      await expect(template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, templateURI)).to.be.revertedWithCustomError(
         template,
         'InvalidTemplateData'
       )
@@ -83,9 +76,7 @@ describe('Template Contract', function () {
 
     it('Should deactivate template successfully', async function () {
       // Create template first
-      const permissions = 0x12345678
-      const templateURI = 'ipfs://QmTest123'
-      await template.createTemplate(permissions, templateURI)
+      await template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       // Deactivate template
       await expect(template.deactivateTemplate(1)).to.emit(template, 'TemplateDeactivated').withArgs(1, owner.address)
@@ -106,10 +97,7 @@ describe('Template Contract', function () {
 
   describe('ERC721 Functionality', function () {
     it('Should mint NFT when creating template', async function () {
-      const permissions = 0x12345678
-      const templateURI = 'ipfs://QmTest123'
-
-      await template.createTemplate(permissions, templateURI)
+      await template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       // Check that NFT was minted to creator
       expect(await template.ownerOf(1)).to.equal(owner.address)
@@ -117,13 +105,10 @@ describe('Template Contract', function () {
     })
 
     it('Should return correct tokenURI for IPFS URLs', async function () {
-      const permissions = 0x12345678
-      const templateURI = 'ipfs://QmTest123'
-
-      await template.createTemplate(permissions, templateURI)
+      await template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       // Check tokenURI returns the DIMO assets URL with IPFS URL
-      expect(await template.tokenURI(1)).to.equal('https://assets.dimo.org/' + templateURI)
+      expect(await template.tokenURI(1)).to.equal('https://assets.dimo.org/' + C.MOCK_TEMPLATE_CID)
     })
 
     it('Should return correct totalSupply', async function () {
@@ -139,10 +124,7 @@ describe('Template Contract', function () {
     })
 
     it('Should allow NFT transfer', async function () {
-      const permissions = 0x12345678
-      const ipfsUrl = 'ipfs://QmTest123'
-
-      await template.createTemplate(permissions, ipfsUrl)
+      await template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       // Transfer NFT to user1
       await template.transferFrom(owner.address, user1.address, 1)
@@ -158,22 +140,16 @@ describe('Template Contract', function () {
     })
 
     it('Should return DIMO assets URL format for IPFS tokenURI', async function () {
-      const permissions = 0x12345678
-      const templateURI = 'ipfs://QmTest123'
-
-      await template.createTemplate(permissions, templateURI)
+      await template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       const tokenURI = await template.tokenURI(1)
-      expect(tokenURI).to.equal('https://assets.dimo.org/ipfs://QmTest123')
-      expect(tokenURI).to.include('https://assets.dimo.org/')
-      expect(tokenURI).to.include(templateURI)
+      expect(tokenURI).to.equal('https://assets.dimo.org/' + C.MOCK_TEMPLATE_CID)
     })
 
     it('Should return templateURI as-is for non-IPFS URLs', async function () {
-      const permissions = 0x12345678
       const templateURI = 'https://example.com/template.json'
 
-      await template.createTemplate(permissions, templateURI)
+      await template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, templateURI)
 
       const tokenURI = await template.tokenURI(1)
       expect(tokenURI).to.equal(templateURI)
@@ -184,7 +160,7 @@ describe('Template Contract', function () {
   describe('SACD Integration', function () {
     beforeEach(async function () {
       // Create a template
-      await template.createTemplate(0x12345678, 'ipfs://QmTemplate123')
+      await template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       // Mint a token to user1
       await mockERC721.mint(user1.address)

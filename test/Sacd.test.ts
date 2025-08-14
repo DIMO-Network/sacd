@@ -46,7 +46,7 @@ describe('Sacd', function () {
               C.MOCK_PERMISSIONS,
               DEFAULT_EXPIRATION,
               0n,
-              C.MOCK_SOURCE
+              C.MOCK_SACD_SOURCE
             )
         )
           .to.be.revertedWithCustomError(sacd, 'Unauthorized')
@@ -65,7 +65,7 @@ describe('Sacd', function () {
               C.MOCK_PERMISSIONS,
               DEFAULT_EXPIRATION,
               0n,
-              C.MOCK_SOURCE
+              C.MOCK_SACD_SOURCE
             )
         ).to.be.reverted
       })
@@ -82,7 +82,7 @@ describe('Sacd', function () {
               C.MOCK_PERMISSIONS,
               DEFAULT_EXPIRATION,
               0n,
-              C.MOCK_SOURCE
+              C.MOCK_SACD_SOURCE
             )
         ).to.be.revertedWithCustomError(sacd, 'ZeroAddress')
       })
@@ -99,7 +99,7 @@ describe('Sacd', function () {
               C.MOCK_PERMISSIONS,
               DEFAULT_EXPIRATION,
               0n,
-              C.MOCK_SOURCE
+              C.MOCK_SACD_SOURCE
             )
         )
           .to.be.revertedWithCustomError(sacd, 'InvalidTokenId')
@@ -107,17 +107,6 @@ describe('Sacd', function () {
       })
       it('Should revert if template permissions do not match', async () => {
         const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
-
-        // Deploy template contract
-        const TemplateModule = await import('../ignition/modules/Template')
-        const template = (await ignition.deploy(TemplateModule.default)).template
-
-        // Set template contract in SACD
-        await sacd.setTemplateContract(await template.getAddress())
-
-        // Create a template with specific permissions
-        const templatePermissions = 0x12345678n
-        await template.createTemplate(templatePermissions, 'ipfs://test-template')
 
         // Try to set permissions with different permissions than template
         const differentPermissions = 0x87654321n
@@ -129,11 +118,11 @@ describe('Sacd', function () {
             differentPermissions,
             DEFAULT_EXPIRATION,
             1n, // templateId = 1
-            C.MOCK_SOURCE
+            C.MOCK_SACD_SOURCE
           )
         )
           .to.be.revertedWithCustomError(sacd, 'TemplatePermissionsMismatch')
-          .withArgs(1n, templatePermissions, differentPermissions)
+          .withArgs(1n, C.MOCK_TEMPLATE_PERMISSIONS, differentPermissions)
       })
     })
 
@@ -152,7 +141,7 @@ describe('Sacd', function () {
               C.MOCK_PERMISSIONS,
               DEFAULT_EXPIRATION,
               0n,
-              C.MOCK_SOURCE
+              C.MOCK_SACD_SOURCE
             )
 
           const permissionRecord = await sacd.permissionRecords(mockErc721Address, 1n, 1n, grantee.address)
@@ -160,7 +149,7 @@ describe('Sacd', function () {
           expect(permissionRecord.permissions).to.equal(C.MOCK_PERMISSIONS)
           expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
           expect(permissionRecord.templateId).to.equal(0n)
-          expect(permissionRecord.source).to.equal(C.MOCK_SOURCE)
+          expect(permissionRecord.source).to.equal(C.MOCK_SACD_SOURCE)
         })
         it('Should correclty set new permissions with matching template permissions', async () => {
           const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
@@ -176,7 +165,7 @@ describe('Sacd', function () {
               C.MOCK_TEMPLATE_PERMISSIONS,
               DEFAULT_EXPIRATION,
               1n,
-              C.MOCK_SOURCE
+              C.MOCK_SACD_SOURCE
             )
 
           const permissionRecord = await sacd.permissionRecords(mockErc721Address, 1n, 1n, grantee.address)
@@ -184,7 +173,7 @@ describe('Sacd', function () {
           expect(permissionRecord.permissions).to.equal(C.MOCK_TEMPLATE_PERMISSIONS)
           expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
           expect(permissionRecord.templateId).to.equal(1n)
-          expect(permissionRecord.source).to.equal(C.MOCK_SOURCE)
+          expect(permissionRecord.source).to.equal(C.MOCK_SACD_SOURCE)
         })
         it('Should correctly set new permissions with superset of template permissions', async () => {
           const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
@@ -204,7 +193,7 @@ describe('Sacd', function () {
               sacdPermissions,
               DEFAULT_EXPIRATION,
               1n,
-              C.MOCK_SOURCE
+              C.MOCK_SACD_SOURCE
             )
 
           const permissionRecord = await sacd.permissionRecords(mockErc721Address, 1n, 1n, grantee.address)
@@ -212,7 +201,7 @@ describe('Sacd', function () {
           expect(permissionRecord.permissions).to.equal(sacdPermissions)
           expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
           expect(permissionRecord.templateId).to.equal(1n)
-          expect(permissionRecord.source).to.equal(C.MOCK_SOURCE)
+          expect(permissionRecord.source).to.equal(C.MOCK_SACD_SOURCE)
         })
       })
 
@@ -225,7 +214,7 @@ describe('Sacd', function () {
             permissions: C.MOCK_PERMISSIONS,
             expiration: DEFAULT_EXPIRATION,
             templateId: 0n,
-            source: C.MOCK_SOURCE,
+            source: C.MOCK_SACD_SOURCE,
           })
 
           const permissionRecord = await sacd.permissionRecords(mockErc721Address, 2n, 1n, grantee.address)
@@ -233,7 +222,7 @@ describe('Sacd', function () {
           expect(permissionRecord.permissions).to.equal(C.MOCK_PERMISSIONS)
           expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
           expect(permissionRecord.templateId).to.equal(0n)
-          expect(permissionRecord.source).to.equal(C.MOCK_SOURCE)
+          expect(permissionRecord.source).to.equal(C.MOCK_SACD_SOURCE)
         })
         it('Should correclty set new permissions with matching template permissions', async () => {
           const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
@@ -243,7 +232,7 @@ describe('Sacd', function () {
             permissions: C.MOCK_TEMPLATE_PERMISSIONS,
             expiration: DEFAULT_EXPIRATION,
             templateId: 1n,
-            source: C.MOCK_SOURCE,
+            source: C.MOCK_SACD_SOURCE,
           })
 
           const permissionRecord = await sacd.permissionRecords(mockErc721Address, 2n, 1n, grantee.address)
@@ -251,7 +240,7 @@ describe('Sacd', function () {
           expect(permissionRecord.permissions).to.equal(C.MOCK_TEMPLATE_PERMISSIONS)
           expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
           expect(permissionRecord.templateId).to.equal(1n)
-          expect(permissionRecord.source).to.equal(C.MOCK_SOURCE)
+          expect(permissionRecord.source).to.equal(C.MOCK_SACD_SOURCE)
         })
         it('Should correctly set new permissions with superset of template permissions', async () => {
           const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
@@ -266,7 +255,7 @@ describe('Sacd', function () {
             permissions: sacdPermissions,
             expiration: DEFAULT_EXPIRATION,
             templateId: 1n,
-            source: C.MOCK_SOURCE,
+            source: C.MOCK_SACD_SOURCE,
           })
 
           const permissionRecord = await sacd.permissionRecords(mockErc721Address, 2n, 1n, grantee.address)
@@ -274,7 +263,7 @@ describe('Sacd', function () {
           expect(permissionRecord.permissions).to.equal(sacdPermissions)
           expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
           expect(permissionRecord.templateId).to.equal(1n)
-          expect(permissionRecord.source).to.equal(C.MOCK_SOURCE)
+          expect(permissionRecord.source).to.equal(C.MOCK_SACD_SOURCE)
         })
       })
     })
@@ -294,11 +283,19 @@ describe('Sacd', function () {
               C.MOCK_PERMISSIONS,
               DEFAULT_EXPIRATION,
               0n,
-              C.MOCK_SOURCE
+              C.MOCK_SACD_SOURCE
             )
         )
           .to.emit(sacd, 'PermissionsSet')
-          .withArgs(mockErc721Address, 1n, C.MOCK_PERMISSIONS, grantee.address, DEFAULT_EXPIRATION, 0n, C.MOCK_SOURCE)
+          .withArgs(
+            mockErc721Address,
+            1n,
+            C.MOCK_PERMISSIONS,
+            grantee.address,
+            DEFAULT_EXPIRATION,
+            0n,
+            C.MOCK_SACD_SOURCE
+          )
       })
     })
 
@@ -316,7 +313,7 @@ describe('Sacd', function () {
             C.MOCK_PERMISSIONS,
             DEFAULT_EXPIRATION,
             0n,
-            C.MOCK_SOURCE
+            C.MOCK_SACD_SOURCE
           )
 
         expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.true
@@ -338,7 +335,7 @@ describe('Sacd', function () {
             C.MOCK_PERMISSIONS,
             DEFAULT_EXPIRATION,
             0n,
-            C.MOCK_SOURCE
+            C.MOCK_SACD_SOURCE
           )
 
         await mockErc721.connect(grantor).transferFrom(grantor.address, otherAccount.address, 1n)
@@ -352,7 +349,7 @@ describe('Sacd', function () {
             C.MOCK_PERMISSIONS,
             DEFAULT_EXPIRATION,
             0n,
-            C.MOCK_SOURCE
+            C.MOCK_SACD_SOURCE
           )
 
         expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.true
@@ -374,7 +371,7 @@ describe('Sacd', function () {
               123n,
               DEFAULT_EXPIRATION,
               '0x000000',
-              C.MOCK_SOURCE
+              C.MOCK_SACD_SOURCE
             )
         ).to.be.revertedWithCustomError(sacd, 'ZeroAddress')
       })
@@ -384,7 +381,14 @@ describe('Sacd', function () {
         await expect(
           sacd
             .connect(grantee)
-            .setPayment(hre.ethers.ZeroAddress, grantor.address, 123n, DEFAULT_EXPIRATION, '0x000000', C.MOCK_SOURCE)
+            .setPayment(
+              hre.ethers.ZeroAddress,
+              grantor.address,
+              123n,
+              DEFAULT_EXPIRATION,
+              '0x000000',
+              C.MOCK_SACD_SOURCE
+            )
         ).to.be.revertedWithCustomError(sacd, 'InvalidCurrency')
       })
       it('Should revert if asset is not address(0) and currency is not empty', async () => {
@@ -399,7 +403,7 @@ describe('Sacd', function () {
               123n,
               DEFAULT_EXPIRATION,
               C.MOCK_PAYMENT_CURRENCY,
-              C.MOCK_SOURCE
+              C.MOCK_SACD_SOURCE
             )
         ).to.be.revertedWithCustomError(sacd, 'InvalidCurrency')
       })
@@ -419,7 +423,7 @@ describe('Sacd', function () {
               C.MOCK_PAYMENT_AMOUNT,
               DEFAULT_EXPIRATION,
               '0x000000',
-              C.MOCK_SOURCE
+              C.MOCK_SACD_SOURCE
             )
 
           const paymentRecord = await sacd.currentPaymentRecord(mockErc20Address, grantee.address, grantor.address)
@@ -427,7 +431,7 @@ describe('Sacd', function () {
           expect(paymentRecord.amount).to.equal(C.MOCK_PAYMENT_AMOUNT)
           expect(paymentRecord.expiration).to.equal(DEFAULT_EXPIRATION)
           expect(paymentRecord.currency).to.equal('0x000000')
-          expect(paymentRecord.source).to.equal(C.MOCK_SOURCE)
+          expect(paymentRecord.source).to.equal(C.MOCK_SACD_SOURCE)
         })
       })
 
@@ -445,7 +449,7 @@ describe('Sacd', function () {
                 C.MOCK_PAYMENT_AMOUNT,
                 DEFAULT_EXPIRATION,
                 '0x000000',
-                C.MOCK_SOURCE
+                C.MOCK_SACD_SOURCE
               )
           )
             .to.emit(sacd, 'PaymentSet')
@@ -455,7 +459,7 @@ describe('Sacd', function () {
               grantor.address,
               C.MOCK_PAYMENT_AMOUNT,
               DEFAULT_EXPIRATION,
-              C.MOCK_SOURCE
+              C.MOCK_SACD_SOURCE
             )
         })
       })
@@ -474,7 +478,7 @@ describe('Sacd', function () {
               C.MOCK_PAYMENT_AMOUNT,
               DEFAULT_EXPIRATION,
               C.MOCK_PAYMENT_CURRENCY,
-              C.MOCK_SOURCE
+              C.MOCK_SACD_SOURCE
             )
 
           const paymentRecord = await sacd.currentPaymentRecord(
@@ -486,7 +490,7 @@ describe('Sacd', function () {
           expect(paymentRecord.amount).to.equal(C.MOCK_PAYMENT_AMOUNT)
           expect(paymentRecord.expiration).to.equal(DEFAULT_EXPIRATION)
           expect(paymentRecord.currency).to.equal(C.MOCK_PAYMENT_CURRENCY)
-          expect(paymentRecord.source).to.equal(C.MOCK_SOURCE)
+          expect(paymentRecord.source).to.equal(C.MOCK_SACD_SOURCE)
         })
       })
 
@@ -503,7 +507,7 @@ describe('Sacd', function () {
                 C.MOCK_PAYMENT_AMOUNT,
                 DEFAULT_EXPIRATION,
                 C.MOCK_PAYMENT_CURRENCY,
-                C.MOCK_SOURCE
+                C.MOCK_SACD_SOURCE
               )
           )
             .to.emit(sacd, 'PaymentSet')
@@ -513,7 +517,7 @@ describe('Sacd', function () {
               grantor.address,
               C.MOCK_PAYMENT_AMOUNT,
               DEFAULT_EXPIRATION,
-              C.MOCK_SOURCE
+              C.MOCK_SACD_SOURCE
             )
         })
       })
@@ -540,7 +544,7 @@ describe('Sacd', function () {
           C.MOCK_PERMISSIONS,
           DEFAULT_EXPIRATION,
           0n,
-          C.MOCK_SOURCE
+          C.MOCK_SACD_SOURCE
         )
 
       expect(await sacd.hasPermission(mockErc721Address, 2n, grantee.address, 0)).to.be.false
@@ -558,7 +562,7 @@ describe('Sacd', function () {
           C.MOCK_PERMISSIONS,
           DEFAULT_EXPIRATION,
           0n,
-          C.MOCK_SOURCE
+          C.MOCK_SACD_SOURCE
         )
 
       expect(await sacd.hasPermission(mockErc721Address, 1n, otherAccount.address, 0)).to.be.false
@@ -576,7 +580,7 @@ describe('Sacd', function () {
           C.MOCK_PERMISSIONS,
           DEFAULT_EXPIRATION,
           0n,
-          C.MOCK_SOURCE
+          C.MOCK_SACD_SOURCE
         )
       await time.increase(time.duration.years(5))
 
@@ -595,7 +599,7 @@ describe('Sacd', function () {
           C.MOCK_PERMISSIONS,
           DEFAULT_EXPIRATION,
           0n,
-          C.MOCK_SOURCE
+          C.MOCK_SACD_SOURCE
         )
 
       expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 0)).to.be.false
@@ -613,7 +617,7 @@ describe('Sacd', function () {
           C.MOCK_PERMISSIONS,
           DEFAULT_EXPIRATION,
           0n,
-          C.MOCK_SOURCE
+          C.MOCK_SACD_SOURCE
         )
 
       expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.true
@@ -639,7 +643,7 @@ describe('Sacd', function () {
             C.MOCK_PERMISSIONS,
             DEFAULT_EXPIRATION,
             0n,
-            C.MOCK_SOURCE
+            C.MOCK_SACD_SOURCE
           )
 
         expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.true
@@ -681,7 +685,7 @@ describe('Sacd', function () {
           C.MOCK_PERMISSIONS,
           DEFAULT_EXPIRATION,
           0n,
-          C.MOCK_SOURCE
+          C.MOCK_SACD_SOURCE
         )
 
       expect(await sacd.hasPermissions(mockErc721Address, 2n, grantee.address, C.MOCK_PERMISSIONS)).to.be.false
@@ -699,7 +703,7 @@ describe('Sacd', function () {
           C.MOCK_PERMISSIONS,
           DEFAULT_EXPIRATION,
           0n,
-          C.MOCK_SOURCE
+          C.MOCK_SACD_SOURCE
         )
 
       expect(await sacd.hasPermissions(mockErc721Address, 1n, otherAccount.address, C.MOCK_PERMISSIONS)).to.be.false
@@ -717,7 +721,7 @@ describe('Sacd', function () {
           C.MOCK_PERMISSIONS,
           DEFAULT_EXPIRATION,
           0n,
-          C.MOCK_SOURCE
+          C.MOCK_SACD_SOURCE
         )
 
       await time.increase(time.duration.years(5))
@@ -737,7 +741,7 @@ describe('Sacd', function () {
           C.MOCK_PERMISSIONS,
           DEFAULT_EXPIRATION,
           0n,
-          C.MOCK_SOURCE
+          C.MOCK_SACD_SOURCE
         )
 
       // C.MOCK_PERMISSIONS 816 11 00 11 00 00
@@ -757,7 +761,7 @@ describe('Sacd', function () {
           C.MOCK_PERMISSIONS,
           DEFAULT_EXPIRATION,
           0n,
-          C.MOCK_SOURCE
+          C.MOCK_SACD_SOURCE
         )
 
       expect(await sacd.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.be.true
@@ -783,7 +787,7 @@ describe('Sacd', function () {
             C.MOCK_PERMISSIONS,
             DEFAULT_EXPIRATION,
             0n,
-            C.MOCK_SOURCE
+            C.MOCK_SACD_SOURCE
           )
 
         expect(await sacd.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.be.true
@@ -825,7 +829,7 @@ describe('Sacd', function () {
           C.MOCK_PERMISSIONS,
           DEFAULT_EXPIRATION,
           0n,
-          C.MOCK_SOURCE
+          C.MOCK_SACD_SOURCE
         )
 
       expect(await sacd.getPermissions(mockErc721Address, 2n, grantee.address, C.MOCK_PERMISSIONS)).to.equal(0)
@@ -843,7 +847,7 @@ describe('Sacd', function () {
           C.MOCK_PERMISSIONS,
           DEFAULT_EXPIRATION,
           0n,
-          C.MOCK_SOURCE
+          C.MOCK_SACD_SOURCE
         )
 
       expect(await sacd.getPermissions(mockErc721Address, 1n, otherAccount.address, C.MOCK_PERMISSIONS)).to.equal(0)
@@ -861,7 +865,7 @@ describe('Sacd', function () {
           C.MOCK_PERMISSIONS,
           DEFAULT_EXPIRATION,
           0n,
-          C.MOCK_SOURCE
+          C.MOCK_SACD_SOURCE
         )
 
       await time.increase(time.duration.years(5))
@@ -881,7 +885,7 @@ describe('Sacd', function () {
           C.MOCK_PERMISSIONS,
           DEFAULT_EXPIRATION,
           0n,
-          C.MOCK_SOURCE
+          C.MOCK_SACD_SOURCE
         )
 
       // C.MOCK_PERMISSIONS 816 11 00 11 00 00
@@ -912,7 +916,7 @@ describe('Sacd', function () {
             C.MOCK_PERMISSIONS,
             DEFAULT_EXPIRATION,
             0n,
-            C.MOCK_SOURCE
+            C.MOCK_SACD_SOURCE
           )
 
         expect(await sacd.getPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.equal(
@@ -940,7 +944,7 @@ describe('Sacd', function () {
           C.MOCK_PERMISSIONS,
           DEFAULT_EXPIRATION,
           0n,
-          C.MOCK_SOURCE
+          C.MOCK_SACD_SOURCE
         )
 
       const tokenVersionBefore = await sacd.tokenIdToVersion(mockErc721Address, 1n)
