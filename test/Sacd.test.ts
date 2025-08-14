@@ -19,7 +19,7 @@ describe('Sacd', function () {
     const template = (await ignition.deploy(TemplateModule)).template as unknown as Template
 
     // Create a template with specific permissions
-    await template.createTemplate(C.MOCK_TEMPLATE_PERMISSIONS, 'ipfs://test-template')
+    await template.createTemplate(owner, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
     const sacd = (await ignition.deploy(SacdModule)).sacd as unknown as Sacd
     const mockErc721 = await mockErc721Factory.deploy(await sacd.getAddress())
@@ -111,18 +111,20 @@ describe('Sacd', function () {
         // Try to set permissions with different permissions than template
         const differentPermissions = 0x87654321n
         await expect(
-          sacd.connect(grantor).setPermissions(
-            await mockErc721.getAddress(),
-            1n,
-            grantee.address,
-            differentPermissions,
-            DEFAULT_EXPIRATION,
-            1n, // templateId = 1
-            C.MOCK_SACD_SOURCE
-          )
+          sacd
+            .connect(grantor)
+            .setPermissions(
+              await mockErc721.getAddress(),
+              1n,
+              grantee.address,
+              differentPermissions,
+              DEFAULT_EXPIRATION,
+              C.MOCK_TEMPLATE_TOKEN_ID,
+              C.MOCK_SACD_SOURCE
+            )
         )
           .to.be.revertedWithCustomError(sacd, 'TemplatePermissionsMismatch')
-          .withArgs(1n, C.MOCK_TEMPLATE_PERMISSIONS, differentPermissions)
+          .withArgs(C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_TEMPLATE_PERMISSIONS, differentPermissions)
       })
     })
 
@@ -164,7 +166,7 @@ describe('Sacd', function () {
               grantee.address,
               C.MOCK_TEMPLATE_PERMISSIONS,
               DEFAULT_EXPIRATION,
-              1n,
+              C.MOCK_TEMPLATE_TOKEN_ID,
               C.MOCK_SACD_SOURCE
             )
 
@@ -172,7 +174,7 @@ describe('Sacd', function () {
 
           expect(permissionRecord.permissions).to.equal(C.MOCK_TEMPLATE_PERMISSIONS)
           expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
-          expect(permissionRecord.templateId).to.equal(1n)
+          expect(permissionRecord.templateId).to.equal(C.MOCK_TEMPLATE_TOKEN_ID)
           expect(permissionRecord.source).to.equal(C.MOCK_SACD_SOURCE)
         })
         it('Should correctly set new permissions with superset of template permissions', async () => {
@@ -192,7 +194,7 @@ describe('Sacd', function () {
               grantee.address,
               sacdPermissions,
               DEFAULT_EXPIRATION,
-              1n,
+              C.MOCK_TEMPLATE_TOKEN_ID,
               C.MOCK_SACD_SOURCE
             )
 
@@ -200,7 +202,7 @@ describe('Sacd', function () {
 
           expect(permissionRecord.permissions).to.equal(sacdPermissions)
           expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
-          expect(permissionRecord.templateId).to.equal(1n)
+          expect(permissionRecord.templateId).to.equal(C.MOCK_TEMPLATE_TOKEN_ID)
           expect(permissionRecord.source).to.equal(C.MOCK_SACD_SOURCE)
         })
       })
@@ -231,7 +233,7 @@ describe('Sacd', function () {
             grantee: grantee.address,
             permissions: C.MOCK_TEMPLATE_PERMISSIONS,
             expiration: DEFAULT_EXPIRATION,
-            templateId: 1n,
+            templateId: C.MOCK_TEMPLATE_TOKEN_ID,
             source: C.MOCK_SACD_SOURCE,
           })
 
@@ -239,7 +241,7 @@ describe('Sacd', function () {
 
           expect(permissionRecord.permissions).to.equal(C.MOCK_TEMPLATE_PERMISSIONS)
           expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
-          expect(permissionRecord.templateId).to.equal(1n)
+          expect(permissionRecord.templateId).to.equal(C.MOCK_TEMPLATE_TOKEN_ID)
           expect(permissionRecord.source).to.equal(C.MOCK_SACD_SOURCE)
         })
         it('Should correctly set new permissions with superset of template permissions', async () => {
@@ -254,7 +256,7 @@ describe('Sacd', function () {
             grantee: grantee.address,
             permissions: sacdPermissions,
             expiration: DEFAULT_EXPIRATION,
-            templateId: 1n,
+            templateId: C.MOCK_TEMPLATE_TOKEN_ID,
             source: C.MOCK_SACD_SOURCE,
           })
 
@@ -262,7 +264,7 @@ describe('Sacd', function () {
 
           expect(permissionRecord.permissions).to.equal(sacdPermissions)
           expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
-          expect(permissionRecord.templateId).to.equal(1n)
+          expect(permissionRecord.templateId).to.equal(C.MOCK_TEMPLATE_TOKEN_ID)
           expect(permissionRecord.source).to.equal(C.MOCK_SACD_SOURCE)
         })
       })

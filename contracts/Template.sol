@@ -16,12 +16,11 @@ import './interfaces/ITemplate.sol';
  */
 contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, ERC721Upgradeable, ITemplate {
   struct TemplateStorage {
-    string baseURI;
-    uint256 templateCounter;
+    bytes baseURI;
     mapping(uint256 => TemplateData) templates;
   }
 
-  string constant IPFS_PREFIX = 'ipfs://';
+  bytes constant IPFS_PREFIX = bytes('ipfs://');
   uint256 constant IPFS_PREFIX_LENGTH = 7;
   bytes32 constant UPGRADER_ROLE = keccak256('UPGRADER_ROLE');
   bytes32 constant TEMPLATE_MANAGER_ROLE = keccak256('TEMPLATE_MANAGER_ROLE');
@@ -43,7 +42,7 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
     __UUPSUpgradeable_init();
     __ERC721_init('Template', 'TMPL');
 
-    _getTemplateStorage().baseURI = baseURI_;
+    _getTemplateStorage().baseURI = bytes(baseURI_);
 
     _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     _grantRole(TEMPLATE_MANAGER_ROLE, msg.sender);
@@ -53,20 +52,24 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
    * @notice Creates a new template with predefined permissions and template URI
    * @dev Only template managers can create templates
    * @param permissions The uint256 that represents the byte array of permissions
-   * @param templateURI The URI to the templatable JSON document
+   * @param templateURI The URI to the templatable JSON document (must be IPFS URI)
    * @return templateId The unique identifier for the created template
    */
   function createTemplate(
+    address owner,
     uint256 permissions,
     string calldata templateURI
   ) external onlyRole(TEMPLATE_MANAGER_ROLE) returns (uint256 templateId) {
-    if (bytes(templateURI).length == 0) {
+    // Verify this is a valid IPFS URI
+    (bool isValid, string memory cid) = _extractCIDFromURI(templateURI);
+    if (!isValid) {
       revert InvalidTemplateData();
     }
 
     TemplateStorage storage $ = _getTemplateStorage();
 
-    templateId = ++$.templateCounter;
+    // Generate deterministic ID from the IPFS CID
+    templateId = uint256(keccak256(bytes(cid)));
 
     TemplateData memory newTemplate = TemplateData({
       templateId: templateId,
@@ -80,9 +83,9 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
     $.templates[templateId] = newTemplate;
 
     // Mint NFT to the creator
-    _mint(msg.sender, templateId);
+    _safeMint(owner, templateId);
 
-    emit TemplateCreated(templateId, msg.sender, permissions, templateURI);
+    emit TemplateCreated(templateId, owner, permissions, templateURI);
   }
 
   /**
@@ -142,18 +145,10 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
   }
 
   /**
-   * @notice Returns the total supply of templates
-   * @return The total number of templates
-   */
-  function totalSupply() public view returns (uint256) {
-    return _getTemplateStorage().templateCounter;
-  }
-
-  /**
    * @notice Returns the base URI used for token metadata
    */
   function baseURI() public view returns (string memory) {
-    return _getTemplateStorage().baseURI;
+    return string(_getTemplateStorage().baseURI);
   }
 
   /**
@@ -172,9 +167,9 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
 
     // If template URI starts with IPFS_PREFIX, prepend baseURI
     if (bytes(template.templateURI).length >= IPFS_PREFIX_LENGTH) {
-      (string memory prefix, string memory suffix) = _splitAt(template.templateURI, IPFS_PREFIX_LENGTH);
-      if (keccak256(abi.encodePacked(prefix)) == keccak256(abi.encodePacked(IPFS_PREFIX))) {
-        return string.concat($.baseURI, suffix);
+      (bytes memory prefix, bytes memory suffix) = _splitAt(template.templateURI, IPFS_PREFIX_LENGTH);
+      if (keccak256(prefix) == keccak256(IPFS_PREFIX)) {
+        return string(bytes.concat($.baseURI, suffix));
       }
     }
 
@@ -197,7 +192,7 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
    * @notice Override _baseURI
    */
   function _baseURI() internal view override returns (string memory) {
-    return _getTemplateStorage().baseURI;
+    return string(_getTemplateStorage().baseURI);
   }
 
   /**
@@ -217,14 +212,47 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
   }
 
   /**
+   * @notice Extracts and validates the CID from an IPFS URI
+   * @dev Checks if the URI is a valid IPFS URI with a basic CIDv0 format check
+   * @param uri The URI string to validate and extract CID from
+   * @return isValid Boolean indicating if the URI is a valid IPFS URI with proper CID
+   * @return cid The extracted CID portion of the URI if valid, empty string otherwise
+   */
+  function _extractCIDFromURI(string memory uri) private pure returns (bool isValid, string memory cid) {
+    if (bytes(uri).length < IPFS_PREFIX_LENGTH) {
+      return (false, '');
+    }
+
+    (bytes memory prefix, bytes memory cidBytes) = _splitAt(uri, IPFS_PREFIX_LENGTH);
+    if (keccak256(prefix) != keccak256(IPFS_PREFIX)) {
+      return (false, '');
+    }
+
+    if (cidBytes.length != 46) {
+      return (false, '');
+    }
+    if (cidBytes[0] != 'Q' || cidBytes[1] != 'm') {
+      return (false, '');
+    }
+
+    return (true, string(cidBytes));
+  }
+
+  /**
    * @dev Helper function to split a string into two parts at a specified index
    * @param str The string to split
    * @param splitIndex The index at which to split the string
    * @return prefix The part of the string from index 0 to splitIndex-1
    * @return suffix The part of the string from splitIndex to the end
    */
-  function _splitAt(string memory str, uint256 splitIndex) private pure returns (string memory, string memory) {
+  function _splitAt(string memory str, uint256 splitIndex) private pure returns (bytes memory, bytes memory) {
     bytes memory strBytes = bytes(str);
+
+    // Check if splitIndex is valid
+    if (splitIndex > strBytes.length) {
+      splitIndex = strBytes.length;
+    }
+
     bytes memory prefixBytes = new bytes(splitIndex);
     bytes memory suffixBytes = new bytes(strBytes.length - splitIndex);
 
@@ -234,6 +262,6 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
     for (uint256 i = splitIndex; i < strBytes.length; i++) {
       suffixBytes[i - splitIndex] = strBytes[i];
     }
-    return (string(prefixBytes), string(suffixBytes));
+    return (prefixBytes, suffixBytes);
   }
 }

@@ -1,6 +1,6 @@
 import { buildModule } from '@nomicfoundation/hardhat-ignition/modules'
 
-const TEMPLATE_BASE_URI = 'https://assets.dimo.xyz/'
+const TEMPLATE_BASE_URI = 'https://assets.dimo.xyz/ipfs/'
 
 const TemplateProxyModule = buildModule('TemplateProxyModule', (m) => {
   // Deploy the implementation contract

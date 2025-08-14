@@ -26,7 +26,11 @@ interface ITemplate is IERC721 {
   error InvalidTemplateData();
   error TemplateAlreadyExists(uint256 templateId);
 
-  function createTemplate(uint256 permissions, string calldata templateURI) external returns (uint256 templateId);
+  function createTemplate(
+    address owner,
+    uint256 permissions,
+    string calldata templateURI
+  ) external returns (uint256 templateId);
 
   function deactivateTemplate(uint256 templateId) external;
 
