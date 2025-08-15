@@ -72,17 +72,15 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
     templateId = uint256(keccak256(bytes(cid)));
 
     TemplateData memory newTemplate = TemplateData({
-      templateId: templateId,
-      owner: msg.sender,
+      owner: owner,
       permissions: permissions,
       templateURI: templateURI,
-      isActive: true,
-      createdAt: block.timestamp
+      isActive: true
     });
 
     $.templates[templateId] = newTemplate;
 
-    // Mint NFT to the creator
+    // Mint NFT to the owner
     _safeMint(owner, templateId);
 
     emit TemplateCreated(templateId, owner, permissions, templateURI);

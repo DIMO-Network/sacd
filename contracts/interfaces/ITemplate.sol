@@ -10,12 +10,10 @@ import '@openzeppelin/contracts/token/ERC721/IERC721.sol';
  */
 interface ITemplate is IERC721 {
   struct TemplateData {
-    uint256 templateId;
     address owner;
     uint256 permissions;
     string templateURI;
     bool isActive;
-    uint256 createdAt;
   }
 
   event TemplateCreated(uint256 indexed templateId, address indexed creator, uint256 permissions, string ipfsUrl);

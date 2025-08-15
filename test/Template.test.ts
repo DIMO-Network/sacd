@@ -43,7 +43,6 @@ describe('Template', function () {
         .withArgs(C.MOCK_TEMPLATE_TOKEN_ID, owner.address, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       const templateData = await template.getTemplate(C.MOCK_TEMPLATE_TOKEN_ID)
-      expect(templateData.templateId).to.equal(C.MOCK_TEMPLATE_TOKEN_ID)
       expect(templateData.owner).to.equal(owner.address)
       expect(templateData.permissions).to.equal(C.MOCK_TEMPLATE_PERMISSIONS)
       expect(templateData.templateURI).to.equal(C.MOCK_TEMPLATE_SOURCE)
