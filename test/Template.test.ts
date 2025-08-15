@@ -158,10 +158,10 @@ describe('Template', function () {
       expect(await template.balanceOf(user1.address)).to.equal(1)
     })
 
-    it('Should revert tokenURI for non-existent template', async function () {
+    it('Should return an empty sring for non-existent template', async function () {
       const { template } = await loadFixture(setup)
 
-      await expect(template.tokenURI(999)).to.be.revertedWithCustomError(template, 'TemplateNotFound')
+      expect(template.tokenURI(999)).to.be.empty
     })
 
     it('Should return DIMO assets URL format for IPFS tokenURI', async function () {

@@ -110,34 +110,28 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
   /**
    * @notice Retrieves a template by its ID
    * @param templateId The ID of the template to retrieve
-   * @return The template data
+   * @return template The template data
    */
-  function getTemplate(uint256 templateId) external view returns (TemplateData memory) {
-    TemplateStorage storage $ = _getTemplateStorage();
-    TemplateData memory template = $.templates[templateId];
-
+  function getTemplate(uint256 templateId) external view returns (TemplateData memory template) {
     if (_ownerOf(templateId) == address(0)) {
       revert TemplateNotFound(templateId);
     }
 
-    return template;
+    template = _getTemplateStorage().templates[templateId];
   }
 
   /**
    * @notice Checks if a template is active
    * @param templateId The ID of the template to check
-   * @return True if the template exists and is active
+   * @return isActive True if the template exists and is active
    */
-  function isTemplateActive(uint256 templateId) external view returns (bool) {
-    TemplateStorage storage $ = _getTemplateStorage();
-    TemplateData memory template = $.templates[templateId];
-
+  function isTemplateActive(uint256 templateId) external view returns (bool isActive) {
     // Check if template exists and is active
     if (_ownerOf(templateId) == address(0)) {
       return false;
     }
 
-    return template.isActive;
+    isActive = _getTemplateStorage().templates[templateId].isActive;
   }
 
   /**
@@ -154,23 +148,23 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
    * @return The token URI
    */
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
-    TemplateStorage storage $ = _getTemplateStorage();
-    TemplateData memory template = $.templates[tokenId];
-
     if (_ownerOf(tokenId) == address(0)) {
       revert TemplateNotFound(tokenId);
     }
 
+    TemplateStorage storage $ = _getTemplateStorage();
+    string memory templateURI = $.templates[tokenId].templateURI;
+
     // If template URI starts with IPFS_PREFIX, prepend baseURI
-    if (bytes(template.templateURI).length >= IPFS_PREFIX_LENGTH) {
-      (bytes memory prefix, bytes memory suffix) = _splitAt(template.templateURI, IPFS_PREFIX_LENGTH);
+    if (bytes(templateURI).length >= IPFS_PREFIX_LENGTH) {
+      (bytes memory prefix, bytes memory suffix) = _splitAt(templateURI, IPFS_PREFIX_LENGTH);
       if (keccak256(prefix) == keccak256(IPFS_PREFIX)) {
         return string(bytes.concat($.baseURI, suffix));
       }
     }
 
     // Otherwise return the template URI as-is
-    return template.templateURI;
+    return templateURI;
   }
 
   /**
