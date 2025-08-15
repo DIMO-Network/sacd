@@ -67,13 +67,16 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   /**
    * @notice Initializes the contract
    * @dev Sets default admin role to msg.sender
+   * @param templateContractAddress The address of the Template contract
    */
-  function initialize() external initializer {
+  function initialize(address templateContractAddress) external initializer {
     __AccessControl_init();
     __UUPSUpgradeable_init();
 
     _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     _grantRole(ADMIN_ROLE, msg.sender);
+
+    _getSacdStorage().templateContract = templateContractAddress;
   }
 
   /**
