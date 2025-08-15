@@ -52,16 +52,16 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
    * @notice Creates a new template with predefined permissions and template URI
    * @dev Only template managers can create templates
    * @param permissions The uint256 that represents the byte array of permissions
-   * @param templateURI The URI to the templatable JSON document (must be IPFS URI)
+   * @param source The URI to the templatable JSON document (must be IPFS URI)
    * @return templateId The unique identifier for the created template
    */
   function createTemplate(
     address owner,
     uint256 permissions,
-    string calldata templateURI
+    string calldata source
   ) external onlyRole(TEMPLATE_MANAGER_ROLE) returns (uint256 templateId) {
     // Verify this is a valid IPFS URI
-    (bool isValid, string memory cid) = _extractCIDFromURI(templateURI);
+    (bool isValid, string memory cid) = _extractCIDFromURI(source);
     if (!isValid) {
       revert InvalidTemplateData();
     }
@@ -71,18 +71,14 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
     // Generate deterministic ID from the IPFS CID
     templateId = uint256(keccak256(bytes(cid)));
 
-    TemplateData memory newTemplate = TemplateData({
-      permissions: permissions,
-      templateURI: templateURI,
-      isActive: true
-    });
+    TemplateData memory newTemplate = TemplateData({permissions: permissions, source: source, isActive: true});
 
     $.templates[templateId] = newTemplate;
 
     // Mint NFT to the owner
     _safeMint(owner, templateId);
 
-    emit TemplateCreated(templateId, owner, permissions, templateURI);
+    emit TemplateCreated(templateId, owner, permissions, source);
   }
 
   /**
@@ -160,18 +156,18 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
     }
 
     TemplateStorage storage $ = _getTemplateStorage();
-    string memory templateURI = $.templates[tokenId].templateURI;
+    string memory source = $.templates[tokenId].source;
 
     // If template URI starts with IPFS_PREFIX, prepend baseURI
-    if (bytes(templateURI).length >= IPFS_PREFIX_LENGTH) {
-      (bytes memory prefix, bytes memory suffix) = _splitAt(templateURI, IPFS_PREFIX_LENGTH);
+    if (bytes(source).length >= IPFS_PREFIX_LENGTH) {
+      (bytes memory prefix, bytes memory suffix) = _splitAt(source, IPFS_PREFIX_LENGTH);
       if (keccak256(prefix) == keccak256(IPFS_PREFIX)) {
         return string(bytes.concat($.baseURI, suffix));
       }
     }
 
     // Otherwise return the template URI as-is
-    return templateURI;
+    return source;
   }
 
   /**

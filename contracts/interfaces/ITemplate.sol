@@ -11,7 +11,7 @@ import '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 interface ITemplate is IERC721 {
   struct TemplateData {
     uint256 permissions;
-    string templateURI;
+    string source;
     bool isActive;
   }
 
@@ -26,7 +26,7 @@ interface ITemplate is IERC721 {
   function createTemplate(
     address owner,
     uint256 permissions,
-    string calldata templateURI
+    string calldata source
   ) external returns (uint256 templateId);
 
   function deactivateTemplate(uint256 templateId) external;
