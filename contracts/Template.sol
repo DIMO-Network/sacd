@@ -72,7 +72,6 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
     templateId = uint256(keccak256(bytes(cid)));
 
     TemplateData memory newTemplate = TemplateData({
-      owner: owner,
       permissions: permissions,
       templateURI: templateURI,
       isActive: true
@@ -92,21 +91,20 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
    * @param templateId The ID of the template to deactivate
    */
   function deactivateTemplate(uint256 templateId) external {
-    // Check if caller owns the template NFT
-    if (ownerOf(templateId) != msg.sender) {
-      revert UnauthorizedTemplateAccess(msg.sender, templateId);
-    }
+    address templateOwner = _ownerOf(templateId);
 
-    TemplateStorage storage $ = _getTemplateStorage();
-    TemplateData storage template = $.templates[templateId];
-
-    if (template.owner == address(0)) {
+    if (templateOwner == address(0)) {
       revert TemplateNotFound(templateId);
     }
 
-    template.isActive = false;
+    // Check if caller owns the template NFT
+    if (templateOwner != msg.sender) {
+      revert UnauthorizedTemplateAccess(msg.sender, templateId);
+    }
 
-    emit TemplateDeactivated(templateId, msg.sender);
+    _getTemplateStorage().templates[templateId].isActive = false;
+
+    emit TemplateDeactivated(templateId);
   }
 
   /**
@@ -118,7 +116,7 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
     TemplateStorage storage $ = _getTemplateStorage();
     TemplateData memory template = $.templates[templateId];
 
-    if (template.owner == address(0)) {
+    if (_ownerOf(templateId) == address(0)) {
       revert TemplateNotFound(templateId);
     }
 
@@ -135,7 +133,7 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
     TemplateData memory template = $.templates[templateId];
 
     // Check if template exists and is active
-    if (template.owner == address(0)) {
+    if (_ownerOf(templateId) == address(0)) {
       return false;
     }
 
@@ -159,7 +157,7 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
     TemplateStorage storage $ = _getTemplateStorage();
     TemplateData memory template = $.templates[tokenId];
 
-    if (template.owner == address(0)) {
+    if (_ownerOf(tokenId) == address(0)) {
       revert TemplateNotFound(tokenId);
     }
 

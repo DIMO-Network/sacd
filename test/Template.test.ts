@@ -43,7 +43,6 @@ describe('Template', function () {
         .withArgs(C.MOCK_TEMPLATE_TOKEN_ID, owner.address, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       const templateData = await template.getTemplate(C.MOCK_TEMPLATE_TOKEN_ID)
-      expect(templateData.owner).to.equal(owner.address)
       expect(templateData.permissions).to.equal(C.MOCK_TEMPLATE_PERMISSIONS)
       expect(templateData.templateURI).to.equal(C.MOCK_TEMPLATE_SOURCE)
       expect(templateData.isActive).to.be.true
@@ -106,7 +105,7 @@ describe('Template', function () {
       // Deactivate template
       await expect(template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID))
         .to.emit(template, 'TemplateDeactivated')
-        .withArgs(C.MOCK_TEMPLATE_TOKEN_ID, owner.address)
+        .withArgs(C.MOCK_TEMPLATE_TOKEN_ID)
 
       const templateData = await template.getTemplate(C.MOCK_TEMPLATE_TOKEN_ID)
       expect(templateData.isActive).to.be.false
