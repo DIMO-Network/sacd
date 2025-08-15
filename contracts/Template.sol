@@ -137,8 +137,15 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
   /**
    * @notice Returns the base URI used for token metadata
    */
-  function baseURI() public view returns (string memory) {
-    return string(_getTemplateStorage().baseURI);
+  function baseURI() external view returns (bytes memory) {
+    return _getTemplateStorage().baseURI;
+  }
+
+  /**
+   * @notice Returns the TemplateData associated with a template ID
+   */
+  function templates(uint256 templateId) external view returns (TemplateData memory templateData) {
+    templateData = _getTemplateStorage().templates[templateId];
   }
 
   /**
