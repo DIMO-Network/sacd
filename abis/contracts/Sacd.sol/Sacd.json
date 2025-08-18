@@ -94,6 +94,27 @@
         "internalType": "uint256",
         "name": "templateId",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "expectedAsset",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "providedAsset",
+        "type": "address"
+      }
+    ],
+    "name": "TemplateAssetMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "templateId",
+        "type": "uint256"
       }
     ],
     "name": "TemplateNotActive",

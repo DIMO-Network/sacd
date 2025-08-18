@@ -110,8 +110,12 @@ describe('Sacd', function () {
           .to.be.revertedWithCustomError(sacd, 'InvalidTokenId')
           .withArgs(await mockErc721.getAddress(), 2)
       })
-      it('Should revert if template permissions do not match', async () => {
+      it('Should revert if template asset do not match', async () => {
         const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        const newMockErc721Factory = await hre.ethers.getContractFactory('MockERC721withSacd')
+        const newMockErc721 = await newMockErc721Factory.deploy(await sacd.getAddress())
+        await newMockErc721.mint(grantor.address)
 
         // Try to set permissions with different permissions than template
         const differentPermissions = 0x87654321n
@@ -119,7 +123,29 @@ describe('Sacd', function () {
           sacd
             .connect(grantor)
             .setPermissions(
-              await mockErc721.getAddress(),
+              await newMockErc721.getAddress(),
+              1n,
+              grantee.address,
+              differentPermissions,
+              DEFAULT_EXPIRATION,
+              C.MOCK_TEMPLATE_TOKEN_ID,
+              C.MOCK_SACD_SOURCE
+            )
+        )
+          .to.be.revertedWithCustomError(sacd, 'TemplateAssetMismatch')
+          .withArgs(C.MOCK_TEMPLATE_TOKEN_ID, await mockErc721.getAddress(), await newMockErc721.getAddress())
+      })
+      it('Should revert if template permissions do not match', async () => {
+        const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+        const MOCK_ERC_721_ADDRESS = await mockErc721.getAddress()
+
+        // Try to set permissions with different permissions than template
+        const differentPermissions = 0x87654321n
+        await expect(
+          sacd
+            .connect(grantor)
+            .setPermissions(
+              MOCK_ERC_721_ADDRESS,
               1n,
               grantee.address,
               differentPermissions,

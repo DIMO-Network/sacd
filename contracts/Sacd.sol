@@ -57,6 +57,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   error InvalidTokenId(address asset, uint256 tokenId);
   error TemplateNotActive(uint256 templateId);
   error InvalidCurrency();
+  error TemplateAssetMismatch(uint256 templateId, address expectedAsset, address providedAsset);
   error TemplatePermissionsMismatch(uint256 templateId, uint256 expectedPermissions, uint256 providedPermissions);
 
   /// @custom:oz-upgrades-unsafe-allow constructor
@@ -125,6 +126,9 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
 
         if (templateContract != address(0)) {
           try ITemplate(templateContract).getTemplate(templateId) returns (ITemplate.TemplateData memory template) {
+            if (template.asset != asset) {
+              revert TemplateAssetMismatch(templateId, template.asset, asset);
+            }
             if ((template.permissions & permissions) != template.permissions) {
               revert TemplatePermissionsMismatch(templateId, template.permissions, permissions);
             }
