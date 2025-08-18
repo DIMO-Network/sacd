@@ -22,6 +22,32 @@ interface ISacd {
     string source;
   }
 
+  event PermissionsSet(
+    address indexed asset,
+    uint256 indexed tokenId,
+    uint256 permissions,
+    address indexed grantee,
+    uint256 expiration,
+    uint256 templateId,
+    string source
+  );
+  event PaymentSet(
+    address indexed asset,
+    address indexed grantee,
+    address indexed grantor,
+    uint256 amount,
+    uint256 expiration,
+    string source
+  );
+
+  error ZeroAddress();
+  error Unauthorized(address addr);
+  error InvalidTokenId(address asset, uint256 tokenId);
+  error TemplateNotActive(uint256 templateId);
+  error InvalidCurrency();
+  error TemplateAssetMismatch(uint256 templateId, address expectedAsset, address providedAsset);
+  error TemplatePermissionsMismatch(uint256 templateId, uint256 expectedPermissions, uint256 providedPermissions);
+
   function setPermissions(
     address asset,
     uint256 tokenId,

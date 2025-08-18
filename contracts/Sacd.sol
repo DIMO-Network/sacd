@@ -34,32 +34,6 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   // keccak256(abi.encode(uint256(keccak256("Sacd.storage")) - 1)) & ~bytes32(uint256(0xff))
   bytes32 private constant SACD_STORAGE = 0x20aa246ca08ba235ee1e06ff6016f518804d64da710b8279d7124e598d8d5200;
 
-  event PermissionsSet(
-    address indexed asset,
-    uint256 indexed tokenId,
-    uint256 permissions,
-    address indexed grantee,
-    uint256 expiration,
-    uint256 templateId,
-    string source
-  );
-  event PaymentSet(
-    address indexed asset,
-    address indexed grantee,
-    address indexed grantor,
-    uint256 amount,
-    uint256 expiration,
-    string source
-  );
-
-  error ZeroAddress();
-  error Unauthorized(address addr);
-  error InvalidTokenId(address asset, uint256 tokenId);
-  error TemplateNotActive(uint256 templateId);
-  error InvalidCurrency();
-  error TemplateAssetMismatch(uint256 templateId, address expectedAsset, address providedAsset);
-  error TemplatePermissionsMismatch(uint256 templateId, uint256 expectedPermissions, uint256 providedPermissions);
-
   /// @custom:oz-upgrades-unsafe-allow constructor
   constructor() {
     _disableInitializers();
