@@ -36,6 +36,16 @@ describe('Sacd', function () {
     return { owner, grantor, grantee, otherAccount, mockErc721, mockErc20, template, sacd, DEFAULT_EXPIRATION }
   }
 
+  describe('setTemplateContract', () => {
+    it('Should revert if caller does not have admin role', async () => {
+      const { sacd, otherAccount, template } = await loadFixture(setup)
+
+      await expect(sacd.connect(otherAccount).setTemplateContract(await template.getAddress()))
+        .to.be.revertedWithCustomError(template, 'AccessControlUnauthorizedAccount')
+        .withArgs(otherAccount.address, C.ADMIN_ROLE)
+    })
+  })
+
   describe('setPermissions', () => {
     context('Error handling', () => {
       it('Should revert if caller is not the token Id owner or asset contract', async () => {

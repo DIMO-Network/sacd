@@ -13,3 +13,6 @@ export const MOCK_SACD_SOURCE = 'ipfs://QmYA2fn8cMbVWo4v95RwcwJVyQsNtnEwHerfWR8U
 
 export const MOCK_PAYMENT_AMOUNT = 10000000000000000000n
 export const MOCK_PAYMENT_CURRENCY = ethers.encodeBytes32String('ZZZ').slice(0, 8) // bytes3
+
+export const ADMIN_ROLE = ethers.keccak256(ethers.toUtf8Bytes('ADMIN_ROLE'))
+export const TEMPLATE_MANAGER_ROLE = ethers.keccak256(ethers.toUtf8Bytes('TEMPLATE_MANAGER_ROLE'))

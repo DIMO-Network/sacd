@@ -66,7 +66,9 @@ describe('Template', function () {
         template
           .connect(user1)
           .createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
-      ).to.be.revertedWithCustomError(template, 'AccessControlUnauthorizedAccount')
+      )
+        .to.be.revertedWithCustomError(template, 'AccessControlUnauthorizedAccount')
+        .withArgs(user1.address, C.TEMPLATE_MANAGER_ROLE)
     })
 
     it('Should not create template with empty template URI', async function () {
