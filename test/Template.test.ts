@@ -14,97 +14,107 @@ describe('Template', function () {
 
     // Deploy template contract
     const template = (await ignition.deploy(TemplateModule)).template as unknown as Template
-
     const sacd = (await ignition.deploy(SacdModule)).sacd as unknown as Sacd
 
-    return { owner, user1, user2, otherAccount, template, sacd }
+    const mockErc721Factory = await hre.ethers.getContractFactory('MockERC721withSacd')
+
+    const mockErc721 = await mockErc721Factory.deploy(await sacd.getAddress())
+    const MOCK_ERC_721_ADDRESS = await mockErc721.getAddress()
+
+    return { owner, user1, user2, otherAccount, template, sacd, mockErc721, MOCK_ERC_721_ADDRESS }
   }
   async function setupWithMint() {
     const vars = await loadFixture(setup)
 
-    const mockErc721Factory = await hre.ethers.getContractFactory('MockERC721withSacd')
-    const mockErc20Factory = await hre.ethers.getContractFactory('MockERC20')
+    await vars.template.createTemplate(
+      vars.owner,
+      vars.MOCK_ERC_721_ADDRESS,
+      C.MOCK_TEMPLATE_PERMISSIONS,
+      C.MOCK_TEMPLATE_SOURCE
+    )
+    await vars.mockErc721.mint(vars.user1.address)
 
-    const mockErc721 = await mockErc721Factory.deploy(await vars.sacd.getAddress())
-    const mockErc20 = await mockErc20Factory.deploy()
-
-    await vars.template.createTemplate(vars.owner, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
-    await mockErc721.mint(vars.user1.address)
-
-    return { ...vars, mockErc721, mockErc20 }
+    return vars
   }
 
   describe('Template Management', function () {
     it('Should create a template successfully', async function () {
-      const { template, owner } = await loadFixture(setup)
+      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
 
-      await expect(template.createTemplate(owner, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE))
+      await expect(
+        template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+      )
         .to.emit(template, 'TemplateCreated')
-        .withArgs(C.MOCK_TEMPLATE_TOKEN_ID, owner.address, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+        .withArgs(
+          C.MOCK_TEMPLATE_TOKEN_ID,
+          owner.address,
+          MOCK_ERC_721_ADDRESS,
+          C.MOCK_TEMPLATE_PERMISSIONS,
+          C.MOCK_TEMPLATE_SOURCE
+        )
 
       const templateData = await template.getTemplate(C.MOCK_TEMPLATE_TOKEN_ID)
+      expect(templateData.asset).to.equal(MOCK_ERC_721_ADDRESS)
       expect(templateData.permissions).to.equal(C.MOCK_TEMPLATE_PERMISSIONS)
       expect(templateData.source).to.equal(C.MOCK_TEMPLATE_SOURCE)
       expect(templateData.isActive).to.be.true
     })
     it('Should not allow non-managers to create templates', async function () {
-      const { template, owner, user1 } = await loadFixture(setup)
+      const { template, owner, user1, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
 
       await expect(
-        template.connect(user1).createTemplate(owner, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+        template
+          .connect(user1)
+          .createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
       ).to.be.revertedWithCustomError(template, 'AccessControlUnauthorizedAccount')
     })
 
     it('Should not create template with empty template URI', async function () {
-      const { template, owner } = await loadFixture(setup)
+      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
 
       const source = ''
 
-      await expect(template.createTemplate(owner, C.MOCK_TEMPLATE_PERMISSIONS, source)).to.be.revertedWithCustomError(
-        template,
-        'InvalidTemplateData'
-      )
+      await expect(
+        template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, source)
+      ).to.be.revertedWithCustomError(template, 'InvalidTemplateData')
     })
     it('Should not create template with invalid CID format (46 chars but not starting with Qm)', async function () {
-      const { template, owner } = await loadFixture(setup)
+      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
 
       // Create an invalid CID that has 46 characters but doesn't start with Qm
       const invalidCid = 'XX' + 'a'.repeat(44) // 46 characters, starts with XX instead of Qm
       const source = 'ipfs://' + invalidCid
 
-      await expect(template.createTemplate(owner, C.MOCK_TEMPLATE_PERMISSIONS, source)).to.be.revertedWithCustomError(
-        template,
-        'InvalidTemplateData'
-      )
+      await expect(
+        template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, source)
+      ).to.be.revertedWithCustomError(template, 'InvalidTemplateData')
     })
     it('Should not create template without ipfs:// prefix', async function () {
-      const { template, owner } = await loadFixture(setup)
+      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
 
       // Use a valid CID but without the ipfs:// prefix
       const source = 'ffff:///' + C.MOCK_TEMPLATE_CID // Missing ipfs:// prefix
 
-      await expect(template.createTemplate(owner, C.MOCK_TEMPLATE_PERMISSIONS, source)).to.be.revertedWithCustomError(
-        template,
-        'InvalidTemplateData'
-      )
+      await expect(
+        template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, source)
+      ).to.be.revertedWithCustomError(template, 'InvalidTemplateData')
     })
     it('Should not create template with CID of incorrect length', async function () {
-      const { template, owner } = await loadFixture(setup)
+      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
 
       // Create a CID that starts with Qm but is too short
       const shortCid = 'Qm' + 'a'.repeat(20) // Only 22 characters instead of 46
       const source = 'ipfs://' + shortCid
 
-      await expect(template.createTemplate(owner, C.MOCK_TEMPLATE_PERMISSIONS, source)).to.be.revertedWithCustomError(
-        template,
-        'InvalidTemplateData'
-      )
+      await expect(
+        template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, source)
+      ).to.be.revertedWithCustomError(template, 'InvalidTemplateData')
     })
     it('Should deactivate template successfully', async function () {
-      const { template, owner } = await loadFixture(setup)
+      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
 
       // Create template first
-      await template.createTemplate(owner, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+      await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       // Deactivate template
       await expect(template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID))
@@ -115,11 +125,11 @@ describe('Template', function () {
       expect(templateData.isActive).to.be.false
     })
     it('Should check if template is active', async function () {
-      const { template, owner } = await loadFixture(setup)
+      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
       const cid = 'QmaA14Co9Q9AuNHcs6KH2ZmJ8sCTwW6ZN7TJfxNcXnrUAX'
       const templateId = stringToUint256WithHash(cid)
 
-      await template.createTemplate(owner, 0x11111111, 'ipfs://' + cid)
+      await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, 0x11111111, 'ipfs://' + cid)
 
       expect(await template.isTemplateActive(templateId)).to.be.true
 
@@ -130,9 +140,9 @@ describe('Template', function () {
 
   describe('ERC721 Functionality', function () {
     it('Should mint NFT when creating template', async function () {
-      const { template, owner } = await loadFixture(setup)
+      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
 
-      await template.createTemplate(owner, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+      await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       // Check that NFT was minted to creator
       expect(await template.ownerOf(C.MOCK_TEMPLATE_TOKEN_ID)).to.equal(owner.address)
@@ -140,18 +150,18 @@ describe('Template', function () {
     })
 
     it('Should return correct tokenURI for IPFS URLs', async function () {
-      const { template, owner } = await loadFixture(setup)
+      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
 
-      await template.createTemplate(owner, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+      await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       // Check tokenURI returns the DIMO assets URL with IPFS URL
       expect(await template.tokenURI(C.MOCK_TEMPLATE_TOKEN_ID)).to.equal(C.TEMPLATE_BASE_URI + C.MOCK_TEMPLATE_CID)
     })
 
     it('Should allow NFT transfer', async function () {
-      const { template, owner, user1 } = await loadFixture(setup)
+      const { template, owner, user1, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
 
-      await template.createTemplate(owner, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+      await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       // Transfer NFT to user1
       await template.transferFrom(owner.address, user1.address, C.MOCK_TEMPLATE_TOKEN_ID)
@@ -169,9 +179,9 @@ describe('Template', function () {
     })
 
     it('Should return DIMO assets URL format for IPFS tokenURI', async function () {
-      const { template, owner } = await loadFixture(setup)
+      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
 
-      await template.createTemplate(owner, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+      await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       const tokenURI = await template.tokenURI(C.MOCK_TEMPLATE_TOKEN_ID)
       expect(tokenURI).to.equal(C.TEMPLATE_BASE_URI + C.MOCK_TEMPLATE_CID)

@@ -18,12 +18,17 @@ describe('Sacd', function () {
     // Deploy template contract
     const template = (await ignition.deploy(TemplateModule)).template as unknown as Template
 
-    // Create a template with specific permissions
-    await template.createTemplate(owner, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
-
     const sacd = (await ignition.deploy(SacdModule)).sacd as unknown as Sacd
     const mockErc721 = await mockErc721Factory.deploy(await sacd.getAddress())
     const mockErc20 = await mockErc20Factory.deploy()
+
+    // Create a template with specific permissions
+    await template.createTemplate(
+      owner,
+      await mockErc721.getAddress(),
+      C.MOCK_TEMPLATE_PERMISSIONS,
+      C.MOCK_TEMPLATE_SOURCE
+    )
 
     await sacd.setTemplateContract(await template.getAddress())
     await mockErc721.mint(grantor.address)

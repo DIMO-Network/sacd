@@ -51,12 +51,14 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
   /**
    * @notice Creates a new template with predefined permissions and template URI
    * @dev Only template managers can create templates
+   * @param asset The contract address of the ERC721
    * @param permissions The uint256 that represents the byte array of permissions
    * @param source The URI to the templatable JSON document (must be IPFS URI)
    * @return templateId The unique identifier for the created template
    */
   function createTemplate(
     address owner,
+    address asset,
     uint256 permissions,
     string calldata source
   ) external onlyRole(TEMPLATE_MANAGER_ROLE) returns (uint256 templateId) {
@@ -71,14 +73,19 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
     // Generate deterministic ID from the IPFS CID
     templateId = uint256(keccak256(bytes(cid)));
 
-    TemplateData memory newTemplate = TemplateData({permissions: permissions, source: source, isActive: true});
+    TemplateData memory newTemplate = TemplateData({
+      asset: asset,
+      permissions: permissions,
+      source: source,
+      isActive: true
+    });
 
     $.templates[templateId] = newTemplate;
 
     // Mint NFT to the owner
     _safeMint(owner, templateId);
 
-    emit TemplateCreated(templateId, owner, permissions, source);
+    emit TemplateCreated(templateId, owner, asset, permissions, source);
   }
 
   /**
