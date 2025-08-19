@@ -102,7 +102,7 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
 
     // Check if caller owns the template NFT
     if (templateOwner != msg.sender) {
-      revert UnauthorizedTemplateAccess(msg.sender, templateId);
+      revert Unauthorized(msg.sender, templateId);
     }
 
     _getTemplateStorage().templates[templateId].isActive = false;

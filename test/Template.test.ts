@@ -91,6 +91,17 @@ describe('Template', function () {
         template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, source)
       ).to.be.revertedWithCustomError(template, 'InvalidTemplateData')
     })
+    it('Should not create template with invalid CID format (46 chars, starting with Q, but not following m)', async function () {
+      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
+
+      // Create an invalid CID that has 46 characters but doesn't start with Qm
+      const invalidCid = 'QX' + 'a'.repeat(44) // 46 characters, starts with XX instead of Qm
+      const source = 'ipfs://' + invalidCid
+
+      await expect(
+        template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, source)
+      ).to.be.revertedWithCustomError(template, 'InvalidTemplateData')
+    })
     it('Should not create template without ipfs:// prefix', async function () {
       const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
 
@@ -112,6 +123,23 @@ describe('Template', function () {
         template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, source)
       ).to.be.revertedWithCustomError(template, 'InvalidTemplateData')
     })
+    it('Should revert if template ID does not exist when deactivate', async function () {
+      const { template } = await loadFixture(setup)
+
+      await expect(template.deactivateTemplate(99n))
+        .to.be.revertedWithCustomError(template, 'TemplateNotFound')
+        .withArgs(99n)
+    })
+    it('Should revert if caller is not the template ID owner when deactivate', async function () {
+      const { template, owner, otherAccount, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
+
+      await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+
+      // Deactivate template
+      await expect(template.connect(otherAccount).deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID))
+        .to.be.revertedWithCustomError(template, 'Unauthorized')
+        .withArgs(otherAccount.address, C.MOCK_TEMPLATE_TOKEN_ID)
+    })
     it('Should deactivate template successfully', async function () {
       const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
 
@@ -128,15 +156,17 @@ describe('Template', function () {
     })
     it('Should check if template is active', async function () {
       const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
-      const cid = 'QmaA14Co9Q9AuNHcs6KH2ZmJ8sCTwW6ZN7TJfxNcXnrUAX'
-      const templateId = stringToUint256WithHash(cid)
 
-      await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, 0x11111111, 'ipfs://' + cid)
+      await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
-      expect(await template.isTemplateActive(templateId)).to.be.true
+      expect(await template.isTemplateActive(C.MOCK_TEMPLATE_TOKEN_ID)).to.be.true
 
-      await template.deactivateTemplate(templateId)
-      expect(await template.isTemplateActive(templateId)).to.be.false
+      await template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID)
+
+      expect(await template.isTemplateActive(C.MOCK_TEMPLATE_TOKEN_ID)).to.be.false
+
+      // Template does not exist
+      expect(await template.isTemplateActive(99n)).to.be.false
     })
   })
 

@@ -26,7 +26,7 @@ interface ITemplate is IERC721 {
   event TemplateDeactivated(uint256 indexed templateId);
 
   error TemplateNotFound(uint256 templateId);
-  error UnauthorizedTemplateAccess(address caller, uint256 templateId);
+  error Unauthorized(address caller, uint256 templateId);
   error InvalidTemplateData();
   error TemplateAlreadyExists(uint256 templateId);
 
