@@ -100,6 +100,9 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
 
         if (templateContract != address(0)) {
           try ITemplate(templateContract).getTemplate(templateId) returns (ITemplate.TemplateData memory template) {
+            if (!template.isActive) {
+              revert TemplateNotActive(templateId);
+            }
             if (template.asset != asset) {
               revert TemplateAssetMismatch(templateId, template.asset, asset);
             }
@@ -290,7 +293,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
         return permissions;
       }
     } catch {
-      return uint256(0);
+      return 0;
     }
 
     SacdStorage storage $ = _getSacdStorage();
@@ -410,7 +413,6 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     // Early return for most common case (no template used)
     if (templateId == 0) return true;
 
-    // Cache storage pointer and template contract address
     SacdStorage storage $ = _getSacdStorage();
     address templateContract = $.templateContract;
 
@@ -423,7 +425,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
       try ITemplate(templateContract).isTemplateActive(templateId) returns (bool isActive) {
         return isActive;
       } catch {
-        return true; // Fail-safe: assume active if call fails
+        return false; // Fail-safe: assume inactive if call fails
       }
     } catch {
       return false; // Template doesn't exist
