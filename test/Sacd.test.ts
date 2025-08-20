@@ -54,15 +54,9 @@ describe('Sacd', function () {
         await expect(
           sacd
             .connect(grantee)
-            .setPermissions(
-              await mockErc721.getAddress(),
-              1n,
-              grantee.address,
-              C.MOCK_PERMISSIONS,
-              DEFAULT_EXPIRATION,
-              0n,
-              C.MOCK_SACD_SOURCE
-            )
+            [
+              'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+            ](await mockErc721.getAddress(), 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
         )
           .to.be.revertedWithCustomError(sacd, 'Unauthorized')
           .withArgs(grantee.address)
@@ -73,15 +67,9 @@ describe('Sacd', function () {
         await expect(
           sacd
             .connect(grantor)
-            .setPermissions(
-              otherAccount.address,
-              2n,
-              grantee.address,
-              C.MOCK_PERMISSIONS,
-              DEFAULT_EXPIRATION,
-              0n,
-              C.MOCK_SACD_SOURCE
-            )
+            [
+              'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+            ](otherAccount.address, 2n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
         ).to.be.reverted
       })
       it('Should revert if grantee is address(0)', async () => {
@@ -90,15 +78,9 @@ describe('Sacd', function () {
         await expect(
           sacd
             .connect(grantor)
-            .setPermissions(
-              await mockErc721.getAddress(),
-              1n,
-              hre.ethers.ZeroAddress,
-              C.MOCK_PERMISSIONS,
-              DEFAULT_EXPIRATION,
-              0n,
-              C.MOCK_SACD_SOURCE
-            )
+            [
+              'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+            ](await mockErc721.getAddress(), 1n, hre.ethers.ZeroAddress, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
         ).to.be.revertedWithCustomError(sacd, 'ZeroAddress')
       })
       it('Should revert if tokend ID does not exist', async () => {
@@ -107,15 +89,9 @@ describe('Sacd', function () {
         await expect(
           sacd
             .connect(grantor)
-            .setPermissions(
-              await mockErc721.getAddress(),
-              2n,
-              grantee.address,
-              C.MOCK_PERMISSIONS,
-              DEFAULT_EXPIRATION,
-              0n,
-              C.MOCK_SACD_SOURCE
-            )
+            [
+              'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+            ](await mockErc721.getAddress(), 2n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
         )
           .to.be.revertedWithCustomError(sacd, 'InvalidTokenId')
           .withArgs(await mockErc721.getAddress(), 2)
@@ -128,15 +104,9 @@ describe('Sacd', function () {
         await expect(
           sacd
             .connect(grantor)
-            .setPermissions(
-              await mockErc721.getAddress(),
-              1n,
-              grantee.address,
-              C.MOCK_PERMISSIONS,
-              DEFAULT_EXPIRATION,
-              C.MOCK_TEMPLATE_TOKEN_ID,
-              C.MOCK_SACD_SOURCE
-            )
+            [
+              'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+            ](await mockErc721.getAddress(), 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
         ).to.be.revertedWithCustomError(sacd, 'TemplateContractNotSet')
       })
       it('Should revert if template asset do not match', async () => {
@@ -151,15 +121,9 @@ describe('Sacd', function () {
         await expect(
           sacd
             .connect(grantor)
-            .setPermissions(
-              await newMockErc721.getAddress(),
-              1n,
-              grantee.address,
-              differentPermissions,
-              DEFAULT_EXPIRATION,
-              C.MOCK_TEMPLATE_TOKEN_ID,
-              C.MOCK_SACD_SOURCE
-            )
+            [
+              'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+            ](await newMockErc721.getAddress(), 1n, grantee.address, differentPermissions, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
         )
           .to.be.revertedWithCustomError(sacd, 'TemplateAssetMismatch')
           .withArgs(C.MOCK_TEMPLATE_TOKEN_ID, await mockErc721.getAddress(), await newMockErc721.getAddress())
@@ -173,15 +137,9 @@ describe('Sacd', function () {
         await expect(
           sacd
             .connect(grantor)
-            .setPermissions(
-              MOCK_ERC_721_ADDRESS,
-              1n,
-              grantee.address,
-              differentPermissions,
-              DEFAULT_EXPIRATION,
-              C.MOCK_TEMPLATE_TOKEN_ID,
-              C.MOCK_SACD_SOURCE
-            )
+            [
+              'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+            ](MOCK_ERC_721_ADDRESS, 1n, grantee.address, differentPermissions, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
         )
           .to.be.revertedWithCustomError(sacd, 'TemplatePermissionsMismatch')
           .withArgs(C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_TEMPLATE_PERMISSIONS, differentPermissions)
@@ -195,15 +153,9 @@ describe('Sacd', function () {
         await expect(
           sacd
             .connect(grantor)
-            .setPermissions(
-              MOCK_ERC_721_ADDRESS,
-              1n,
-              grantee.address,
-              C.MOCK_TEMPLATE_PERMISSIONS,
-              DEFAULT_EXPIRATION,
-              C.MOCK_TEMPLATE_TOKEN_ID,
-              C.MOCK_SACD_SOURCE
-            )
+            [
+              'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+            ](MOCK_ERC_721_ADDRESS, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
         )
           .to.be.revertedWithCustomError(sacd, 'TemplateNotActive')
           .withArgs(C.MOCK_TEMPLATE_TOKEN_ID)
@@ -215,15 +167,9 @@ describe('Sacd', function () {
         await expect(
           sacd
             .connect(grantor)
-            .setPermissions(
-              MOCK_ERC_721_ADDRESS,
-              1n,
-              grantee.address,
-              C.MOCK_TEMPLATE_PERMISSIONS,
-              DEFAULT_EXPIRATION,
-              99n,
-              C.MOCK_SACD_SOURCE
-            )
+            [
+              'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+            ](MOCK_ERC_721_ADDRESS, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, 99n, C.MOCK_SACD_SOURCE)
         )
           .to.be.revertedWithCustomError(sacd, 'TemplateNotActive')
           .withArgs(99n)
@@ -238,15 +184,9 @@ describe('Sacd', function () {
 
           await sacd
             .connect(grantor)
-            .setPermissions(
-              mockErc721Address,
-              1n,
-              grantee.address,
-              C.MOCK_PERMISSIONS,
-              DEFAULT_EXPIRATION,
-              0n,
-              C.MOCK_SACD_SOURCE
-            )
+            [
+              'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+            ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
           const permissionRecord = await sacd.permissionRecords(mockErc721Address, 1n, 1n, grantee.address)
 
@@ -262,15 +202,9 @@ describe('Sacd', function () {
           // Set permissions with matching template permissions
           await sacd
             .connect(grantor)
-            .setPermissions(
-              await mockErc721.getAddress(),
-              1n,
-              grantee.address,
-              C.MOCK_TEMPLATE_PERMISSIONS,
-              DEFAULT_EXPIRATION,
-              C.MOCK_TEMPLATE_TOKEN_ID,
-              C.MOCK_SACD_SOURCE
-            )
+            [
+              'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+            ](await mockErc721.getAddress(), 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
 
           const permissionRecord = await sacd.permissionRecords(mockErc721Address, 1n, 1n, grantee.address)
 
@@ -290,15 +224,9 @@ describe('Sacd', function () {
           // Set permissions with matching template permissions
           await sacd
             .connect(grantor)
-            .setPermissions(
-              await mockErc721.getAddress(),
-              1n,
-              grantee.address,
-              sacdPermissions,
-              DEFAULT_EXPIRATION,
-              C.MOCK_TEMPLATE_TOKEN_ID,
-              C.MOCK_SACD_SOURCE
-            )
+            [
+              'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+            ](await mockErc721.getAddress(), 1n, grantee.address, sacdPermissions, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
 
           const permissionRecord = await sacd.permissionRecords(mockErc721Address, 1n, 1n, grantee.address)
 
@@ -380,15 +308,9 @@ describe('Sacd', function () {
         await expect(
           sacd
             .connect(grantor)
-            .setPermissions(
-              mockErc721Address,
-              1n,
-              grantee.address,
-              C.MOCK_PERMISSIONS,
-              DEFAULT_EXPIRATION,
-              0n,
-              C.MOCK_SACD_SOURCE
-            )
+            [
+              'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+            ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
         )
           .to.emit(sacd, 'PermissionsSet')
           .withArgs(
@@ -410,15 +332,9 @@ describe('Sacd', function () {
 
         await sacd
           .connect(grantor)
-          .setPermissions(
-            mockErc721Address,
-            1n,
-            grantee.address,
-            C.MOCK_PERMISSIONS,
-            DEFAULT_EXPIRATION,
-            0n,
-            C.MOCK_SACD_SOURCE
-          )
+          [
+            'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+          ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
         expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.true
 
@@ -432,29 +348,17 @@ describe('Sacd', function () {
 
         await sacd
           .connect(grantor)
-          .setPermissions(
-            mockErc721Address,
-            1n,
-            grantee.address,
-            C.MOCK_PERMISSIONS,
-            DEFAULT_EXPIRATION,
-            0n,
-            C.MOCK_SACD_SOURCE
-          )
+          [
+            'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+          ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
         await mockErc721.connect(grantor).transferFrom(grantor.address, otherAccount.address, 1n)
 
         await sacd
           .connect(otherAccount)
-          .setPermissions(
-            mockErc721Address,
-            1n,
-            grantee.address,
-            C.MOCK_PERMISSIONS,
-            DEFAULT_EXPIRATION,
-            0n,
-            C.MOCK_SACD_SOURCE
-          )
+          [
+            'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+          ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
         expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.true
       })
@@ -641,15 +545,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          0n,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.hasPermission(mockErc721Address, 2n, grantee.address, 0)).to.be.false
     })
@@ -659,15 +557,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          0n,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.hasPermission(mockErc721Address, 1n, otherAccount.address, 0)).to.be.false
     })
@@ -677,15 +569,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          0n,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
       await time.increase(time.duration.years(5))
 
       expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 0)).to.be.false
@@ -696,15 +582,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          0n,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 0)).to.be.false
     })
@@ -714,15 +594,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_TEMPLATE_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          C.MOCK_TEMPLATE_TOKEN_ID,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 2)).to.be.true
 
@@ -736,15 +610,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_TEMPLATE_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          C.MOCK_TEMPLATE_TOKEN_ID,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 2)).to.be.true
 
@@ -758,15 +626,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          0n,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.true
     })
@@ -784,15 +646,9 @@ describe('Sacd', function () {
 
         await sacd
           .connect(grantor)
-          .setPermissions(
-            mockErc721Address,
-            1n,
-            grantee.address,
-            C.MOCK_PERMISSIONS,
-            DEFAULT_EXPIRATION,
-            0n,
-            C.MOCK_SACD_SOURCE
-          )
+          [
+            'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+          ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
         expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.true
 
@@ -826,15 +682,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          0n,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.hasPermissions(mockErc721Address, 2n, grantee.address, C.MOCK_PERMISSIONS)).to.be.false
     })
@@ -844,15 +694,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          0n,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.hasPermissions(mockErc721Address, 1n, otherAccount.address, C.MOCK_PERMISSIONS)).to.be.false
     })
@@ -862,15 +706,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          0n,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
       await time.increase(time.duration.years(5))
 
@@ -882,15 +720,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          0n,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
       // C.MOCK_PERMISSIONS 816 11 00 11 00 00
       // Test               819 11 00 11 00 11
@@ -902,15 +734,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_TEMPLATE_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          C.MOCK_TEMPLATE_TOKEN_ID,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.be.true
 
@@ -924,15 +750,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_TEMPLATE_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          C.MOCK_TEMPLATE_TOKEN_ID,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.be.true
 
@@ -946,15 +766,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          0n,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.be.true
     })
@@ -972,15 +786,9 @@ describe('Sacd', function () {
 
         await sacd
           .connect(grantor)
-          .setPermissions(
-            mockErc721Address,
-            1n,
-            grantee.address,
-            C.MOCK_PERMISSIONS,
-            DEFAULT_EXPIRATION,
-            0n,
-            C.MOCK_SACD_SOURCE
-          )
+          [
+            'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+          ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
         expect(await sacd.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.be.true
 
@@ -1014,15 +822,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          0n,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.getPermissions(mockErc721Address, 2n, grantee.address, C.MOCK_PERMISSIONS)).to.equal(0)
     })
@@ -1032,15 +834,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          0n,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.getPermissions(mockErc721Address, 1n, otherAccount.address, C.MOCK_PERMISSIONS)).to.equal(0)
     })
@@ -1050,15 +846,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          0n,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
       await time.increase(time.duration.years(5))
 
@@ -1070,15 +860,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_TEMPLATE_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          C.MOCK_TEMPLATE_TOKEN_ID,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.getPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.equal(
         C.MOCK_TEMPLATE_PERMISSIONS
@@ -1094,15 +878,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_TEMPLATE_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          C.MOCK_TEMPLATE_TOKEN_ID,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.getPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.equal(
         C.MOCK_TEMPLATE_PERMISSIONS
@@ -1118,15 +896,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          0n,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
       // C.MOCK_PERMISSIONS 816 11 00 11 00 00
       // Test               771 11 00 00 00 11
@@ -1149,15 +921,9 @@ describe('Sacd', function () {
 
         await sacd
           .connect(grantor)
-          .setPermissions(
-            mockErc721Address,
-            1n,
-            grantee.address,
-            C.MOCK_PERMISSIONS,
-            DEFAULT_EXPIRATION,
-            0n,
-            C.MOCK_SACD_SOURCE
-          )
+          [
+            'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+          ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
         expect(await sacd.getPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.equal(
           C.MOCK_PERMISSIONS
@@ -1177,15 +943,9 @@ describe('Sacd', function () {
 
       await sacd
         .connect(grantor)
-        .setPermissions(
-          mockErc721Address,
-          1n,
-          grantee.address,
-          C.MOCK_PERMISSIONS,
-          DEFAULT_EXPIRATION,
-          0n,
-          C.MOCK_SACD_SOURCE
-        )
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
       const tokenVersionBefore = await sacd.tokenIdToVersion(mockErc721Address, 1n)
 

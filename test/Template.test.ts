@@ -247,7 +247,9 @@ describe('Template', function () {
       // Call SACD with template ID
       await sacd
         .connect(user1)
-        .setPermissions(asset, tokenId, grantee, permissions, expiration, templateId, finalSource)
+        [
+          'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+        ](asset, tokenId, grantee, permissions, expiration, templateId, finalSource)
 
       // Verify permissions work when template is active
       expect(await sacd.hasPermissions(asset, tokenId, grantee, permissions)).to.be.true

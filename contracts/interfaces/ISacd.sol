@@ -55,6 +55,15 @@ interface ISacd {
     address grantee,
     uint256 permissions,
     uint256 expiration,
+    string calldata source
+  ) external;
+
+  function setPermissions(
+    address asset,
+    uint256 tokenId,
+    address grantee,
+    uint256 permissions,
+    uint256 expiration,
     uint256 templateId,
     string calldata source
   ) external;
@@ -98,4 +107,19 @@ interface ISacd {
     uint256 tokenId,
     address grantee
   ) external view returns (PermissionRecord memory permissionRecord);
+
+  function paymentRecords(
+    address asset,
+    address grantee,
+    address grantor,
+    uint256 paymentId
+  ) external view returns (PaymentRecord memory paymentRecord);
+
+  function currentPaymentRecord(
+    address asset,
+    address grantee,
+    address grantor
+  ) external view returns (PaymentRecord memory paymentRecord);
+
+  function nextPaymentId(address asset, address grantee, address grantor) external view returns (uint256 paymentId);
 }
