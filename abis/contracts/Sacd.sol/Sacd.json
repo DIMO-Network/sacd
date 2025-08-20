@@ -110,6 +110,11 @@
     "type": "error"
   },
   {
+    "inputs": [],
+    "name": "TemplateContractNotSet",
+    "type": "error"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",

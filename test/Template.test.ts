@@ -241,13 +241,13 @@ describe('Template', function () {
       const permissions = templateData.permissions
       const finalSource = templateData.source
 
+      // Set the template contract in SACD
+      await sacd.setTemplateContract(await template.getAddress())
+
       // Call SACD with template ID
       await sacd
         .connect(user1)
         .setPermissions(asset, tokenId, grantee, permissions, expiration, templateId, finalSource)
-
-      // Set the template contract in SACD
-      await sacd.setTemplateContract(await template.getAddress())
 
       // Verify permissions work when template is active
       expect(await sacd.hasPermissions(asset, tokenId, grantee, permissions)).to.be.true

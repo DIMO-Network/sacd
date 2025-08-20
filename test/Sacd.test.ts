@@ -120,6 +120,25 @@ describe('Sacd', function () {
           .to.be.revertedWithCustomError(sacd, 'InvalidTokenId')
           .withArgs(await mockErc721.getAddress(), 2)
       })
+      it('Should revert if templateId != 0 and template contract address is not set', async () => {
+        const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        await sacd.setTemplateContract(hre.ethers.ZeroAddress)
+
+        await expect(
+          sacd
+            .connect(grantor)
+            .setPermissions(
+              await mockErc721.getAddress(),
+              1n,
+              grantee.address,
+              C.MOCK_PERMISSIONS,
+              DEFAULT_EXPIRATION,
+              C.MOCK_TEMPLATE_TOKEN_ID,
+              C.MOCK_SACD_SOURCE
+            )
+        ).to.be.revertedWithCustomError(sacd, 'TemplateContractNotSet')
+      })
       it('Should revert if template asset do not match', async () => {
         const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
 

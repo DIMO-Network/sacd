@@ -44,6 +44,7 @@ interface ISacd {
   error Unauthorized(address addr);
   error InvalidTokenId(address asset, uint256 tokenId);
   error TemplateNotActive(uint256 templateId);
+  error TemplateContractNotSet();
   error InvalidCurrency();
   error TemplateAssetMismatch(uint256 templateId, address expectedAsset, address providedAsset);
   error TemplatePermissionsMismatch(uint256 templateId, uint256 expectedPermissions, uint256 providedPermissions);

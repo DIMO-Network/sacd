@@ -92,13 +92,15 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
         revert ZeroAddress();
       }
 
-      // Validate template permissions if template is used
       SacdStorage storage $ = _getSacdStorage();
 
+      // Validate template permissions if template is used
       if (templateId != 0) {
         address templateContract = $.templateContract;
 
-        if (templateContract != address(0)) {
+        if (templateContract == address(0)) {
+          revert TemplateContractNotSet();
+        } else {
           try ITemplate(templateContract).getTemplate(templateId) returns (ITemplate.TemplateData memory template) {
             if (!template.isActive) {
               revert TemplateNotActive(templateId);
