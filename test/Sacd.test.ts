@@ -730,6 +730,28 @@ describe('Sacd', function () {
 
       expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 2)).to.be.false
     })
+    it('Should return false if template ID is defined, but no template contract is set', async () => {
+      const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
+
+      await sacd
+        .connect(grantor)
+        .setPermissions(
+          mockErc721Address,
+          1n,
+          grantee.address,
+          C.MOCK_TEMPLATE_PERMISSIONS,
+          DEFAULT_EXPIRATION,
+          C.MOCK_TEMPLATE_TOKEN_ID,
+          C.MOCK_SACD_SOURCE
+        )
+
+      expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 2)).to.be.true
+
+      await sacd.setTemplateContract(hre.ethers.ZeroAddress)
+
+      expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 2)).to.be.false
+    })
     it('Should return true if it has permission', async () => {
       const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
       const mockErc721Address = await mockErc721.getAddress()
@@ -896,6 +918,28 @@ describe('Sacd', function () {
 
       expect(await sacd.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.be.false
     })
+    it('Should return false if template ID is defined, but no template contract is set', async () => {
+      const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
+
+      await sacd
+        .connect(grantor)
+        .setPermissions(
+          mockErc721Address,
+          1n,
+          grantee.address,
+          C.MOCK_TEMPLATE_PERMISSIONS,
+          DEFAULT_EXPIRATION,
+          C.MOCK_TEMPLATE_TOKEN_ID,
+          C.MOCK_SACD_SOURCE
+        )
+
+      expect(await sacd.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.be.true
+
+      await sacd.setTemplateContract(hre.ethers.ZeroAddress)
+
+      expect(await sacd.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.be.false
+    })
     it('Should return true if it has permission', async () => {
       const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
       const mockErc721Address = await mockErc721.getAddress()
@@ -1041,6 +1085,30 @@ describe('Sacd', function () {
       )
 
       await template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID)
+
+      expect(await sacd.getPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.equal(0)
+    })
+    it('Should return 0 if template ID is defined, but no template contract is set', async () => {
+      const { mockErc721, sacd, template, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+      const mockErc721Address = await mockErc721.getAddress()
+
+      await sacd
+        .connect(grantor)
+        .setPermissions(
+          mockErc721Address,
+          1n,
+          grantee.address,
+          C.MOCK_TEMPLATE_PERMISSIONS,
+          DEFAULT_EXPIRATION,
+          C.MOCK_TEMPLATE_TOKEN_ID,
+          C.MOCK_SACD_SOURCE
+        )
+
+      expect(await sacd.getPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.equal(
+        C.MOCK_TEMPLATE_PERMISSIONS
+      )
+
+      await sacd.setTemplateContract(hre.ethers.ZeroAddress)
 
       expect(await sacd.getPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.equal(0)
     })

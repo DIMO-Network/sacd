@@ -419,7 +419,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     address templateContract = $.templateContract;
 
     // Early return if no template contract set
-    if (templateContract == address(0)) return true;
+    if (templateContract == address(0)) return false;
 
     // Check if template exists by trying to get its owner
     try ITemplate(templateContract).ownerOf(templateId) returns (address) {
