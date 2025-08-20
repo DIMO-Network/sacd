@@ -73,6 +73,10 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
     // Generate deterministic ID from the IPFS CID
     templateId = uint256(keccak256(bytes(cid)));
 
+    if (_ownerOf(templateId) != address(0)) {
+      revert TemplateAlreadyExists(templateId);
+    }
+
     TemplateData memory newTemplate = TemplateData({
       asset: asset,
       permissions: permissions,
@@ -82,7 +86,6 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
 
     $.templates[templateId] = newTemplate;
 
-    // Mint NFT to the owner
     _safeMint(owner, templateId);
 
     emit TemplateCreated(templateId, owner, asset, permissions, source);

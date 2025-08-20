@@ -123,6 +123,15 @@ describe('Template', function () {
         template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, source)
       ).to.be.revertedWithCustomError(template, 'InvalidTemplateData')
     })
+    it('Should not create template if CID was already used', async function () {
+      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setupWithMint)
+
+      await expect(
+        template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+      )
+        .to.be.revertedWithCustomError(template, 'TemplateAlreadyExists')
+        .withArgs(C.MOCK_TEMPLATE_TOKEN_ID)
+    })
     it('Should revert if template ID does not exist when deactivate', async function () {
       const { template } = await loadFixture(setup)
 
