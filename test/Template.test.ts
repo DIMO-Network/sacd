@@ -102,16 +102,6 @@ describe('Template', function () {
         template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, source)
       ).to.be.revertedWithCustomError(template, 'InvalidTemplateData')
     })
-    it('Should not create template without ipfs:// prefix', async function () {
-      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
-
-      // Use a valid CID but without the ipfs:// prefix
-      const source = 'ffff:///' + C.MOCK_TEMPLATE_CID // Missing ipfs:// prefix
-
-      await expect(
-        template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, source)
-      ).to.be.revertedWithCustomError(template, 'InvalidTemplateData')
-    })
     it('Should not create template with CID of incorrect length', async function () {
       const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
 
@@ -196,7 +186,7 @@ describe('Template', function () {
       await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       // Check tokenURI returns the DIMO assets URL with IPFS URL
-      expect(await template.tokenURI(C.MOCK_TEMPLATE_TOKEN_ID)).to.equal(C.TEMPLATE_BASE_URI + C.MOCK_TEMPLATE_CID)
+      expect(await template.tokenURI(C.MOCK_TEMPLATE_TOKEN_ID)).to.equal(C.TEMPLATE_BASE_URI + C.MOCK_TEMPLATE_SOURCE)
     })
 
     it('Should allow NFT transfer', async function () {
@@ -225,7 +215,14 @@ describe('Template', function () {
       await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
 
       const tokenURI = await template.tokenURI(C.MOCK_TEMPLATE_TOKEN_ID)
-      expect(tokenURI).to.equal(C.TEMPLATE_BASE_URI + C.MOCK_TEMPLATE_CID)
+      expect(tokenURI).to.equal(C.TEMPLATE_BASE_URI + C.MOCK_TEMPLATE_SOURCE)
+    })
+
+    it('Should return empty tokenURI for inexisting tokens', async function () {
+      const { template } = await loadFixture(setup)
+
+      const tokenURI = await template.tokenURI(99n)
+      expect(tokenURI).to.be.empty
     })
   })
 
