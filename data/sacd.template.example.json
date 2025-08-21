@@ -1,0 +1,29 @@
+{
+    "specversion": "1.0",
+    "time": "2025-03-11T14:30:00Z",
+    "type": "dimo.sacd.template",
+    "data": {
+        "owner": {
+            "address": "0xC008EF40B0b42AAD7e34879EB024385024f753ea",
+            "name": "Carol"
+        },
+        "description": "Standard permissions for basic vehicle connectivity",
+        "agreements": [
+            {
+                "type": "permission",
+                "asset": "did:erc721:80002:0x45fbCD3ef7361d156e8b16F5538AE36DEdf61Da8",
+                "permissions": [
+                    {
+                        "name": "privilege:ExecuteCommands",
+                        "description": "Send commands to the vehicle"
+                    },
+                    {
+                        "name": "privilege:GetApproximateLocation",
+                        "description": "View current location data"
+                    }
+                ]
+            }
+        ]
+    },
+    "signature": "0x81634af1ccc743a956ca890a798486008a302eef169373a9496f3a4e04bd9fc7578ceea149e1e8acdb0b73ba818b8b5f87eff44d27ddee165c04fa069675c3641b"
+}
