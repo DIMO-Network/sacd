@@ -446,7 +446,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
         if (templateContract == address(0)) {
           revert TemplateContractNotSet();
         } else {
-          try ITemplate(templateContract).getTemplate(templateId) returns (ITemplate.TemplateData memory template) {
+          try ITemplate(templateContract).templates(templateId) returns (ITemplate.TemplateData memory template) {
             if (!template.isActive) {
               revert TemplateNotActive(templateId);
             }

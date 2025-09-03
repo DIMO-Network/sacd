@@ -53,7 +53,7 @@ describe('Template', function () {
           C.MOCK_TEMPLATE_SOURCE
         )
 
-      const templateData = await template.getTemplate(C.MOCK_TEMPLATE_TOKEN_ID)
+      const templateData = await template.templates(C.MOCK_TEMPLATE_TOKEN_ID)
       expect(templateData.asset).to.equal(MOCK_ERC_721_ADDRESS)
       expect(templateData.permissions).to.equal(C.MOCK_TEMPLATE_PERMISSIONS)
       expect(templateData.source).to.equal(C.MOCK_TEMPLATE_SOURCE)
@@ -150,7 +150,7 @@ describe('Template', function () {
         .to.emit(template, 'TemplateDeactivated')
         .withArgs(C.MOCK_TEMPLATE_TOKEN_ID)
 
-      const templateData = await template.getTemplate(C.MOCK_TEMPLATE_TOKEN_ID)
+      const templateData = await template.templates(C.MOCK_TEMPLATE_TOKEN_ID)
       expect(templateData.isActive).to.be.false
     })
     it('Should check if template is active', async function () {
@@ -237,7 +237,7 @@ describe('Template', function () {
       const expiration = Math.floor(Date.now() / 1000) + 3600
 
       // Get template data directly
-      const templateData = await template.getTemplate(templateId)
+      const templateData = await template.templates(templateId)
       const permissions = templateData.permissions
       const finalSource = templateData.source
 
