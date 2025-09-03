@@ -101,7 +101,7 @@
             {
                 "type": "permission",
                 "asset": "did:erc721:80002:0x45fbCD3ef7361d156e8b16F5538AE36DEdf61Da8:928",
-                "permissionTemplateId": "42450912898054052389966093156672567802032497359412869612766600782099724167695",
+                "permissionTemplateId": "96179539916889253257282130118985729529713942692168220805034659800513642098155",
                 "permissions": [
                     {
                         "name": "privilege:ExecuteCommands",
@@ -121,5 +121,5 @@
             }
         ]
     },
-    "signature": "0x9cff841ab0dde05748815a4cf127bf7b59109205d26c1d979fd1b3f4e8bb317959bd27640b1d11e71c870b6818055011a8b1a658911f33d9715207f7ea67504b1b"
+    "signature": "0x1e8abeb9f4b1937f97b9a54d87aeca94c30e5d05e6f689722edc91e529761b580be9ed407b3f46a9badd732a38acfaf58d89bbec6a5af53b22745da44cf2e9d11b"
 }
