@@ -109,6 +109,20 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
   }
 
   /**
+   * @notice Retrieves a template by its ID
+   * @dev Use this function in the SACD contract to perform only one call
+   * @param templateId The ID of the template to retrieve
+   * @return template The template data
+   */
+  function getTemplate(uint256 templateId) external view returns (TemplateData memory template) {
+    if (_ownerOf(templateId) == address(0)) {
+      revert TemplateNotFound(templateId);
+    }
+
+    template = _getTemplateStorage().templates[templateId];
+  }
+
+  /**
    * @notice Checks if a template is active
    * @param templateId The ID of the template to check
    * @return isActive True if the template exists and is active

@@ -213,28 +213,6 @@ describe('Sacd', function () {
           expect(permissionRecord.templateId).to.equal(C.MOCK_TEMPLATE_TOKEN_ID)
           expect(permissionRecord.source).to.equal(C.MOCK_SACD_SOURCE)
         })
-        it('Should correctly set new permissions with superset of template permissions', async () => {
-          const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
-          const mockErc721Address = await mockErc721.getAddress()
-
-          // Append new permission
-          const sacdPermissions =
-            (3n << BigInt(C.MOCK_TEMPLATE_PERMISSIONS.toString(2).length)) | C.MOCK_TEMPLATE_PERMISSIONS
-
-          // Set permissions with matching template permissions
-          await sacd
-            .connect(grantor)
-            [
-              'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
-            ](await mockErc721.getAddress(), 1n, grantee.address, sacdPermissions, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
-
-          const permissionRecord = await sacd.permissionRecords(mockErc721Address, 1n, 1n, grantee.address)
-
-          expect(permissionRecord.permissions).to.equal(sacdPermissions)
-          expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
-          expect(permissionRecord.templateId).to.equal(C.MOCK_TEMPLATE_TOKEN_ID)
-          expect(permissionRecord.source).to.equal(C.MOCK_SACD_SOURCE)
-        })
       })
 
       context('Caller is the asset contract', () => {
@@ -270,29 +248,6 @@ describe('Sacd', function () {
           const permissionRecord = await sacd.permissionRecords(mockErc721Address, 2n, 1n, grantee.address)
 
           expect(permissionRecord.permissions).to.equal(C.MOCK_TEMPLATE_PERMISSIONS)
-          expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
-          expect(permissionRecord.templateId).to.equal(C.MOCK_TEMPLATE_TOKEN_ID)
-          expect(permissionRecord.source).to.equal(C.MOCK_SACD_SOURCE)
-        })
-        it('Should correctly set new permissions with superset of template permissions', async () => {
-          const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
-          const mockErc721Address = await mockErc721.getAddress()
-
-          // Append new permission
-          const sacdPermissions =
-            (3n << BigInt(C.MOCK_TEMPLATE_PERMISSIONS.toString(2).length)) | C.MOCK_TEMPLATE_PERMISSIONS
-
-          await mockErc721.connect(grantor).mintWithSacd(grantor.address, {
-            grantee: grantee.address,
-            permissions: sacdPermissions,
-            expiration: DEFAULT_EXPIRATION,
-            templateId: C.MOCK_TEMPLATE_TOKEN_ID,
-            source: C.MOCK_SACD_SOURCE,
-          })
-
-          const permissionRecord = await sacd.permissionRecords(mockErc721Address, 2n, 1n, grantee.address)
-
-          expect(permissionRecord.permissions).to.equal(sacdPermissions)
           expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
           expect(permissionRecord.templateId).to.equal(C.MOCK_TEMPLATE_TOKEN_ID)
           expect(permissionRecord.source).to.equal(C.MOCK_SACD_SOURCE)

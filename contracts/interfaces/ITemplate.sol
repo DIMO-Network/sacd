@@ -41,5 +41,7 @@ interface ITemplate is IERC721 {
 
   function templates(uint256 templateId) external view returns (TemplateData memory templateData);
 
+  function getTemplate(uint256 templateId) external view returns (TemplateData memory template);
+
   function isTemplateActive(uint256 templateId) external view returns (bool);
 }

@@ -202,7 +202,6 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
       return false;
     }
 
-    // Check if template is still active
     if (!_isTemplateActive(pr.templateId)) {
       return false;
     }
@@ -242,7 +241,6 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
       return false;
     }
 
-    // Check if template is still active
     if (!_isTemplateActive(pr.templateId)) {
       return false;
     }
@@ -284,7 +282,6 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
       return 0;
     }
 
-    // Check if template is still active
     if (!_isTemplateActive(pr.templateId)) {
       return 0;
     }
@@ -395,12 +392,11 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     SacdStorage storage $ = _getSacdStorage();
     address templateContract = $.templateContract;
 
-    // Early return if no template contract set
+    // Early return if no template contract set and template ID is defined
     if (templateContract == address(0)) return false;
 
-    // Check if template exists by trying to get its owner
-    try ITemplate(templateContract).ownerOf(templateId) returns (address) {
-      return ITemplate(templateContract).isTemplateActive(templateId);
+    try ITemplate(templateContract).getTemplate(templateId) returns (ITemplate.TemplateData memory templateData) {
+      return templateData.isActive;
     } catch {
       return false; // Template doesn't exist
     }
@@ -453,7 +449,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
             if (template.asset != asset) {
               revert TemplateAssetMismatch(templateId, template.asset, asset);
             }
-            if ((template.permissions & permissions) != template.permissions) {
+            if (template.permissions != permissions) {
               revert TemplatePermissionsMismatch(templateId, template.permissions, permissions);
             }
           } catch {
