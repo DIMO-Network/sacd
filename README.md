@@ -40,12 +40,12 @@ The SACD JSON follows a similar structure, as seen in the example:
     "effectiveAt": "0000-00-00T00:00:00Z",
     "expiresAt": "0000-00-00T00:00:00Z",
     "additionalDates": {},
+    "permissionTemplateId": "",
     "agreements": [
       {
         "type": "<type>",
         "asset": "did:<assetType>:<chainId>:<contractAddress>:<tokenId>",
         "<type>": {},
-        "permissionTemplateId": "",
         "purpose": "",
         "attachments": [
           {
@@ -77,10 +77,10 @@ Within the `data` field, the following are typically found:
 - `effectiveAt`: The date and time when the agreement becomes effective.
 - `expiresAt`: The date and time when the agreement expires.
 - `additionalDates`: A section to include any other relevant dates.
+- `permissionTemplateId`: Template ID for a permissions SACD
 - `agreements`: An array that can contain one or more specific agreement clauses, such as those related to payments or permissions. Each element in this array specifies a type of agreement and its details.
   - `type`: The agreeement type (e.g. permission, payment)
   - `asset`: A DID identifying the asset, such as a specific a NFT or ERC-20 token (e.g., did:erc721:137:0x4440000000000000000000000000000000000000:123).
-  - `permissionTemplateId`: Template ID for a permissions SACD
   - `agreements`: An array containing the specific details of the agreements. The specific format is defined in the use cases below.
   - `attachments`: An array of documents related to the agreement, each with a name, description, contentType, and uri.
   - `extensions`: A section for adding any custom or non-standard fields relevant to a specific use case.
