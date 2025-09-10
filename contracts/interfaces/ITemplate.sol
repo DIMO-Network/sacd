@@ -21,7 +21,7 @@ interface ITemplate is IERC721 {
     address indexed creator,
     address indexed asset,
     uint256 permissions,
-    string ipfsUrl
+    string cid
   );
   event TemplateDeactivated(uint256 indexed templateId);
 

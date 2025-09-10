@@ -210,10 +210,7 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
   function _validateCID(string memory cid) private pure {
     bytes memory cidBytes = bytes(cid);
 
-    if (cidBytes.length != 46) {
-      revert InvalidTemplateData();
-    }
-    if (cidBytes[0] != 'Q' || cidBytes[1] != 'm') {
+    if (cidBytes.length != 46 || cidBytes[0] != 'Q' || cidBytes[1] != 'm') {
       revert InvalidTemplateData();
     }
   }

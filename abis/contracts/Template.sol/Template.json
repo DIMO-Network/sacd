@@ -397,7 +397,7 @@
       {
         "indexed": false,
         "internalType": "string",
-        "name": "ipfsUrl",
+        "name": "cid",
         "type": "string"
       }
     ],
