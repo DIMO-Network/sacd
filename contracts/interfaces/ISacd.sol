@@ -11,6 +11,7 @@ interface ISacd {
   struct PermissionRecord {
     uint256 permissions;
     uint256 expiration;
+    uint256 templateId; // 0 means no template was used
     string source;
   }
 
@@ -21,6 +22,33 @@ interface ISacd {
     string source;
   }
 
+  event PermissionsSet(
+    address indexed asset,
+    uint256 indexed tokenId,
+    uint256 permissions,
+    address indexed grantee,
+    uint256 expiration,
+    uint256 templateId,
+    string source
+  );
+  event PaymentSet(
+    address indexed asset,
+    address indexed grantee,
+    address indexed grantor,
+    uint256 amount,
+    uint256 expiration,
+    string source
+  );
+
+  error ZeroAddress();
+  error Unauthorized(address addr);
+  error InvalidTokenId(address asset, uint256 tokenId);
+  error TemplateNotActive(uint256 templateId);
+  error TemplateContractNotSet();
+  error InvalidCurrency();
+  error TemplateAssetMismatch(uint256 templateId, address expectedAsset, address providedAsset);
+  error TemplatePermissionsMismatch(uint256 templateId, uint256 expectedPermissions, uint256 providedPermissions);
+
   function setPermissions(
     address asset,
     uint256 tokenId,
@@ -29,6 +57,18 @@ interface ISacd {
     uint256 expiration,
     string calldata source
   ) external;
+
+  function setPermissions(
+    address asset,
+    uint256 tokenId,
+    address grantee,
+    uint256 permissions,
+    uint256 expiration,
+    uint256 templateId,
+    string calldata source
+  ) external;
+
+  function setTemplateContract(address templateContractAddress) external;
 
   function hasPermission(
     address asset,
@@ -67,4 +107,19 @@ interface ISacd {
     uint256 tokenId,
     address grantee
   ) external view returns (PermissionRecord memory permissionRecord);
+
+  function paymentRecords(
+    address asset,
+    address grantee,
+    address grantor,
+    uint256 paymentId
+  ) external view returns (PaymentRecord memory paymentRecord);
+
+  function currentPaymentRecord(
+    address asset,
+    address grantee,
+    address grantor
+  ) external view returns (PaymentRecord memory paymentRecord);
+
+  function nextPaymentId(address asset, address grantee, address grantor) external view returns (uint256 paymentId);
 }

@@ -53,25 +53,31 @@
     "type": "error"
   },
   {
-    "inputs": [],
-    "name": "FailedInnerCall",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidCurrency",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidInitialization",
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "ERC721IncorrectOwner",
     "type": "error"
   },
   {
     "inputs": [
       {
         "internalType": "address",
-        "name": "asset",
+        "name": "operator",
         "type": "address"
       },
       {
@@ -80,7 +86,88 @@
         "type": "uint256"
       }
     ],
-    "name": "InvalidTokenId",
+    "name": "ERC721InsufficientApproval",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "approver",
+        "type": "address"
+      }
+    ],
+    "name": "ERC721InvalidApprover",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      }
+    ],
+    "name": "ERC721InvalidOperator",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "ERC721InvalidOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "receiver",
+        "type": "address"
+      }
+    ],
+    "name": "ERC721InvalidReceiver",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      }
+    ],
+    "name": "ERC721InvalidSender",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "ERC721NonexistentToken",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "FailedInnerCall",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidInitialization",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidTemplateData",
     "type": "error"
   },
   {
@@ -94,24 +181,9 @@
         "internalType": "uint256",
         "name": "templateId",
         "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "expectedAsset",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "providedAsset",
-        "type": "address"
       }
     ],
-    "name": "TemplateAssetMismatch",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "TemplateContractNotSet",
+    "name": "TemplateAlreadyExists",
     "type": "error"
   },
   {
@@ -122,28 +194,7 @@
         "type": "uint256"
       }
     ],
-    "name": "TemplateNotActive",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "templateId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "expectedPermissions",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "providedPermissions",
-        "type": "uint256"
-      }
-    ],
-    "name": "TemplatePermissionsMismatch",
+    "name": "TemplateNotFound",
     "type": "error"
   },
   {
@@ -166,17 +217,67 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "addr",
+        "name": "caller",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "templateId",
+        "type": "uint256"
       }
     ],
     "name": "Unauthorized",
     "type": "error"
   },
   {
-    "inputs": [],
-    "name": "ZeroAddress",
-    "type": "error"
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "approved",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "Approval",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "approved",
+        "type": "bool"
+      }
+    ],
+    "name": "ApprovalForAll",
+    "type": "event"
   },
   {
     "anonymous": false,
@@ -189,98 +290,6 @@
       }
     ],
     "name": "Initialized",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "asset",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "grantee",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "grantor",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "expiration",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "source",
-        "type": "string"
-      }
-    ],
-    "name": "PaymentSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "asset",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "permissions",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "grantee",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "expiration",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "templateId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "source",
-        "type": "string"
-      }
-    ],
-    "name": "PermissionsSet",
     "type": "event"
   },
   {
@@ -363,6 +372,81 @@
     "inputs": [
       {
         "indexed": true,
+        "internalType": "uint256",
+        "name": "templateId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "asset",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "permissions",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "cid",
+        "type": "string"
+      }
+    ],
+    "name": "TemplateCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "templateId",
+        "type": "uint256"
+      }
+    ],
+    "name": "TemplateDeactivated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "Transfer",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "address",
         "name": "implementation",
         "type": "address"
@@ -401,48 +485,47 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "asset",
+        "name": "to",
         "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "grantee",
-        "type": "address"
-      },
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "approve",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
       {
         "internalType": "address",
-        "name": "grantor",
+        "name": "owner",
         "type": "address"
       }
     ],
-    "name": "currentPaymentRecord",
+    "name": "balanceOf",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint64",
-            "name": "expiration",
-            "type": "uint64"
-          },
-          {
-            "internalType": "bytes3",
-            "name": "currency",
-            "type": "bytes3"
-          },
-          {
-            "internalType": "string",
-            "name": "source",
-            "type": "string"
-          }
-        ],
-        "internalType": "struct ISacd.PaymentRecord",
-        "name": "paymentRecord",
-        "type": "tuple"
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "baseURI",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -452,82 +535,63 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "asset",
+        "name": "owner",
         "type": "address"
       },
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "grantee",
-        "type": "address"
-      }
-    ],
-    "name": "currentPermissionRecord",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "permissions",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "expiration",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "templateId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "name": "source",
-            "type": "string"
-          }
-        ],
-        "internalType": "struct ISacd.PermissionRecord",
-        "name": "permissionRecord",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
       {
         "internalType": "address",
         "name": "asset",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "grantee",
         "type": "address"
       },
       {
         "internalType": "uint256",
         "name": "permissions",
         "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "cid",
+        "type": "string"
       }
     ],
-    "name": "getPermissions",
+    "name": "createTemplate",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "templateId",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "templateId",
+        "type": "uint256"
+      }
+    ],
+    "name": "deactivateTemplate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getApproved",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -555,6 +619,47 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "templateId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getTemplate",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "asset",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "permissions",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "source",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "isActive",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct ITemplate.TemplateData",
+        "name": "template",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "role",
         "type": "bytes32"
@@ -568,74 +673,6 @@
     "name": "grantRole",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "asset",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "grantee",
-        "type": "address"
-      },
-      {
-        "internalType": "uint8",
-        "name": "permissionIndex",
-        "type": "uint8"
-      }
-    ],
-    "name": "hasPermission",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "asset",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "grantee",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "permissions",
-        "type": "uint256"
-      }
-    ],
-    "name": "hasPermissions",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -665,9 +702,9 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "templateContractAddress",
-        "type": "address"
+        "internalType": "string",
+        "name": "baseURI_",
+        "type": "string"
       }
     ],
     "name": "initialize",
@@ -679,26 +716,21 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "asset",
+        "name": "owner",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "grantee",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "grantor",
+        "name": "operator",
         "type": "address"
       }
     ],
-    "name": "nextPaymentId",
+    "name": "isApprovedForAll",
     "outputs": [
       {
-        "internalType": "uint256",
-        "name": "paymentId",
-        "type": "uint256"
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -707,72 +739,30 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "asset",
-        "type": "address"
-      },
-      {
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "templateId",
         "type": "uint256"
       }
     ],
-    "name": "onTransfer",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "name": "isTemplateActive",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isActive",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "asset",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "grantee",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "grantor",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "paymentId",
-        "type": "uint256"
-      }
-    ],
-    "name": "paymentRecords",
+    "inputs": [],
+    "name": "name",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint64",
-            "name": "expiration",
-            "type": "uint64"
-          },
-          {
-            "internalType": "bytes3",
-            "name": "currency",
-            "type": "bytes3"
-          },
-          {
-            "internalType": "string",
-            "name": "source",
-            "type": "string"
-          }
-        ],
-        "internalType": "struct ISacd.PaymentRecord",
-        "name": "paymentRecord",
-        "type": "tuple"
+        "internalType": "string",
+        "name": "",
+        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -781,54 +771,17 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "asset",
-        "type": "address"
-      },
-      {
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "version",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "grantee",
-        "type": "address"
       }
     ],
-    "name": "permissionRecords",
+    "name": "ownerOf",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "permissions",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "expiration",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "templateId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "name": "source",
-            "type": "string"
-          }
-        ],
-        "internalType": "struct ISacd.PermissionRecord",
-        "name": "permissionRecord",
-        "type": "tuple"
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -887,36 +840,21 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "asset",
+        "name": "from",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "grantor",
+        "name": "to",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "amount",
+        "name": "tokenId",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint64",
-        "name": "expiration",
-        "type": "uint64"
-      },
-      {
-        "internalType": "bytes3",
-        "name": "currency",
-        "type": "bytes3"
-      },
-      {
-        "internalType": "string",
-        "name": "source",
-        "type": "string"
       }
     ],
-    "name": "setPayment",
+    "name": "safeTransferFrom",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -925,7 +863,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "asset",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
         "type": "address"
       },
       {
@@ -934,32 +877,12 @@
         "type": "uint256"
       },
       {
-        "internalType": "address",
-        "name": "grantee",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "permissions",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "expiration",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "templateId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "source",
-        "type": "string"
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
       }
     ],
-    "name": "setPermissions",
+    "name": "safeTransferFrom",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -968,49 +891,16 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "asset",
+        "name": "operator",
         "type": "address"
       },
       {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "grantee",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "permissions",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "expiration",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "source",
-        "type": "string"
+        "internalType": "bool",
+        "name": "approved",
+        "type": "bool"
       }
     ],
-    "name": "setPermissions",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "templateContractAddress",
-        "type": "address"
-      }
-    ],
-    "name": "setTemplateContract",
+    "name": "setApprovalForAll",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1035,10 +925,88 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "symbol",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "templateId",
+        "type": "uint256"
+      }
+    ],
+    "name": "templates",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "asset",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "permissions",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "source",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "isActive",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct ITemplate.TemplateData",
+        "name": "templateData",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "tokenURI",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
-        "name": "asset",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
         "type": "address"
       },
       {
@@ -1047,15 +1015,9 @@
         "type": "uint256"
       }
     ],
-    "name": "tokenIdToVersion",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "version",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
+    "name": "transferFrom",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

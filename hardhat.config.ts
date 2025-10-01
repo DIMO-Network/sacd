@@ -46,7 +46,7 @@ const config: HardhatUserConfig = {
   abiExporter: {
     path: './abis',
     runOnCompile: true,
-    only: [':Sacd$'],
+    only: [':Sacd$', ':Template$'],
     format: 'json',
   },
 }

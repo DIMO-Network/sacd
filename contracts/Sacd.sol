@@ -7,6 +7,7 @@ import {UUPSUpgradeable} from '@openzeppelin/contracts-upgradeable/proxy/utils/U
 import {AccessControlUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol';
 
 import './interfaces/ISacd.sol';
+import './interfaces/ITemplate.sol';
 
 /**
  * @title Service Access Contract Definition (SACD)
@@ -24,34 +25,14 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     mapping(address asset => mapping(address grantee => mapping(address grantor => mapping(uint256 paymentId => PaymentRecord)))) paymentRecords;
     // Track the next payment ID for each (asset, grantee, grantor) combination
     mapping(address asset => mapping(address grantee => mapping(address grantor => uint256))) nextPaymentId;
+    address templateContract; // Address of the Template contract
   }
 
+  bytes32 constant ADMIN_ROLE = keccak256('ADMIN_ROLE');
   bytes32 constant UPGRADER_ROLE = keccak256('UPGRADER_ROLE');
 
   // keccak256(abi.encode(uint256(keccak256("Sacd.storage")) - 1)) & ~bytes32(uint256(0xff))
   bytes32 private constant SACD_STORAGE = 0x20aa246ca08ba235ee1e06ff6016f518804d64da710b8279d7124e598d8d5200;
-
-  event PermissionsSet(
-    address indexed asset,
-    uint256 indexed tokenId,
-    uint256 permissions,
-    address indexed grantee,
-    uint256 expiration,
-    string source
-  );
-  event PaymentSet(
-    address indexed asset,
-    address indexed grantee,
-    address indexed grantor,
-    uint256 amount,
-    uint256 expiration,
-    string source
-  );
-
-  error ZeroAddress();
-  error Unauthorized(address addr);
-  error InvalidTokenId(address asset, uint256 tokenId);
-  error InvalidCurrency();
 
   /// @custom:oz-upgrades-unsafe-allow constructor
   constructor() {
@@ -61,22 +42,35 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   /**
    * @notice Initializes the contract
    * @dev Sets default admin role to msg.sender
+   * @param templateContractAddress The address of the Template contract
    */
-  function initialize() external initializer {
+  function initialize(address templateContractAddress) external initializer {
     __AccessControl_init();
     __UUPSUpgradeable_init();
 
     _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    _grantRole(ADMIN_ROLE, msg.sender);
+
+    _getSacdStorage().templateContract = templateContractAddress;
+  }
+
+  /**
+   * @notice Sets the template contract address
+   * @dev Only admin can call this function
+   * @param templateContractAddress The address of the Template contract
+   */
+  function setTemplateContract(address templateContractAddress) external onlyRole(ADMIN_ROLE) {
+    _getSacdStorage().templateContract = templateContractAddress;
   }
 
   /**
    * @notice Sets a permission record to a grantee
-   * @dev The caller must be the owner of the token or the asset contract
+   * @dev This is a function for backwards compatibility for permissions with templateId=0
    * @param asset The contract address of the ERC721
    * @param tokenId Token ID associated with the permissions
-   * @param permissions The uint256 that represents the byte array of permissions
    * @param grantee The address to receive the permission
-   * @param expiration Expiration of the permissions
+   * @param permissions The uint256 that represents the byte array of permissions
+   * @param expiration Timestamp when the permissions expire
    * @param source The URI source associated with the permissions
    */
   function setPermissions(
@@ -87,24 +81,32 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     uint256 expiration,
     string calldata source
   ) external {
-    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
-      if (tokenIdOwner != msg.sender && asset != msg.sender) {
-        revert Unauthorized(msg.sender);
-      }
+    _setPermissions(asset, tokenId, grantee, permissions, expiration, 0, source);
+  }
 
-      if (grantee == address(0)) {
-        revert ZeroAddress();
-      }
-
-      SacdStorage storage $ = _getSacdStorage();
-
-      uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
-      $.permissionRecords[asset][tokenId][tokenIdVersion][grantee] = PermissionRecord(permissions, expiration, source);
-
-      emit PermissionsSet(asset, tokenId, permissions, grantee, expiration, source);
-    } catch {
-      revert InvalidTokenId(asset, tokenId);
-    }
+  /**
+   * @notice Sets a permission record to a grantee with a template ID
+   * @dev The caller must be the owner of the token or the asset contract.
+   *      If a template is used, it validates that the template is active,
+   *      matches the asset, and has compatible permissions.
+   * @param asset The contract address of the ERC721 token
+   * @param tokenId Token ID associated with the permissions
+   * @param grantee The address to receive the permission
+   * @param permissions The uint256 that represents the byte array of permissions
+   * @param expiration Timestamp when the permissions expire
+   * @param templateId The ID of the template used (0 if no template)
+   * @param source The URI source associated with the permissions
+   */
+  function setPermissions(
+    address asset,
+    uint256 tokenId,
+    address grantee,
+    uint256 permissions,
+    uint256 expiration,
+    uint256 templateId,
+    string calldata source
+  ) external {
+    _setPermissions(asset, tokenId, grantee, permissions, expiration, templateId, source);
   }
 
   /**
@@ -199,6 +201,11 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     if (pr.expiration <= block.timestamp) {
       return false;
     }
+
+    if (!_isTemplateActive(pr.templateId)) {
+      return false;
+    }
+
     return (pr.permissions >> (2 * permissionIndex)) & 3 == 3;
   }
 
@@ -233,6 +240,11 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     if (pr.expiration <= block.timestamp) {
       return false;
     }
+
+    if (!_isTemplateActive(pr.templateId)) {
+      return false;
+    }
+
     return (pr.permissions & permissions) == permissions;
   }
 
@@ -258,7 +270,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
         return permissions;
       }
     } catch {
-      return uint256(0);
+      return 0;
     }
 
     SacdStorage storage $ = _getSacdStorage();
@@ -269,6 +281,11 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     if (pr.expiration <= block.timestamp) {
       return 0;
     }
+
+    if (!_isTemplateActive(pr.templateId)) {
+      return 0;
+    }
+
     return pr.permissions & permissions;
   }
 
@@ -360,6 +377,100 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
    */
   function nextPaymentId(address asset, address grantee, address grantor) external view returns (uint256 paymentId) {
     paymentId = _getSacdStorage().nextPaymentId[asset][grantee][grantor];
+  }
+
+  /**
+   * @notice Checks if a template is active
+   * @dev Internal function to check template status
+   * @param templateId The ID of the template to check
+   * @return bool Returns true if the template is active
+   */
+  function _isTemplateActive(uint256 templateId) internal view returns (bool) {
+    // Early return for most common case (no template used)
+    if (templateId == 0) return true;
+
+    SacdStorage storage $ = _getSacdStorage();
+    address templateContract = $.templateContract;
+
+    // Early return if no template contract set and template ID is defined
+    if (templateContract == address(0)) return false;
+
+    try ITemplate(templateContract).getTemplate(templateId) returns (ITemplate.TemplateData memory templateData) {
+      return templateData.isActive;
+    } catch {
+      return false; // Template doesn't exist
+    }
+  }
+
+  /**
+   * @notice Internal function to sets a permission record to a grantee with a template ID
+   * @dev The caller must be the owner of the token or the asset contract.
+   *      If a template is used, it validates that the template is active,
+   *      matches the asset, and has compatible permissions.
+   * @param asset The contract address of the ERC721 token
+   * @param tokenId Token ID associated with the permissions
+   * @param grantee The address to receive the permission
+   * @param permissions The uint256 that represents the byte array of permissions
+   * @param expiration Timestamp when the permissions expire
+   * @param templateId The ID of the template used (0 if no template)
+   * @param source The URI source associated with the permissions
+   */
+  function _setPermissions(
+    address asset,
+    uint256 tokenId,
+    address grantee,
+    uint256 permissions,
+    uint256 expiration,
+    uint256 templateId,
+    string calldata source
+  ) internal {
+    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
+      if (tokenIdOwner != msg.sender && asset != msg.sender) {
+        revert Unauthorized(msg.sender);
+      }
+
+      if (grantee == address(0)) {
+        revert ZeroAddress();
+      }
+
+      SacdStorage storage $ = _getSacdStorage();
+
+      // Validate template permissions if template is used
+      if (templateId != 0) {
+        address templateContract = $.templateContract;
+
+        if (templateContract == address(0)) {
+          revert TemplateContractNotSet();
+        } else {
+          try ITemplate(templateContract).templates(templateId) returns (ITemplate.TemplateData memory template) {
+            if (!template.isActive) {
+              revert TemplateNotActive(templateId);
+            }
+            if (template.asset != asset) {
+              revert TemplateAssetMismatch(templateId, template.asset, asset);
+            }
+            if (template.permissions != permissions) {
+              revert TemplatePermissionsMismatch(templateId, template.permissions, permissions);
+            }
+          } catch {
+            // If template contract call fails, assume template is invalid
+            revert TemplateNotActive(templateId);
+          }
+        }
+      }
+
+      uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
+      $.permissionRecords[asset][tokenId][tokenIdVersion][grantee] = PermissionRecord(
+        permissions,
+        expiration,
+        templateId,
+        source
+      );
+
+      emit PermissionsSet(asset, tokenId, permissions, grantee, expiration, templateId, source);
+    } catch {
+      revert InvalidTokenId(asset, tokenId);
+    }
   }
 
   /**

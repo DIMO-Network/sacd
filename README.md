@@ -8,7 +8,7 @@ This document provides a basic overview of the SACD JSON format, which is used t
 
 The following example files demonstrate different use cases for the SACD format:
 
-- [`sacd.template.json`](data/sacd.template.json) - Generic template structure for SACD JSON files
+- [`sacd.template.example.json`](data/sacd.template.example.json) - Generic template structure for SACD JSON files
 - [`sacd.permission.example.json`](data/sacd.permission.example.json) - Example of permission-based agreement
 - [`sacd.payment.erc20.example.json`](data/sacd.payment.erc20.example.json) - Payment agreement using ERC20 tokens
 - [`sacd.payment.fiat.example.json`](data/sacd.payment.fiat.example.json) - Payment agreement using fiat currency
@@ -17,7 +17,11 @@ The following example files demonstrate different use cases for the SACD format:
 
 ### Overview
 
-The SACD JSON follows a consistent structure, as seen in the template:
+This section details the JSON structure specifications for both the SACD and Template formats.
+
+#### SACD
+
+The SACD JSON follows a similar structure, as seen in the example:
 
 ```json
 {
@@ -36,6 +40,7 @@ The SACD JSON follows a consistent structure, as seen in the template:
     "effectiveAt": "0000-00-00T00:00:00Z",
     "expiresAt": "0000-00-00T00:00:00Z",
     "additionalDates": {},
+    "permissionTemplateId": "",
     "agreements": [
       {
         "type": "<type>",
@@ -72,6 +77,7 @@ Within the `data` field, the following are typically found:
 - `effectiveAt`: The date and time when the agreement becomes effective.
 - `expiresAt`: The date and time when the agreement expires.
 - `additionalDates`: A section to include any other relevant dates.
+- `permissionTemplateId`: Template ID for a permissions SACD
 - `agreements`: An array that can contain one or more specific agreement clauses, such as those related to payments or permissions. Each element in this array specifies a type of agreement and its details.
   - `type`: The agreeement type (e.g. permission, payment)
   - `asset`: A DID identifying the asset, such as a specific a NFT or ERC-20 token (e.g., did:erc721:137:0x4440000000000000000000000000000000000000:123).
@@ -79,6 +85,44 @@ Within the `data` field, the following are typically found:
   - `attachments`: An array of documents related to the agreement, each with a name, description, contentType, and uri.
   - `extensions`: A section for adding any custom or non-standard fields relevant to a specific use case.
 - `signature`: The cryptographic signature of the entity submitting the SACD, typically created by signing the JSON data with the submitter's private key. This signature verifies the authenticity and integrity of the SACD document and proves the submitter's consent to the agreement terms.
+
+#### Template
+
+The Template JSON follows a similar structure, as seen in the example:
+
+```json
+{
+  "specversion": "1.0",
+  "time": "0000-00-00T00:00:00Z",
+  "type": "dimo.sacd.template",
+  "data": {
+    "owner": {
+      "address": "0x0000000000000000000000000000000000000000",
+      "name": ""
+    },
+    "description": "",
+    "agreements": [
+      {
+        "type": "permission",
+        "asset": "did:<assetType>:<chainId>:<contractAddress>",
+        "permissions": [
+          {
+            "name": "",
+            "description": ""
+          }
+        ]
+      }
+    ]
+  },
+  "signature": ""
+}
+```
+
+Within the `data` field, the template structure differs from the standard SACD:
+
+- `owner`: Replaces the grantor/grantee fields with a single owner entity that creates and manages the template
+- `agreements`:
+  - `asset`: Contains only the contract address portion of the DID without a token ID, as templates apply to all tokens of the specified asset contract
 
 ### Use Case: Permissions
 
@@ -160,6 +204,7 @@ For detailed information about the DID format used in DIMO, see the [Decentraliz
 
 ```
 npx hardhat ignition deploy ./ignition/modules/Sacd.ts --network <network>
+npx hardhat ignition deploy ./ignition/modules/Template.ts --network <network>
 ```
 
 In case of reconciliation failed, you can wipe the `journal.jsonl`. Make sure to use the last `futureId` in the journal.
@@ -192,6 +237,7 @@ To regenerate the Go bindings for, e.g., [the devices API](https://github.com/DI
 
 ```sh
 abigen --abi abis/contracts/Sacd.sol/Sacd.json --out sacd.go --pkg sacd --type Sacd
+abigen --abi abis/contracts/Template.sol/Template.json --out template.go --pkg template --type Template
 ```
 
 and copy over that file.

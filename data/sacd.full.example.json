@@ -18,6 +18,7 @@
         "effectiveAt": "2025-03-11T14:30:00Z",
         "expiresAt": "2030-12-20T05:20:45Z",
         "additionalDates": {},
+        "permissionTemplateId": "96179539916889253257282130118985729529713942692168220805034659800513642098155",
         "agreements": [
             {
                 "type": "cloudevent",
@@ -120,5 +121,5 @@
             }
         ]
     },
-    "signature": "0x9cff841ab0dde05748815a4cf127bf7b59109205d26c1d979fd1b3f4e8bb317959bd27640b1d11e71c870b6818055011a8b1a658911f33d9715207f7ea67504b1b"
+    "signature": "0xe2edf875df47cd2a3e8fb61f36bbc98c826d08eac29ba6ac48ea0a6dda119e9f7c4ac41a5ea37d760f4d142c242976bd857b8e2a495264cb46e0f5acceb6d8dd1b"
 }
