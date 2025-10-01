@@ -1,26 +1,7 @@
-import * as fs from 'fs'
-import path from 'path'
 import { ethers } from 'hardhat'
 import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers'
 
-type AddressesByNetwork = {
-  [index: string]: string
-}
-
-function getAddresses() {
-  return JSON.parse(fs.readFileSync(path.resolve(__dirname, 'data', 'addresses.json'), 'utf8'))
-}
-
-function writeAddresses(addresses: AddressesByNetwork, networkName: string) {
-  console.log('\n----- Writing addresses to file -----')
-
-  const currentAddresses: AddressesByNetwork = addresses
-  currentAddresses[networkName] = addresses[networkName]
-
-  fs.writeFileSync(path.resolve(__dirname, 'data', 'addresses.json'), JSON.stringify(currentAddresses, null, 4))
-
-  console.log('----- Addresses written to file -----\n')
-}
+import { getAddresses, writeAddresses } from '../utils/helpers'
 
 async function getGasPrice(bump: bigint = 20n): Promise<bigint> {
   if (bump < 1n) {
@@ -61,10 +42,11 @@ async function main() {
   let { name } = await ethers.provider.getNetwork()
 
   if (name === 'localhost') {
-    name = 'polygon'
+    name = 'amoy'
     // 0xCED3c922200559128930180d3f0bfFd4d9f4F123 Prod account
     // 0xC008EF40B0b42AAD7e34879EB024385024f753ea Shared dev account
-    deployer = await ethers.getImpersonatedSigner('0xCED3c922200559128930180d3f0bfFd4d9f4F123')
+    // 0xD64b27cA7F7d4447dFa8cb8701497Fb6eE774F6a Deployer create3
+    deployer = await ethers.getImpersonatedSigner('0xC008EF40B0b42AAD7e34879EB024385024f753ea')
 
     await user1.sendTransaction({
       to: deployer.address,
