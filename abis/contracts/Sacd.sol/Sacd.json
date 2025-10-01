@@ -1035,6 +1035,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "templateContract",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "template_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",

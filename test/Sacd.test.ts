@@ -36,6 +36,17 @@ describe('Sacd', function () {
     return { owner, grantor, grantee, otherAccount, mockErc721, mockErc20, template, sacd, DEFAULT_EXPIRATION }
   }
 
+  describe('initialize', () => {
+    it('Should correctly initialize', async () => {
+      const { sacd, owner, template } = await loadFixture(setup)
+
+      expect(await sacd.hasRole(C.DEFAULT_ADMIN_ROLE, owner)).to.be.true
+      expect(await sacd.hasRole(C.ADMIN_ROLE, owner)).to.be.true
+
+      expect(await sacd.templateContract()).to.equal(await template.getAddress())
+    })
+  })
+
   describe('setTemplateContract', () => {
     it('Should revert if caller does not have admin role', async () => {
       const { sacd, otherAccount, template } = await loadFixture(setup)

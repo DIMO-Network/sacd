@@ -380,6 +380,14 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   }
 
   /**
+   * @notice Returns the address of the Template contract
+   * @return template_ The template contract address
+   */
+  function templateContract() external view returns (address template_) {
+    template_ = _getSacdStorage().templateContract;
+  }
+
+  /**
    * @notice Checks if a template is active
    * @dev Internal function to check template status
    * @param templateId The ID of the template to check
@@ -390,12 +398,12 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     if (templateId == 0) return true;
 
     SacdStorage storage $ = _getSacdStorage();
-    address templateContract = $.templateContract;
+    address template = $.templateContract;
 
     // Early return if no template contract set and template ID is defined
-    if (templateContract == address(0)) return false;
+    if (template == address(0)) return false;
 
-    try ITemplate(templateContract).getTemplate(templateId) returns (ITemplate.TemplateData memory templateData) {
+    try ITemplate(template).getTemplate(templateId) returns (ITemplate.TemplateData memory templateData) {
       return templateData.isActive;
     } catch {
       return false; // Template doesn't exist
@@ -437,20 +445,20 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
 
       // Validate template permissions if template is used
       if (templateId != 0) {
-        address templateContract = $.templateContract;
+        address template = $.templateContract;
 
-        if (templateContract == address(0)) {
+        if (template == address(0)) {
           revert TemplateContractNotSet();
         } else {
-          try ITemplate(templateContract).templates(templateId) returns (ITemplate.TemplateData memory template) {
-            if (!template.isActive) {
+          try ITemplate(template).templates(templateId) returns (ITemplate.TemplateData memory templateData) {
+            if (!templateData.isActive) {
               revert TemplateNotActive(templateId);
             }
-            if (template.asset != asset) {
-              revert TemplateAssetMismatch(templateId, template.asset, asset);
+            if (templateData.asset != asset) {
+              revert TemplateAssetMismatch(templateId, templateData.asset, asset);
             }
-            if (template.permissions != permissions) {
-              revert TemplatePermissionsMismatch(templateId, template.permissions, permissions);
+            if (templateData.permissions != permissions) {
+              revert TemplatePermissionsMismatch(templateId, templateData.permissions, permissions);
             }
           } catch {
             // If template contract call fails, assume template is invalid
