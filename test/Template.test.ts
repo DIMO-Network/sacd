@@ -1,11 +1,10 @@
-import { time, loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
+import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import { expect } from 'chai'
 import hre, { ignition } from 'hardhat'
 
 import * as C from './constants'
 import SacdModule from '../ignition/modules/Sacd'
 import TemplateModule from '../ignition/modules/Template'
-import { stringToUint256WithHash } from '../utils/helpers'
 import type { Sacd, Template } from '../typechain-types'
 
 describe('Template', function () {
@@ -13,7 +12,15 @@ describe('Template', function () {
     const [owner, user1, user2, otherAccount] = await hre.ethers.getSigners()
 
     // Deploy template contract
-    const template = (await ignition.deploy(TemplateModule)).template as unknown as Template
+    const template = (
+      await ignition.deploy(TemplateModule, {
+        parameters: {
+          TemplateProxyModule: {
+            admin: owner.address,
+          },
+        },
+      })
+    ).template as unknown as Template
     const sacd = (await ignition.deploy(SacdModule)).sacd as unknown as Sacd
 
     const mockErc721Factory = await hre.ethers.getContractFactory('MockERC721withSacd')

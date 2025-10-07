@@ -33,17 +33,19 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
 
   /**
    * @notice Initializes the contract
+   * @param admin Address that will be granted admin, template manager, and upgrader roles
    * @param baseURI_ The base URI for template metadata that will be used for token URIs
    */
-  function initialize(string calldata baseURI_) external initializer {
+  function initialize(address admin, string calldata baseURI_) external initializer {
     __AccessControl_init();
     __UUPSUpgradeable_init();
     __ERC721_init('Template', 'TMPL');
 
     _getTemplateStorage().baseURI = baseURI_;
 
-    _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    _grantRole(TEMPLATE_MANAGER_ROLE, msg.sender);
+    _grantRole(DEFAULT_ADMIN_ROLE, admin);
+    _grantRole(TEMPLATE_MANAGER_ROLE, admin);
+    _grantRole(UPGRADER_ROLE, admin);
   }
 
   /**
