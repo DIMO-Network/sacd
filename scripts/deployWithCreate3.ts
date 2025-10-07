@@ -307,6 +307,7 @@ async function main() {
 
     const templateFactory = await ethers.getContractFactory('Template')
     const templateInitData = templateFactory.interface.encodeFunctionData('initialize', [
+      '0xC008EF40B0b42AAD7e34879EB024385024f753ea',
       process.env.TEMPLATE_BASE_URI || 'https://assets.dimo.xyz/ipfs/',
     ])
 
