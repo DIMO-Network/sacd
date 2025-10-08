@@ -30,6 +30,8 @@ interface ITemplate is IERC721 {
   error Unauthorized(address caller, uint256 templateId);
   error InvalidTemplateData();
   error TemplateAlreadyExists(uint256 templateId);
+  error TemplateAlreadyActive(uint256 templateId);
+  error TemplateAlreadyDeactivated(uint256 templateId);
 
   function createTemplate(
     address owner,

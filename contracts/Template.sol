@@ -106,6 +106,12 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
       revert Unauthorized(msg.sender, templateId);
     }
 
+    TemplateStorage storage $ = _getTemplateStorage();
+
+    if (!$.templates[templateId].isActive) {
+      revert TemplateAlreadyDeactivated(templateId);
+    }
+
     _getTemplateStorage().templates[templateId].isActive = false;
 
     emit TemplateDeactivated(templateId);

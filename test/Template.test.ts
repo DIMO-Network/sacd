@@ -147,6 +147,17 @@ describe('Template', function () {
         .to.be.revertedWithCustomError(template, 'Unauthorized')
         .withArgs(otherAccount.address, C.MOCK_TEMPLATE_TOKEN_ID)
     })
+    it('Should revert if template is already deactivated', async function () {
+      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
+
+      await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+
+      await template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID)
+
+      await expect(template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID))
+        .to.be.revertedWithCustomError(template, 'TemplateAlreadyDeactivated')
+        .withArgs(C.MOCK_TEMPLATE_TOKEN_ID)
+    })
     it('Should deactivate template successfully', async function () {
       const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
 

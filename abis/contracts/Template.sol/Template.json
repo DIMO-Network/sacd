@@ -183,6 +183,28 @@
         "type": "uint256"
       }
     ],
+    "name": "TemplateAlreadyActive",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "templateId",
+        "type": "uint256"
+      }
+    ],
+    "name": "TemplateAlreadyDeactivated",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "templateId",
+        "type": "uint256"
+      }
+    ],
     "name": "TemplateAlreadyExists",
     "type": "error"
   },
