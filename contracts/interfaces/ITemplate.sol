@@ -23,6 +23,7 @@ interface ITemplate is IERC721 {
     uint256 permissions,
     string cid
   );
+  event TemplateActivated(uint256 indexed templateId);
   event TemplateDeactivated(uint256 indexed templateId);
 
   error TemplateNotFound(uint256 templateId);

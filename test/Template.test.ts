@@ -59,6 +59,7 @@ describe('Template', function () {
           C.MOCK_TEMPLATE_PERMISSIONS,
           C.MOCK_TEMPLATE_SOURCE
         )
+        .to.emit(template, 'TemplateActivated')
 
       const templateData = await template.templates(C.MOCK_TEMPLATE_TOKEN_ID)
       expect(templateData.asset).to.equal(MOCK_ERC_721_ADDRESS)

@@ -86,6 +86,7 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
     _safeMint(owner, templateId);
 
     emit TemplateCreated(templateId, owner, asset, permissions, cid);
+    emit TemplateActivated(templateId);
   }
 
   /**

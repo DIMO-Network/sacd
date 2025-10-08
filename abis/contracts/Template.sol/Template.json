@@ -375,6 +375,19 @@
         "internalType": "uint256",
         "name": "templateId",
         "type": "uint256"
+      }
+    ],
+    "name": "TemplateActivated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "templateId",
+        "type": "uint256"
       },
       {
         "indexed": true,
