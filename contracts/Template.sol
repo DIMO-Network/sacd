@@ -90,6 +90,34 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
   }
 
   /**
+   * @notice Activates a template
+   * @dev Only the template creator can activate their templates
+   * @param templateId The ID of the template to activate
+   */
+  function activateTemplate(uint256 templateId) external {
+    address templateOwner = _ownerOf(templateId);
+
+    if (templateOwner == address(0)) {
+      revert TemplateNotFound(templateId);
+    }
+
+    // Check if caller owns the template NFT
+    if (templateOwner != msg.sender) {
+      revert Unauthorized(msg.sender, templateId);
+    }
+
+    TemplateStorage storage $ = _getTemplateStorage();
+
+    if ($.templates[templateId].isActive) {
+      revert TemplateAlreadyActivated(templateId);
+    }
+
+    _getTemplateStorage().templates[templateId].isActive = true;
+
+    emit TemplateActivated(templateId);
+  }
+
+  /**
    * @notice Deactivates a template
    * @dev Only the template creator can deactivate their templates
    * @param templateId The ID of the template to deactivate

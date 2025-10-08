@@ -78,7 +78,6 @@ describe('Template', function () {
         .to.be.revertedWithCustomError(template, 'AccessControlUnauthorizedAccount')
         .withArgs(user1.address, C.TEMPLATE_MANAGER_ROLE)
     })
-
     it('Should not create template with empty template URI', async function () {
       const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
 
@@ -130,6 +129,47 @@ describe('Template', function () {
         .to.be.revertedWithCustomError(template, 'TemplateAlreadyExists')
         .withArgs(C.MOCK_TEMPLATE_TOKEN_ID)
     })
+    it('Should revert if template ID does not exist when activate', async function () {
+      const { template } = await loadFixture(setup)
+
+      await expect(template.activateTemplate(99n))
+        .to.be.revertedWithCustomError(template, 'TemplateNotFound')
+        .withArgs(99n)
+    })
+    it('Should revert if caller is not the template ID owner when activate', async function () {
+      const { template, owner, otherAccount, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
+
+      await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+
+      // Deactivate template
+      await expect(template.connect(otherAccount).activateTemplate(C.MOCK_TEMPLATE_TOKEN_ID))
+        .to.be.revertedWithCustomError(template, 'Unauthorized')
+        .withArgs(otherAccount.address, C.MOCK_TEMPLATE_TOKEN_ID)
+    })
+    it('Should revert if template is already activated', async function () {
+      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
+
+      await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+
+      await expect(template.activateTemplate(C.MOCK_TEMPLATE_TOKEN_ID))
+        .to.be.revertedWithCustomError(template, 'TemplateAlreadyActivated')
+        .withArgs(C.MOCK_TEMPLATE_TOKEN_ID)
+    })
+    it('Should deactivate template successfully', async function () {
+      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
+
+      // Create template first
+      await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+
+      // Deactivate template
+      await expect(template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID))
+        .to.emit(template, 'TemplateDeactivated')
+        .withArgs(C.MOCK_TEMPLATE_TOKEN_ID)
+
+      const templateData = await template.templates(C.MOCK_TEMPLATE_TOKEN_ID)
+      expect(templateData.isActive).to.be.false
+    })
+
     it('Should revert if template ID does not exist when deactivate', async function () {
       const { template } = await loadFixture(setup)
 
