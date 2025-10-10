@@ -18,6 +18,20 @@ const CREATEX_ABI = [
   'function computeCreate3Address(bytes32 salt) external view returns (address)',
 ]
 
+/**
+ * Gets the designated CREATE3 deployer address from addresses.json
+ */
+function getCreate3Deployer(): string {
+  const instances = getAddresses()
+  const create3Deployer = instances.create3Deployer as string
+
+  if (!create3Deployer) {
+    throw new Error('create3Deployer address not found in addresses.json')
+  }
+
+  return create3Deployer
+}
+
 const networkToChainId = {
   polygon: 137n,
   amoy: 80002n,
@@ -51,6 +65,14 @@ function generateSalt(deployer: string, identifier: string): string {
 }
 
 async function deployWithCreate3(deployer: HardhatEthersSigner, contractName: string, salt: string): Promise<string> {
+  // Verify deployer is the designated CREATE3 deployer
+  const designatedDeployer = getCreate3Deployer()
+  if (deployer.address.toLowerCase() !== designatedDeployer.toLowerCase()) {
+    throw new Error(
+      `Unauthorized: Only ${designatedDeployer} can deploy with CREATE3. Current deployer: ${deployer.address}`
+    )
+  }
+
   console.log(`Deploying ${contractName} with Create3...`)
   console.log(`Deployer address: ${deployer.address}`)
   console.log(`Salt identifier: ${salt}`)
@@ -159,6 +181,14 @@ async function deployProxyWithCreate3(
   initializeData: string,
   salt: string
 ): Promise<string> {
+  // Verify deployer is the designated CREATE3 deployer
+  const designatedDeployer = getCreate3Deployer()
+  if (deployer.address.toLowerCase() !== designatedDeployer.toLowerCase()) {
+    throw new Error(
+      `Unauthorized: Only ${designatedDeployer} can deploy with CREATE3. Current deployer: ${deployer.address}`
+    )
+  }
+
   console.log(`Deploying ERC1967Proxy with Create3...`)
   console.log(`Implementation: ${implementationAddress}`)
   console.log(`Salt identifier: ${salt}`)
@@ -332,7 +362,7 @@ async function main() {
   }
 }
 
-export { deployWithCreate3, deployProxyWithCreate3, computeAddresses }
+export { deployWithCreate3, deployProxyWithCreate3, computeAddresses, getCreate3Deployer }
 
 if (require.main === module) {
   main()

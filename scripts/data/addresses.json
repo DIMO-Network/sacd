@@ -17,7 +17,7 @@
         },
         "Template": {
             "proxy": "0x666309adbec298bb332c722f0303ce883f895750",
-            "implementation": "0x3199d659902a62b16b4a447c3feb325406ebc3cc"
+            "implementation": "0x2e71712d4319c9a2b2937f319f1458976e8509e2"
         }
     },
     "hardhat": {
