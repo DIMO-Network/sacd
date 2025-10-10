@@ -1,4 +1,8 @@
+
 #!/bin/bash
+
+# Exit on error
+set -e
 
 # Check if abigen is installed
 if ! command -v abigen &> /dev/null
@@ -10,10 +14,14 @@ fi
 
 echo "Generating Go bindings..."
 
-# Create bindings directory if it doesn't exist
-mkdir -p bindings
+# Create directories if they don't exist
+mkdir -p bindings/sacd
+mkdir -p bindings/template
 
-abigen --abi abis/contracts/Sacd.sol/Sacd.json --out bindings/sacd.go --pkg sacd --type Sacd --v2
-abigen --abi abis/contracts/Template.sol/Template.json --out bindings/template.go --pkg template --type Template --v2
+abigen --abi abis/contracts/Sacd.sol/Sacd.json --out bindings/sacd/sacd.go --pkg sacd --type Sacd --v2
+echo "✅ Sacd bindings generated"
 
-echo "✅ Go bindings generated successfully in bindings/"
+abigen --abi abis/contracts/Template.sol/Template.json --out bindings/template/template.go --pkg template --type Template --v2
+echo "✅ Template bindings generated"
+
+echo "✅ All Go bindings generated successfully in bindings/"
