@@ -4,7 +4,8 @@
   "description": "",
   "main": "hardhat.config.ts",
   "scripts": {
-    "build": "npx hardhat clean && npx hardhat compile",
+    "build": "npx hardhat clean && npx hardhat compile && npm run abigen",
+    "abigen": "bash scripts/generate-bindings.sh",
     "test": "npx hardhat test",
     "gas-reporter": "REPORT_GAS=true npx hardhat test",
     "lint": "npm run lint:ts && npm run lint:sol",
