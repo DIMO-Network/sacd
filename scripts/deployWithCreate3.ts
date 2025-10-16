@@ -328,9 +328,11 @@ async function main() {
     })
   }
 
+  console.log(`\n========================================`)
   console.log(`Deploying on network: ${name} (${chainId})`)
   console.log(`Deployer: ${deployer.address}`)
-  console.log(`Admin: ${admin}\n`)
+  console.log(`Admin: ${admin}`)
+  console.log(`========================================`)
 
   // Verify CreateX contract exists
   const createXCode = await ethers.provider.getCode(CREATEX_ADDRESS)

@@ -155,14 +155,17 @@ async function main() {
   let upgrader = deployer
 
   if (name === 'localhost') {
-    name = 'amoy'
+    name = 'polygon'
     // 0xCED3c922200559128930180d3f0bfFd4d9f4F123 Prod account
+    // 0x1741ec2915ab71fc03492715b5640133da69420b Prod deployer/manager
     // 0xC008EF40B0b42AAD7e34879EB024385024f753ea Shared dev account (has UPGRADER_ROLE)
     // 0xD64b27cA7F7d4447dFa8cb8701497Fb6eE774F6a Deployer create3 (designated CREATE3 deployer)
 
     const designatedDeployer = getCreate3Deployer()
     create3Deployer = await ethers.getImpersonatedSigner(designatedDeployer)
-    upgrader = await ethers.getImpersonatedSigner('0xC008EF40B0b42AAD7e34879EB024385024f753ea')
+    upgrader = await ethers.getImpersonatedSigner(
+      name == 'polygon' ? '0x1741ec2915ab71fc03492715b5640133da69420b' : '0xC008EF40B0b42AAD7e34879EB024385024f753ea'
+    )
 
     // Fund both accounts
     await user1.sendTransaction({
