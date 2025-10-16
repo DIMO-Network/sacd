@@ -11,8 +11,8 @@ interface ISacd {
   struct PermissionRecord {
     uint256 permissions;
     uint256 expiration;
-    uint256 templateId; // 0 means no template was used
     string source;
+    uint256 templateId; // 0 means no template was used
   }
 
   struct PaymentRecord {

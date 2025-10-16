@@ -16,9 +16,25 @@ describe('Sacd', function () {
     const mockErc20Factory = await hre.ethers.getContractFactory('MockERC20')
 
     // Deploy template contract
-    const template = (await ignition.deploy(TemplateModule)).template as unknown as Template
+    const template = (
+      await ignition.deploy(TemplateModule, {
+        parameters: {
+          TemplateProxyModule: {
+            admin: owner.address,
+          },
+        },
+      })
+    ).template as unknown as Template
 
-    const sacd = (await ignition.deploy(SacdModule)).sacd as unknown as Sacd
+    const sacd = (
+      await ignition.deploy(SacdModule, {
+        parameters: {
+          ProxyModule: {
+            templateContractAddress: await template.getAddress(),
+          },
+        },
+      })
+    ).sacd as unknown as Sacd
     const mockErc721 = await mockErc721Factory.deploy(await sacd.getAddress())
     const mockErc20 = await mockErc20Factory.deploy()
 
@@ -30,11 +46,21 @@ describe('Sacd', function () {
       C.MOCK_TEMPLATE_SOURCE
     )
 
-    await sacd.setTemplateContract(await template.getAddress())
     await mockErc721.mint(grantor.address)
 
     return { owner, grantor, grantee, otherAccount, mockErc721, mockErc20, template, sacd, DEFAULT_EXPIRATION }
   }
+
+  describe('initialize', () => {
+    it('Should correctly initialize', async () => {
+      const { sacd, owner, template } = await loadFixture(setup)
+
+      expect(await sacd.hasRole(C.DEFAULT_ADMIN_ROLE, owner)).to.be.true
+      expect(await sacd.hasRole(C.ADMIN_ROLE, owner)).to.be.true
+
+      expect(await sacd.templateContract()).to.equal(await template.getAddress())
+    })
+  })
 
   describe('setTemplateContract', () => {
     it('Should revert if caller does not have admin role', async () => {

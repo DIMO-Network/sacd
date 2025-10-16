@@ -236,8 +236,7 @@ npx hardhat ignition verify chain-<id>
 To regenerate the Go bindings for, e.g., [the devices API](https://github.com/DIMO-Network/devices-api/blob/main/internal/contracts/registry.go), you would run
 
 ```sh
-abigen --abi abis/contracts/Sacd.sol/Sacd.json --out sacd.go --pkg sacd --type Sacd
-abigen --abi abis/contracts/Template.sol/Template.json --out template.go --pkg template --type Template
+npm run abigen
 ```
 
-and copy over that file.
+and copy over the generated files from [bindings](/bindings) folder.

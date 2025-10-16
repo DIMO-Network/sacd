@@ -33,17 +33,19 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
 
   /**
    * @notice Initializes the contract
+   * @param admin Address that will be granted admin, template manager, and upgrader roles
    * @param baseURI_ The base URI for template metadata that will be used for token URIs
    */
-  function initialize(string calldata baseURI_) external initializer {
+  function initialize(address admin, string calldata baseURI_) external initializer {
     __AccessControl_init();
     __UUPSUpgradeable_init();
     __ERC721_init('Template', 'TMPL');
 
     _getTemplateStorage().baseURI = baseURI_;
 
-    _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    _grantRole(TEMPLATE_MANAGER_ROLE, msg.sender);
+    _grantRole(DEFAULT_ADMIN_ROLE, admin);
+    _grantRole(TEMPLATE_MANAGER_ROLE, admin);
+    _grantRole(UPGRADER_ROLE, admin);
   }
 
   /**
@@ -84,6 +86,35 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
     _safeMint(owner, templateId);
 
     emit TemplateCreated(templateId, owner, asset, permissions, cid);
+    emit TemplateActivated(templateId);
+  }
+
+  /**
+   * @notice Activates a template
+   * @dev Only the template creator can activate their templates
+   * @param templateId The ID of the template to activate
+   */
+  function activateTemplate(uint256 templateId) external {
+    address templateOwner = _ownerOf(templateId);
+
+    if (templateOwner == address(0)) {
+      revert TemplateNotFound(templateId);
+    }
+
+    // Check if caller owns the template NFT
+    if (templateOwner != msg.sender) {
+      revert Unauthorized(msg.sender, templateId);
+    }
+
+    TemplateStorage storage $ = _getTemplateStorage();
+
+    if ($.templates[templateId].isActive) {
+      revert TemplateAlreadyActivated(templateId);
+    }
+
+    _getTemplateStorage().templates[templateId].isActive = true;
+
+    emit TemplateActivated(templateId);
   }
 
   /**
@@ -101,6 +132,12 @@ contract Template is Initializable, AccessControlUpgradeable, UUPSUpgradeable, E
     // Check if caller owns the template NFT
     if (templateOwner != msg.sender) {
       revert Unauthorized(msg.sender, templateId);
+    }
+
+    TemplateStorage storage $ = _getTemplateStorage();
+
+    if (!$.templates[templateId].isActive) {
+      revert TemplateAlreadyDeactivated(templateId);
     }
 
     _getTemplateStorage().templates[templateId].isActive = false;

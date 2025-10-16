@@ -1,11 +1,10 @@
-import { time, loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
+import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import { expect } from 'chai'
 import hre, { ignition } from 'hardhat'
 
 import * as C from './constants'
 import SacdModule from '../ignition/modules/Sacd'
 import TemplateModule from '../ignition/modules/Template'
-import { stringToUint256WithHash } from '../utils/helpers'
 import type { Sacd, Template } from '../typechain-types'
 
 describe('Template', function () {
@@ -13,7 +12,15 @@ describe('Template', function () {
     const [owner, user1, user2, otherAccount] = await hre.ethers.getSigners()
 
     // Deploy template contract
-    const template = (await ignition.deploy(TemplateModule)).template as unknown as Template
+    const template = (
+      await ignition.deploy(TemplateModule, {
+        parameters: {
+          TemplateProxyModule: {
+            admin: owner.address,
+          },
+        },
+      })
+    ).template as unknown as Template
     const sacd = (await ignition.deploy(SacdModule)).sacd as unknown as Sacd
 
     const mockErc721Factory = await hre.ethers.getContractFactory('MockERC721withSacd')
@@ -52,6 +59,7 @@ describe('Template', function () {
           C.MOCK_TEMPLATE_PERMISSIONS,
           C.MOCK_TEMPLATE_SOURCE
         )
+        .to.emit(template, 'TemplateActivated')
 
       const templateData = await template.templates(C.MOCK_TEMPLATE_TOKEN_ID)
       expect(templateData.asset).to.equal(MOCK_ERC_721_ADDRESS)
@@ -70,7 +78,6 @@ describe('Template', function () {
         .to.be.revertedWithCustomError(template, 'AccessControlUnauthorizedAccount')
         .withArgs(user1.address, C.TEMPLATE_MANAGER_ROLE)
     })
-
     it('Should not create template with empty template URI', async function () {
       const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
 
@@ -122,6 +129,47 @@ describe('Template', function () {
         .to.be.revertedWithCustomError(template, 'TemplateAlreadyExists')
         .withArgs(C.MOCK_TEMPLATE_TOKEN_ID)
     })
+    it('Should revert if template ID does not exist when activate', async function () {
+      const { template } = await loadFixture(setup)
+
+      await expect(template.activateTemplate(99n))
+        .to.be.revertedWithCustomError(template, 'TemplateNotFound')
+        .withArgs(99n)
+    })
+    it('Should revert if caller is not the template ID owner when activate', async function () {
+      const { template, owner, otherAccount, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
+
+      await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+
+      // Deactivate template
+      await expect(template.connect(otherAccount).activateTemplate(C.MOCK_TEMPLATE_TOKEN_ID))
+        .to.be.revertedWithCustomError(template, 'Unauthorized')
+        .withArgs(otherAccount.address, C.MOCK_TEMPLATE_TOKEN_ID)
+    })
+    it('Should revert if template is already activated', async function () {
+      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
+
+      await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+
+      await expect(template.activateTemplate(C.MOCK_TEMPLATE_TOKEN_ID))
+        .to.be.revertedWithCustomError(template, 'TemplateAlreadyActivated')
+        .withArgs(C.MOCK_TEMPLATE_TOKEN_ID)
+    })
+    it('Should deactivate template successfully', async function () {
+      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
+
+      // Create template first
+      await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+
+      // Deactivate template
+      await expect(template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID))
+        .to.emit(template, 'TemplateDeactivated')
+        .withArgs(C.MOCK_TEMPLATE_TOKEN_ID)
+
+      const templateData = await template.templates(C.MOCK_TEMPLATE_TOKEN_ID)
+      expect(templateData.isActive).to.be.false
+    })
+
     it('Should revert if template ID does not exist when deactivate', async function () {
       const { template } = await loadFixture(setup)
 
@@ -138,6 +186,17 @@ describe('Template', function () {
       await expect(template.connect(otherAccount).deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID))
         .to.be.revertedWithCustomError(template, 'Unauthorized')
         .withArgs(otherAccount.address, C.MOCK_TEMPLATE_TOKEN_ID)
+    })
+    it('Should revert if template is already deactivated', async function () {
+      const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)
+
+      await template.createTemplate(owner, MOCK_ERC_721_ADDRESS, C.MOCK_TEMPLATE_PERMISSIONS, C.MOCK_TEMPLATE_SOURCE)
+
+      await template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID)
+
+      await expect(template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID))
+        .to.be.revertedWithCustomError(template, 'TemplateAlreadyDeactivated')
+        .withArgs(C.MOCK_TEMPLATE_TOKEN_ID)
     })
     it('Should deactivate template successfully', async function () {
       const { template, owner, MOCK_ERC_721_ADDRESS } = await loadFixture(setup)

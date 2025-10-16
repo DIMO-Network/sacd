@@ -34,10 +34,18 @@ const config: HardhatUserConfig = {
     },
     customChains: [
       {
+        network: 'polygon',
+        chainId: 137,
+        urls: {
+          apiURL: 'https://api.etherscan.io/v2/api?chainid=137',
+          browserURL: 'https://polygonscan.com/',
+        },
+      },
+      {
         network: 'polygonAmoy',
         chainId: 80002,
         urls: {
-          apiURL: 'https://api-amoy.polygonscan.com/api',
+          apiURL: 'https://api.etherscan.io/v2/api?chainid=80002',
           browserURL: 'https://amoy.polygonscan.com/',
         },
       },

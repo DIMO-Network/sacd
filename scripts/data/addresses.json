@@ -1,24 +1,41 @@
 {
+    "create3Deployer": "0xD64b27cA7F7d4447dFa8cb8701497Fb6eE774F6a",
     "polygon": {
         "Sacd": {
             "proxy": "0x3c152B5d96769661008Ff404224d6530FCAC766d",
-            "implementation": "0x801AD772783A541F783cC3C5f3e7f33FB6d708e4"
+            "implementation": "0xf33f775A94EdA878885174FbEC07Ed2867610eF7"
+        },
+        "Template": {
+            "proxy": "0x666309adbec298bb332c722f0303ce883f895750",
+            "implementation": "0x2e71712d4319c9a2b2937f319f1458976e8509e2"
         }
     },
     "amoy": {
         "Sacd": {
             "proxy": "0x4E5F9320b1c7cB3DE5ebDD760aD67375B66cF8a3",
-            "implementation": "0x275615aa7Ef34100a556Cecd05fD055e262C1386"
+            "implementation": "0xfB807Aaa7Cb22027f8D67aF1E100E99A59A572e9"
+        },
+        "Template": {
+            "proxy": "0x666309adbec298bb332c722f0303ce883f895750",
+            "implementation": "0x2e71712d4319c9a2b2937f319f1458976e8509e2"
         }
     },
     "hardhat": {
         "Sacd": {
             "proxy": "",
             "implementation": ""
+        },
+        "Template": {
+            "proxy": "",
+            "implementation": ""
         }
     },
     "localhost": {
         "Sacd": {
+            "proxy": "",
+            "implementation": ""
+        },
+        "Template": {
             "proxy": "",
             "implementation": ""
         }
