@@ -6,8 +6,8 @@
             "implementation": "0x801AD772783A541F783cC3C5f3e7f33FB6d708e4"
         },
         "Template": {
-            "proxy": "",
-            "implementation": ""
+            "proxy": "0x666309adbec298bb332c722f0303ce883f895750",
+            "implementation": "0x2e71712d4319c9a2b2937f319f1458976e8509e2"
         }
     },
     "amoy": {

@@ -305,15 +305,22 @@ async function computeAddresses() {
 async function main() {
   let [deployer, user1] = await ethers.getSigners()
   let { name, chainId } = await ethers.provider.getNetwork()
+  let admin = deployer.address
+
+  if (name == 'polygon') admin = '0x1741ec2915ab71fc03492715b5640133da69420b'
+  if (name == 'amoy') admin = '0xC008EF40B0b42AAD7e34879EB024385024f753ea'
 
   if (name === 'localhost') {
-    name = 'amoy'
+    name = 'polygon'
     chainId = networkToChainId[name as keyof typeof networkToChainId]
 
     // 0xCED3c922200559128930180d3f0bfFd4d9f4F123 Prod account
+    // 0x1741ec2915ab71fc03492715b5640133da69420b Prod deployer/manager
     // 0xC008EF40B0b42AAD7e34879EB024385024f753ea Shared dev account
     // 0xD64b27cA7F7d4447dFa8cb8701497Fb6eE774F6a Deployer create3
     deployer = await ethers.getImpersonatedSigner('0xD64b27cA7F7d4447dFa8cb8701497Fb6eE774F6a')
+    admin =
+      name == 'polygon' ? '0x1741ec2915ab71fc03492715b5640133da69420b' : '0xC008EF40B0b42AAD7e34879EB024385024f753ea'
 
     await user1.sendTransaction({
       to: deployer.address,
@@ -321,7 +328,9 @@ async function main() {
     })
   }
 
-  console.log(`Deploying on network: ${name} (${chainId})\n`)
+  console.log(`Deploying on network: ${name} (${chainId})`)
+  console.log(`Deployer: ${deployer.address}`)
+  console.log(`Admin: ${admin}\n`)
 
   // Verify CreateX contract exists
   const createXCode = await ethers.provider.getCode(CREATEX_ADDRESS)
@@ -333,11 +342,11 @@ async function main() {
   console.log(`CreateX contract verified at: ${CREATEX_ADDRESS}\n`)
 
   try {
-    const templateImplAddress = await deployWithCreate3(deployer, 'Template', 'TemplateImplementation_1.0.1')
+    const templateImplAddress = await deployWithCreate3(deployer, 'Template', 'TemplateImplementation_1.0.2')
 
     const templateFactory = await ethers.getContractFactory('Template')
     const templateInitData = templateFactory.interface.encodeFunctionData('initialize', [
-      '0xC008EF40B0b42AAD7e34879EB024385024f753ea',
+      admin,
       process.env.TEMPLATE_BASE_URI || 'https://assets.dimo.xyz/ipfs/',
     ])
 
