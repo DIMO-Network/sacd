@@ -471,8 +471,8 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
       $.permissionRecords[asset][tokenId][tokenIdVersion][grantee] = PermissionRecord(
         permissions,
         expiration,
-        templateId,
-        source
+        source,
+        templateId
       );
 
       emit PermissionsSet(asset, tokenId, permissions, grantee, expiration, templateId, source);

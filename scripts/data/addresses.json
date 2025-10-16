@@ -13,7 +13,7 @@
     "amoy": {
         "Sacd": {
             "proxy": "0x4E5F9320b1c7cB3DE5ebDD760aD67375B66cF8a3",
-            "implementation": "0xe3B5D1139AA508D30D0f58AF8308Af7D714c9bA4"
+            "implementation": "0xfB807Aaa7Cb22027f8D67aF1E100E99A59A572e9"
         },
         "Template": {
             "proxy": "0x666309adbec298bb332c722f0303ce883f895750",

@@ -481,14 +481,14 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint256",
-            "name": "templateId",
-            "type": "uint256"
-          },
-          {
             "internalType": "string",
             "name": "source",
             "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "templateId",
+            "type": "uint256"
           }
         ],
         "internalType": "struct ISacd.PermissionRecord",
@@ -816,14 +816,14 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint256",
-            "name": "templateId",
-            "type": "uint256"
-          },
-          {
             "internalType": "string",
             "name": "source",
             "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "templateId",
+            "type": "uint256"
           }
         ],
         "internalType": "struct ISacd.PermissionRecord",
