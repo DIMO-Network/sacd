@@ -26,6 +26,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     // Track the next payment ID for each (asset, grantee, grantor) combination
     mapping(address asset => mapping(address grantee => mapping(address grantor => uint256))) nextPaymentId;
     address templateContract; // Address of the Template contract
+    mapping(address grantor => mapping(address grantee => PermissionRecord)) accountPermissionRecords;
   }
 
   bytes32 constant ADMIN_ROLE = keccak256('ADMIN_ROLE');
@@ -107,6 +108,32 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     string calldata source
   ) external {
     _setPermissions(asset, tokenId, grantee, permissions, expiration, templateId, source);
+  }
+
+  // TODO Documentation
+  function setAccountPermissions(
+    address grantee,
+    uint256 permissions,
+    uint256 expiration,
+    uint256 templateId,
+    string calldata source
+  ) external {
+    if (grantee == address(0)) {
+      revert ZeroAddress();
+    }
+
+    // Validate template permissions if template is used
+    _validateTemplateId(templateId, address(0), permissions);
+
+    _getSacdStorage().accountPermissionRecords[msg.sender][grantee] = PermissionRecord(
+      permissions,
+      expiration,
+      source,
+      templateId
+    );
+
+    // TODO Use PermissionsSet event with asset 0x0 or create a new event?
+    emit PermissionsSet(address(0), 0, permissions, grantee, expiration, templateId, source);
   }
 
   /**
@@ -387,6 +414,14 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     template_ = _getSacdStorage().templateContract;
   }
 
+  // TODO
+  function accountPermissionRecords(
+    address grantor,
+    address grantee
+  ) external view returns (PermissionRecord memory permissionRecord) {
+    permissionRecord = _getSacdStorage().accountPermissionRecords[grantor][grantee];
+  }
+
   /**
    * @notice Checks if a template is active
    * @dev Internal function to check template status
@@ -441,31 +476,10 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
         revert ZeroAddress();
       }
 
-      SacdStorage storage $ = _getSacdStorage();
-
       // Validate template permissions if template is used
-      if (templateId != 0) {
-        address template = $.templateContract;
+      _validateTemplateId(templateId, asset, permissions);
 
-        if (template == address(0)) {
-          revert TemplateContractNotSet();
-        } else {
-          try ITemplate(template).templates(templateId) returns (ITemplate.TemplateData memory templateData) {
-            if (!templateData.isActive) {
-              revert TemplateNotActive(templateId);
-            }
-            if (templateData.asset != asset) {
-              revert TemplateAssetMismatch(templateId, templateData.asset, asset);
-            }
-            if (templateData.permissions != permissions) {
-              revert TemplatePermissionsMismatch(templateId, templateData.permissions, permissions);
-            }
-          } catch {
-            // If template contract call fails, assume template is invalid
-            revert TemplateNotActive(templateId);
-          }
-        }
-      }
+      SacdStorage storage $ = _getSacdStorage();
 
       uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
       $.permissionRecords[asset][tokenId][tokenIdVersion][grantee] = PermissionRecord(
@@ -478,6 +492,32 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
       emit PermissionsSet(asset, tokenId, permissions, grantee, expiration, templateId, source);
     } catch {
       revert InvalidTokenId(asset, tokenId);
+    }
+  }
+
+  // TODO Documentation
+  function _validateTemplateId(uint256 templateId, address asset, uint256 permissions) private view {
+    if (templateId == 0) return;
+
+    address template = _getSacdStorage().templateContract;
+
+    if (template == address(0)) {
+      revert TemplateContractNotSet();
+    } else {
+      try ITemplate(template).templates(templateId) returns (ITemplate.TemplateData memory templateData) {
+        if (!templateData.isActive) {
+          revert TemplateNotActive(templateId);
+        }
+        if (templateData.asset != asset) {
+          revert TemplateAssetMismatch(templateId, templateData.asset, asset);
+        }
+        if (templateData.permissions != permissions) {
+          revert TemplatePermissionsMismatch(templateId, templateData.permissions, permissions);
+        }
+      } catch {
+        // If template contract call fails, assume template is invalid
+        revert TemplateNotActive(templateId);
+      }
     }
   }
 
