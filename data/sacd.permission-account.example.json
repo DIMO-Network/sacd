@@ -1,0 +1,42 @@
+{
+    "specversion": "1.0",
+    "time": "2025-10-07T05:43:00Z",
+    "type": "dimo.sacd",
+    "data": {
+        "grantor": {
+            "address": "0xC008EF40B0b42AAD7e34879EB024385024f753ea",
+            "name": "Alice"
+        },
+        "grantee": {
+            "address": "0x15b8aB8022eDA0B9b15D78EC7b39Df795fa30ff2",
+            "name": "Bob"
+        },
+        "effectiveAt": "2025-10-07T05:43:00Z",
+        "expiresAt": "2030-12-20T05:20:45Z",
+        "additionalDates": {},
+        "permissionTemplateId": "",
+        "agreements": [
+            {
+                "type": "permission",
+                "asset": "did:ethr:80002:0xC008EF40B0b42AAD7e34879EB024385024f753ea:928",
+                "permissions": [
+                    {
+                        "name": "permission01",
+                        "description": "Permission 01"
+                    },
+                    {
+                        "name": "permission02",
+                        "description": "Permission 02"
+                    },
+                    {
+                        "name": "permission03",
+                        "description": "Permission 03"
+                    }
+                ],
+                "attachments": [],
+                "extensions": {}
+            }
+        ]
+    },
+    "signature": "0x5465515b16bd85793daf10e9d972d6b241f376fee681dc6b455d19f6089a15c40996de6f93936b6950779136dedd48b96bd56bdfbdbf482dcd8bb22075f354ad1b"
+}
