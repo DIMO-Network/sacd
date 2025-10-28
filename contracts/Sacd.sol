@@ -110,7 +110,17 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     _setPermissions(asset, tokenId, grantee, permissions, expiration, templateId, source);
   }
 
-  // TODO Documentation
+  /**
+   * @notice Sets account-level permissions for a grantee without requiring an ERC721 token
+   * @dev Creates a permission record directly between the caller (grantor) and the grantee.
+   *      Unlike asset-specific permissions, these permissions are not tied to any token ID.
+   *      If a template is used, it validates that the template is active and has compatible permissions.
+   * @param grantee The address to receive the permission
+   * @param permissions The uint256 that represents the byte array of permissions
+   * @param expiration Timestamp when the permissions expire
+   * @param templateId The ID of the template used (0 if no template)
+   * @param source The URI source associated with the permissions
+   */
   function setAccountPermissions(
     address grantee,
     uint256 permissions,
@@ -132,7 +142,6 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
       templateId
     );
 
-    // TODO Use PermissionsSet event with asset 0x0 or create a new event?
     emit PermissionsSet(address(0), 0, permissions, grantee, expiration, templateId, source);
   }
 
@@ -197,7 +206,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   }
 
   /**
-   * @notice Checks if a user has a permission
+   * @notice Checks if a user has an asset permission
    * @dev The permission is identified by its relative index in the byte array
    * @dev The owner of the token always has all permissions
    * @param asset The contract address of the ERC721
@@ -237,7 +246,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   }
 
   /**
-   * @notice Checks if a user has a set of permissions
+   * @notice Checks if a user has a set of asset permissions
    * @dev The owner of the token always has all permissions
    * @param asset The contract address of the ERC721
    * @param tokenId Token ID associated with the permissions
@@ -275,7 +284,15 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     return (pr.permissions & permissions) == permissions;
   }
 
-  // TODO Documentation
+  /**
+   * @notice Checks if a grantee has a specific account permission from a grantor
+   * @dev The permission is identified by its relative index in the byte array.
+   *      Returns false if the permission has expired or if the associated template is inactive.
+   * @param grantor The address that granted the permission
+   * @param grantee The address to be checked for the permission
+   * @param permissionIndex The relative index of the permission to check
+   * @return bool Returns true if the grantee has the specified permission and it has not expired
+   */
   function hasAccountPermission(address grantor, address grantee, uint8 permissionIndex) external view returns (bool) {
     PermissionRecord memory pr = _getSacdStorage().accountPermissionRecords[grantor][grantee];
 
@@ -290,7 +307,15 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     return (pr.permissions >> (2 * permissionIndex)) & 3 == 3;
   }
 
-  // TODO Documentation
+  /**
+   * @notice Checks if a grantee has a set of account permissions from a grantor
+   * @dev Returns false if the permissions have expired or if the associated template is inactive.
+   *      Uses bitwise AND operation to verify that all requested permissions are present.
+   * @param grantor The address that granted the permissions
+   * @param grantee The address to be checked for the permissions
+   * @param permissions The uint256 that represents the byte array of permissions to check
+   * @return bool Returns true if the grantee has all the specified permissions and they have not expired
+   */
   function hasAccountPermissions(address grantor, address grantee, uint256 permissions) external view returns (bool) {
     PermissionRecord memory pr = _getSacdStorage().accountPermissionRecords[grantor][grantee];
 
@@ -389,6 +414,19 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   }
 
   /**
+   * @notice Retrieves the account permission record between a grantor and grantee
+   * @param grantor The address that granted the permissions
+   * @param grantee The address that received the permissions
+   * @return permissionRecord The permission record containing permissions, expiration, source, and templateId
+   */
+  function accountPermissionRecords(
+    address grantor,
+    address grantee
+  ) external view returns (PermissionRecord memory permissionRecord) {
+    permissionRecord = _getSacdStorage().accountPermissionRecords[grantor][grantee];
+  }
+
+  /**
    * @notice Retrieves a specific payment record based on the provided identifiers
    * @param asset The asset contract address. For non-asset specific payments, this will be address(0)
    * @param grantee The address that made the payment
@@ -442,14 +480,6 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
    */
   function templateContract() external view returns (address template_) {
     template_ = _getSacdStorage().templateContract;
-  }
-
-  // TODO
-  function accountPermissionRecords(
-    address grantor,
-    address grantee
-  ) external view returns (PermissionRecord memory permissionRecord) {
-    permissionRecord = _getSacdStorage().accountPermissionRecords[grantor][grantee];
   }
 
   /**
@@ -525,7 +555,17 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     }
   }
 
-  // TODO Documentation
+  /**
+   * @notice Validates that a template ID matches the expected asset and permissions
+   * @dev If templateId is 0, validation is skipped. Otherwise, checks that:
+   *      - The template contract is set
+   *      - The template exists and is active
+   *      - The template's asset matches the provided asset
+   *      - The template's permissions match the provided permissions
+   * @param templateId The ID of the template to validate (0 to skip validation)
+   * @param asset The contract address of the ERC721 token that should match the template's asset
+   * @param permissions The uint256 representing the byte array of permissions that should match the template's permissions
+   */
   function _validateTemplateId(uint256 templateId, address asset, uint256 permissions) private view {
     if (templateId == 0) return;
 
