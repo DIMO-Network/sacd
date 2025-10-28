@@ -275,6 +275,36 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     return (pr.permissions & permissions) == permissions;
   }
 
+  // TODO Documentation
+  function hasAccountPermission(address grantor, address grantee, uint8 permissionIndex) external view returns (bool) {
+    PermissionRecord memory pr = _getSacdStorage().accountPermissionRecords[grantor][grantee];
+
+    if (pr.expiration <= block.timestamp) {
+      return false;
+    }
+
+    if (!_isTemplateActive(pr.templateId)) {
+      return false;
+    }
+
+    return (pr.permissions >> (2 * permissionIndex)) & 3 == 3;
+  }
+
+  // TODO Documentation
+  function hasAccountPermissions(address grantor, address grantee, uint256 permissions) external view returns (bool) {
+    PermissionRecord memory pr = _getSacdStorage().accountPermissionRecords[grantor][grantee];
+
+    if (pr.expiration <= block.timestamp) {
+      return false;
+    }
+
+    if (!_isTemplateActive(pr.templateId)) {
+      return false;
+    }
+
+    return (pr.permissions & permissions) == permissions;
+  }
+
   /**
    * @notice Retrieves valid permissions for a grantee
    * @dev Returns the intersection of the grantee's permissions and the requested permissions.
