@@ -286,7 +286,8 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
 
   /**
    * @notice Checks if a grantee has a specific account permission from a grantor
-   * @dev The permission is identified by its relative index in the byte array.
+   * @dev The grantor always has all permissions
+   *      The permission is identified by its relative index in the byte array.
    *      Returns false if the permission has expired or if the associated template is inactive.
    * @param grantor The address that granted the permission
    * @param grantee The address to be checked for the permission
@@ -294,6 +295,10 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
    * @return bool Returns true if the grantee has the specified permission and it has not expired
    */
   function hasAccountPermission(address grantor, address grantee, uint8 permissionIndex) external view returns (bool) {
+    if (grantor == grantee) {
+      return true;
+    }
+
     PermissionRecord memory pr = _getSacdStorage().accountPermissionRecords[grantor][grantee];
 
     if (pr.expiration <= block.timestamp) {
@@ -309,7 +314,8 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
 
   /**
    * @notice Checks if a grantee has a set of account permissions from a grantor
-   * @dev Returns false if the permissions have expired or if the associated template is inactive.
+   * @dev The grantor always has all permissions
+   *      Returns false if the permissions have expired or if the associated template is inactive.
    *      Uses bitwise AND operation to verify that all requested permissions are present.
    * @param grantor The address that granted the permissions
    * @param grantee The address to be checked for the permissions
@@ -317,6 +323,10 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
    * @return bool Returns true if the grantee has all the specified permissions and they have not expired
    */
   function hasAccountPermissions(address grantor, address grantee, uint256 permissions) external view returns (bool) {
+    if (grantor == grantee) {
+      return true;
+    }
+
     PermissionRecord memory pr = _getSacdStorage().accountPermissionRecords[grantor][grantee];
 
     if (pr.expiration <= block.timestamp) {

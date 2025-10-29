@@ -1047,6 +1047,11 @@ describe('Sacd', function () {
 
       expect(await sacd.hasAccountPermission(grantor.address, grantee.address, 4)).to.be.true
     })
+    it('Should return true if grantor and grantee are the same', async () => {
+      const { sacd, grantor } = await loadFixture(setup)
+
+      expect(await sacd.hasAccountPermission(grantor.address, grantor.address, 4)).to.be.true
+    })
   })
 
   describe('hasAccountPermissions', () => {
@@ -1129,6 +1134,11 @@ describe('Sacd', function () {
         .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.hasAccountPermissions(grantor.address, grantee.address, C.MOCK_PERMISSIONS)).to.be.true
+    })
+    it('Should return true if grantor and grantee are the same', async () => {
+      const { sacd, grantor } = await loadFixture(setup)
+
+      expect(await sacd.hasAccountPermissions(grantor.address, grantor.address, C.MOCK_PERMISSIONS)).to.be.true
     })
   })
 
