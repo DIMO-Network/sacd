@@ -372,6 +372,38 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   }
 
   /**
+   * @notice Retrieves valid account permissions for a grantee from a grantor
+   * @dev Returns the intersection of the grantee's permissions and the requested permissions.
+   *      If the grantor and grantee are the same address, all requested permissions are considered valid.
+   *      If the permissions have expired or the associated template is inactive, no permissions are returned.
+   * @param grantor The address that granted the permissions
+   * @param grantee The address of the account whose permissions are being retrieved
+   * @param permissions A bitmask representing the permissions to check against
+   * @return uint256 A bitmask representing the valid permissions for the grantee
+   */
+  function getAccountPermissions(
+    address grantor,
+    address grantee,
+    uint256 permissions
+  ) external view returns (uint256) {
+    if (grantor == grantee) {
+      return permissions;
+    }
+
+    PermissionRecord memory pr = _getSacdStorage().accountPermissionRecords[grantor][grantee];
+
+    if (pr.expiration <= block.timestamp) {
+      return 0;
+    }
+
+    if (!_isTemplateActive(pr.templateId)) {
+      return 0;
+    }
+
+    return pr.permissions & permissions;
+  }
+
+  /**
    * @notice Returns the current token ID version of a specified asset
    * @param asset The asset contract address
    * @param tokenId The token ID

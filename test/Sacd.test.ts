@@ -1196,7 +1196,7 @@ describe('Sacd', function () {
       expect(await sacd.getPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.equal(0)
     })
     it('Should return 0 if template ID is defined, but no template contract is set', async () => {
-      const { mockErc721, sacd, template, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+      const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
       const mockErc721Address = await mockErc721.getAddress()
 
       await sacd
@@ -1256,6 +1256,94 @@ describe('Sacd', function () {
 
         expect(await sacd.getPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.equal(0)
       })
+    })
+  })
+
+  describe('getAccountPermissions', () => {
+    it('Should return 0 if grantee does not match', async () => {
+      const { sacd, grantor, grantee, otherAccount, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+      expect(await sacd.getAccountPermissions(grantor.address, otherAccount.address, C.MOCK_PERMISSIONS)).to.equal(0)
+    })
+    it('Should return 0 if permission is already expired', async () => {
+      const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+      await time.increase(time.duration.years(5))
+
+      expect(await sacd.getAccountPermissions(grantor.address, grantee.address, C.MOCK_PERMISSIONS)).to.equal(0)
+    })
+    it('Should return 0 if template is not active', async () => {
+      const { sacd, template, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(
+          grantee.address,
+          C.MOCK_TEMPLATE_PERMISSIONS,
+          DEFAULT_EXPIRATION,
+          C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET,
+          C.MOCK_SACD_SOURCE
+        )
+
+      expect(await sacd.getAccountPermissions(grantor.address, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.equal(
+        C.MOCK_TEMPLATE_PERMISSIONS
+      )
+
+      await template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET)
+
+      expect(await sacd.getAccountPermissions(grantor.address, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.equal(
+        0
+      )
+    })
+    it('Should return 0 if template ID is defined, but no template contract is set', async () => {
+      const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(
+          grantee.address,
+          C.MOCK_TEMPLATE_PERMISSIONS,
+          DEFAULT_EXPIRATION,
+          C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET,
+          C.MOCK_SACD_SOURCE
+        )
+
+      expect(await sacd.getAccountPermissions(grantor.address, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.equal(
+        C.MOCK_TEMPLATE_PERMISSIONS
+      )
+
+      await sacd.setTemplateContract(hre.ethers.ZeroAddress)
+
+      expect(await sacd.getAccountPermissions(grantor.address, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.equal(
+        0
+      )
+    })
+    it('Should correctly return intersected permissions', async () => {
+      const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+      // C.MOCK_PERMISSIONS 816 11 00 11 00 00
+      // Test               771 11 00 00 00 11
+      // Result             768 11 00 00 00 00
+      expect(await sacd.getAccountPermissions(grantor.address, grantee.address, 771)).to.equal(768)
+    })
+    it('Should return the input permissions if grantor and grantee are the same', async () => {
+      const { sacd, grantor } = await loadFixture(setup)
+
+      // Test               771 11 00 00 00 11
+      // Result             768 11 00 00 00 00
+      expect(await sacd.getAccountPermissions(grantor.address, grantor.address, 771)).to.equal(771)
     })
   })
 
