@@ -515,7 +515,7 @@ describe('Sacd', function () {
         )
           .to.emit(sacd, 'PermissionsSet')
           .withArgs(
-            hre.ethers.ZeroAddress,
+            grantor.address,
             0n,
             C.MOCK_TEMPLATE_PERMISSIONS,
             grantee.address,

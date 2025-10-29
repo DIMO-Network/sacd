@@ -142,7 +142,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
       templateId
     );
 
-    emit PermissionsSet(address(0), 0, permissions, grantee, expiration, templateId, source);
+    emit PermissionsSet(msg.sender, 0, permissions, grantee, expiration, templateId, source);
   }
 
   /**
