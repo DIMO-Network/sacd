@@ -234,15 +234,11 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
     PermissionRecord memory pr = $.permissionRecords[asset][tokenId][tokenIdVersion][grantee];
 
-    if (pr.expiration <= block.timestamp) {
-      return false;
+    if (_isPermissionValid(pr.expiration, $.templateContract, pr.templateId)) {
+      return (pr.permissions >> (2 * permissionIndex)) & 3 == 3;
     }
 
-    if (!_isTemplateActive(pr.templateId)) {
-      return false;
-    }
-
-    return (pr.permissions >> (2 * permissionIndex)) & 3 == 3;
+    return false;
   }
 
   /**
@@ -273,15 +269,11 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
     PermissionRecord memory pr = $.permissionRecords[asset][tokenId][tokenIdVersion][grantee];
 
-    if (pr.expiration <= block.timestamp) {
-      return false;
+    if (_isPermissionValid(pr.expiration, $.templateContract, pr.templateId)) {
+      return (pr.permissions & permissions) == permissions;
     }
 
-    if (!_isTemplateActive(pr.templateId)) {
-      return false;
-    }
-
-    return (pr.permissions & permissions) == permissions;
+    return false;
   }
 
   /**
@@ -299,17 +291,15 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
       return true;
     }
 
-    PermissionRecord memory pr = _getSacdStorage().accountPermissionRecords[grantor][grantee];
+    SacdStorage storage $ = _getSacdStorage();
 
-    if (pr.expiration <= block.timestamp) {
-      return false;
+    PermissionRecord memory pr = $.accountPermissionRecords[grantor][grantee];
+
+    if (_isPermissionValid(pr.expiration, $.templateContract, pr.templateId)) {
+      return (pr.permissions >> (2 * permissionIndex)) & 3 == 3;
     }
 
-    if (!_isTemplateActive(pr.templateId)) {
-      return false;
-    }
-
-    return (pr.permissions >> (2 * permissionIndex)) & 3 == 3;
+    return false;
   }
 
   /**
@@ -327,17 +317,15 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
       return true;
     }
 
-    PermissionRecord memory pr = _getSacdStorage().accountPermissionRecords[grantor][grantee];
+    SacdStorage storage $ = _getSacdStorage();
 
-    if (pr.expiration <= block.timestamp) {
-      return false;
+    PermissionRecord memory pr = $.accountPermissionRecords[grantor][grantee];
+
+    if (_isPermissionValid(pr.expiration, $.templateContract, pr.templateId)) {
+      return (pr.permissions & permissions) == permissions;
     }
 
-    if (!_isTemplateActive(pr.templateId)) {
-      return false;
-    }
-
-    return (pr.permissions & permissions) == permissions;
+    return false;
   }
 
   /**
@@ -370,15 +358,11 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
     PermissionRecord memory pr = $.permissionRecords[asset][tokenId][tokenIdVersion][grantee];
 
-    if (pr.expiration <= block.timestamp) {
-      return 0;
+    if (_isPermissionValid(pr.expiration, $.templateContract, pr.templateId)) {
+      return pr.permissions & permissions;
     }
 
-    if (!_isTemplateActive(pr.templateId)) {
-      return 0;
-    }
-
-    return pr.permissions & permissions;
+    return 0;
   }
 
   /**
@@ -400,17 +384,15 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
       return permissions;
     }
 
-    PermissionRecord memory pr = _getSacdStorage().accountPermissionRecords[grantor][grantee];
+    SacdStorage storage $ = _getSacdStorage();
 
-    if (pr.expiration <= block.timestamp) {
-      return 0;
+    PermissionRecord memory pr = $.accountPermissionRecords[grantor][grantee];
+
+    if (_isPermissionValid(pr.expiration, $.templateContract, pr.templateId)) {
+      return pr.permissions & permissions;
     }
 
-    if (!_isTemplateActive(pr.templateId)) {
-      return 0;
-    }
-
-    return pr.permissions & permissions;
+    return 0;
   }
 
   /**
@@ -525,29 +507,6 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   }
 
   /**
-   * @notice Checks if a template is active
-   * @dev Internal function to check template status
-   * @param templateId The ID of the template to check
-   * @return bool Returns true if the template is active
-   */
-  function _isTemplateActive(uint256 templateId) internal view returns (bool) {
-    // Early return for most common case (no template used)
-    if (templateId == 0) return true;
-
-    SacdStorage storage $ = _getSacdStorage();
-    address template = $.templateContract;
-
-    // Early return if no template contract set and template ID is defined
-    if (template == address(0)) return false;
-
-    try ITemplate(template).getTemplate(templateId) returns (ITemplate.TemplateData memory templateData) {
-      return templateData.isActive;
-    } catch {
-      return false; // Template doesn't exist
-    }
-  }
-
-  /**
    * @notice Internal function to sets a permission record to a grantee with a template ID
    * @dev The caller must be the owner of the token or the asset contract.
    *      If a template is used, it validates that the template is active,
@@ -630,6 +589,33 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
         // If template contract call fails, assume template is invalid
         revert TemplateNotActive(templateId);
       }
+    }
+  }
+
+  /**
+   * @notice Checks if a permission is currently valid
+   * @dev A permission is valid if it has not expired and its associated template (if any) is active.
+   *      This is an internal helper function used by permission checking functions.
+   * @param expiration The timestamp when the permission expires
+   * @param template The address of the Template contract to validate against
+   * @param templateId The ID of the template associated with the permission (0 if no template)
+   * @return bool Returns true if the permission has not expired and the template is active, false otherwise
+   */
+  function _isPermissionValid(uint256 expiration, address template, uint256 templateId) private view returns (bool) {
+    if (expiration <= block.timestamp) {
+      return false;
+    }
+
+    // Early return for most common case (no template used)
+    if (templateId == 0) return true;
+
+    // Early return if no template contract set and template ID is defined
+    if (template == address(0)) return false;
+
+    try ITemplate(template).getTemplate(templateId) returns (ITemplate.TemplateData memory templateData) {
+      return templateData.isActive;
+    } catch {
+      return false; // Template doesn't exist
     }
   }
 
