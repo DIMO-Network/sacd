@@ -792,12 +792,14 @@ describe('Sacd', function () {
           'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
         ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
+      expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 2)).to.be.true
       expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.true
     })
     it('Should return true if grantee is the token owner', async () => {
       const { mockErc721, sacd, grantor } = await loadFixture(setup)
       const mockErc721Address = await mockErc721.getAddress()
 
+      expect(await sacd.hasPermission(mockErc721Address, 1n, grantor.address, 2)).to.be.true
       expect(await sacd.hasPermission(mockErc721Address, 1n, grantor.address, 4)).to.be.true
     })
 
@@ -1045,11 +1047,13 @@ describe('Sacd', function () {
         .connect(grantor)
         .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
+      expect(await sacd.hasAccountPermission(grantor.address, grantee.address, 2)).to.be.true
       expect(await sacd.hasAccountPermission(grantor.address, grantee.address, 4)).to.be.true
     })
     it('Should return true if grantor and grantee are the same', async () => {
       const { sacd, grantor } = await loadFixture(setup)
 
+      expect(await sacd.hasAccountPermission(grantor.address, grantor.address, 2)).to.be.true
       expect(await sacd.hasAccountPermission(grantor.address, grantor.address, 4)).to.be.true
     })
   })

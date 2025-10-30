@@ -221,59 +221,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
     address grantee,
     uint8 permissionIndex
   ) external view returns (bool) {
-    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
-      if (tokenIdOwner == grantee) {
-        return true;
-      }
-    } catch {
-      return false;
-    }
-
-    SacdStorage storage $ = _getSacdStorage();
-
-    uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
-    PermissionRecord memory pr = $.permissionRecords[asset][tokenId][tokenIdVersion][grantee];
-
-    if (_isPermissionValid(pr.expiration, $.templateContract, pr.templateId)) {
-      return (pr.permissions >> (2 * permissionIndex)) & 3 == 3;
-    }
-
-    return false;
-  }
-
-  /**
-   * @notice Checks if a user has a set of asset permissions
-   * @dev The owner of the token always has all permissions
-   * @param asset The contract address of the ERC721
-   * @param tokenId Token ID associated with the permissions
-   * @param grantee The address to be checked
-   * @param permissions The uint256 that represents the byte array of permissions
-   * @return bool Returns true if the grantee has all the specified permissions and they have not expired, or if the grantee is the token owner
-   */
-  function hasPermissions(
-    address asset,
-    uint256 tokenId,
-    address grantee,
-    uint256 permissions
-  ) external view returns (bool) {
-    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
-      if (tokenIdOwner == grantee) {
-        return true;
-      }
-    } catch {
-      return false;
-    }
-
-    SacdStorage storage $ = _getSacdStorage();
-
-    uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
-    PermissionRecord memory pr = $.permissionRecords[asset][tokenId][tokenIdVersion][grantee];
-
-    if (_isPermissionValid(pr.expiration, $.templateContract, pr.templateId)) {
-      return (pr.permissions & permissions) == permissions;
-    }
-
-    return false;
+    return hasPermissions(asset, tokenId, grantee, 3 << (2 * permissionIndex));
   }
 
   /**
@@ -287,45 +235,7 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
    * @return bool Returns true if the grantee has the specified permission and it has not expired
    */
   function hasAccountPermission(address grantor, address grantee, uint8 permissionIndex) external view returns (bool) {
-    if (grantor == grantee) {
-      return true;
-    }
-
-    SacdStorage storage $ = _getSacdStorage();
-
-    PermissionRecord memory pr = $.accountPermissionRecords[grantor][grantee];
-
-    if (_isPermissionValid(pr.expiration, $.templateContract, pr.templateId)) {
-      return (pr.permissions >> (2 * permissionIndex)) & 3 == 3;
-    }
-
-    return false;
-  }
-
-  /**
-   * @notice Checks if a grantee has a set of account permissions from a grantor
-   * @dev The grantor always has all permissions
-   *      Returns false if the permissions have expired or if the associated template is inactive.
-   *      Uses bitwise AND operation to verify that all requested permissions are present.
-   * @param grantor The address that granted the permissions
-   * @param grantee The address to be checked for the permissions
-   * @param permissions The uint256 that represents the byte array of permissions to check
-   * @return bool Returns true if the grantee has all the specified permissions and they have not expired
-   */
-  function hasAccountPermissions(address grantor, address grantee, uint256 permissions) external view returns (bool) {
-    if (grantor == grantee) {
-      return true;
-    }
-
-    SacdStorage storage $ = _getSacdStorage();
-
-    PermissionRecord memory pr = $.accountPermissionRecords[grantor][grantee];
-
-    if (_isPermissionValid(pr.expiration, $.templateContract, pr.templateId)) {
-      return (pr.permissions & permissions) == permissions;
-    }
-
-    return false;
+    return hasAccountPermissions(grantor, grantee, 3 << (2 * permissionIndex));
   }
 
   /**
@@ -504,6 +414,67 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
    */
   function templateContract() external view returns (address template_) {
     template_ = _getSacdStorage().templateContract;
+  }
+
+  /**
+   * @notice Checks if a user has a set of asset permissions
+   * @dev The owner of the token always has all permissions
+   * @param asset The contract address of the ERC721
+   * @param tokenId Token ID associated with the permissions
+   * @param grantee The address to be checked
+   * @param permissions The uint256 that represents the byte array of permissions
+   * @return bool Returns true if the grantee has all the specified permissions and they have not expired, or if the grantee is the token owner
+   */
+  function hasPermissions(
+    address asset,
+    uint256 tokenId,
+    address grantee,
+    uint256 permissions
+  ) public view returns (bool) {
+    try IERC721(asset).ownerOf(tokenId) returns (address tokenIdOwner) {
+      if (tokenIdOwner == grantee) {
+        return true;
+      }
+    } catch {
+      return false;
+    }
+
+    SacdStorage storage $ = _getSacdStorage();
+
+    uint256 tokenIdVersion = $.tokenIdToVersion[asset][tokenId];
+    PermissionRecord memory pr = $.permissionRecords[asset][tokenId][tokenIdVersion][grantee];
+
+    if (_isPermissionValid(pr.expiration, $.templateContract, pr.templateId)) {
+      return (pr.permissions & permissions) == permissions;
+    }
+
+    return false;
+  }
+
+  /**
+   * @notice Checks if a grantee has a set of account permissions from a grantor
+   * @dev The grantor always has all permissions
+   *      Returns false if the permissions have expired or if the associated template is inactive.
+   *      Uses bitwise AND operation to verify that all requested permissions are present.
+   * @param grantor The address that granted the permissions
+   * @param grantee The address to be checked for the permissions
+   * @param permissions The uint256 that represents the byte array of permissions to check
+   * @return bool Returns true if the grantee has all the specified permissions and they have not expired
+   */
+  function hasAccountPermissions(address grantor, address grantee, uint256 permissions) public view returns (bool) {
+    if (grantor == grantee) {
+      return true;
+    }
+
+    SacdStorage storage $ = _getSacdStorage();
+
+    PermissionRecord memory pr = $.accountPermissionRecords[grantor][grantee];
+
+    if (_isPermissionValid(pr.expiration, $.templateContract, pr.templateId)) {
+      return (pr.permissions & permissions) == permissions;
+    }
+
+    return false;
   }
 
   /**
