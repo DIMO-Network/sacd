@@ -9,7 +9,8 @@ This document provides a basic overview of the SACD JSON format, which is used t
 The following example files demonstrate different use cases for the SACD format:
 
 - [`sacd.template.example.json`](data/sacd.template.example.json) - Generic template structure for SACD JSON files
-- [`sacd.permission.example.json`](data/sacd.permission.example.json) - Example of permission-based agreement
+- [`sacd.permission-account.example.json`](data/sacd.permission-account.example.json) - Example of permission-based agreement for accounts
+- [`sacd.permission-asset.example.json`](data/sacd.permission-asset.example.json) - Example of permission-based agreement for assets
 - [`sacd.payment.erc20.example.json`](data/sacd.payment.erc20.example.json) - Payment agreement using ERC20 tokens
 - [`sacd.payment.fiat.example.json`](data/sacd.payment.fiat.example.json) - Payment agreement using fiat currency
 - [`sacd.attestation.example.json`](data/sacd.attestation.example.json) - Example of attestation agreement

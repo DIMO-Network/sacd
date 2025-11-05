@@ -43,7 +43,15 @@ describe('Sacd', function () {
       owner,
       await mockErc721.getAddress(),
       C.MOCK_TEMPLATE_PERMISSIONS,
-      C.MOCK_TEMPLATE_SOURCE
+      C.MOCK_TEMPLATE_SOURCE_WITH_ASSET
+    )
+
+    // Create a template with specific permissions and no asset
+    await template.createTemplate(
+      owner,
+      hre.ethers.ZeroAddress,
+      C.MOCK_TEMPLATE_PERMISSIONS,
+      C.MOCK_TEMPLATE_SOURCE_WITHOUT_ASSET
     )
 
     await mockErc721.mint(grantor.address)
@@ -132,7 +140,7 @@ describe('Sacd', function () {
             .connect(grantor)
             [
               'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
-            ](await mockErc721.getAddress(), 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
+            ](await mockErc721.getAddress(), 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET, C.MOCK_SACD_SOURCE)
         ).to.be.revertedWithCustomError(sacd, 'TemplateContractNotSet')
       })
       it('Should revert if template asset do not match', async () => {
@@ -149,10 +157,14 @@ describe('Sacd', function () {
             .connect(grantor)
             [
               'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
-            ](await newMockErc721.getAddress(), 1n, grantee.address, differentPermissions, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
+            ](await newMockErc721.getAddress(), 1n, grantee.address, differentPermissions, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET, C.MOCK_SACD_SOURCE)
         )
           .to.be.revertedWithCustomError(sacd, 'TemplateAssetMismatch')
-          .withArgs(C.MOCK_TEMPLATE_TOKEN_ID, await mockErc721.getAddress(), await newMockErc721.getAddress())
+          .withArgs(
+            C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET,
+            await mockErc721.getAddress(),
+            await newMockErc721.getAddress()
+          )
       })
       it('Should revert if template permissions do not match', async () => {
         const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
@@ -165,26 +177,26 @@ describe('Sacd', function () {
             .connect(grantor)
             [
               'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
-            ](MOCK_ERC_721_ADDRESS, 1n, grantee.address, differentPermissions, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
+            ](MOCK_ERC_721_ADDRESS, 1n, grantee.address, differentPermissions, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET, C.MOCK_SACD_SOURCE)
         )
           .to.be.revertedWithCustomError(sacd, 'TemplatePermissionsMismatch')
-          .withArgs(C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_TEMPLATE_PERMISSIONS, differentPermissions)
+          .withArgs(C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET, C.MOCK_TEMPLATE_PERMISSIONS, differentPermissions)
       })
       it('Should revert if template is not active', async () => {
         const { mockErc721, sacd, template, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
         const MOCK_ERC_721_ADDRESS = await mockErc721.getAddress()
 
-        await template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID)
+        await template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET)
 
         await expect(
           sacd
             .connect(grantor)
             [
               'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
-            ](MOCK_ERC_721_ADDRESS, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
+            ](MOCK_ERC_721_ADDRESS, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET, C.MOCK_SACD_SOURCE)
         )
           .to.be.revertedWithCustomError(sacd, 'TemplateNotActive')
-          .withArgs(C.MOCK_TEMPLATE_TOKEN_ID)
+          .withArgs(C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET)
       })
       it('Should revert if template does not exist', async () => {
         const { mockErc721, sacd, template, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
@@ -230,13 +242,13 @@ describe('Sacd', function () {
             .connect(grantor)
             [
               'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
-            ](await mockErc721.getAddress(), 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
+            ](await mockErc721.getAddress(), 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET, C.MOCK_SACD_SOURCE)
 
           const permissionRecord = await sacd.permissionRecords(mockErc721Address, 1n, 1n, grantee.address)
 
           expect(permissionRecord.permissions).to.equal(C.MOCK_TEMPLATE_PERMISSIONS)
           expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
-          expect(permissionRecord.templateId).to.equal(C.MOCK_TEMPLATE_TOKEN_ID)
+          expect(permissionRecord.templateId).to.equal(C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET)
           expect(permissionRecord.source).to.equal(C.MOCK_SACD_SOURCE)
         })
       })
@@ -267,7 +279,7 @@ describe('Sacd', function () {
             grantee: grantee.address,
             permissions: C.MOCK_TEMPLATE_PERMISSIONS,
             expiration: DEFAULT_EXPIRATION,
-            templateId: C.MOCK_TEMPLATE_TOKEN_ID,
+            templateId: C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET,
             source: C.MOCK_SACD_SOURCE,
           })
 
@@ -275,7 +287,7 @@ describe('Sacd', function () {
 
           expect(permissionRecord.permissions).to.equal(C.MOCK_TEMPLATE_PERMISSIONS)
           expect(permissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
-          expect(permissionRecord.templateId).to.equal(C.MOCK_TEMPLATE_TOKEN_ID)
+          expect(permissionRecord.templateId).to.equal(C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET)
           expect(permissionRecord.source).to.equal(C.MOCK_SACD_SOURCE)
         })
       })
@@ -342,6 +354,175 @@ describe('Sacd', function () {
           ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
         expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.true
+      })
+    })
+  })
+
+  describe('setAccountPermissions', () => {
+    context('Error handling', () => {
+      it('Should revert if grantee is address(0)', async () => {
+        const { sacd, grantor, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        await expect(
+          sacd
+            .connect(grantor)
+            .setAccountPermissions(
+              hre.ethers.ZeroAddress,
+              C.MOCK_PERMISSIONS,
+              DEFAULT_EXPIRATION,
+              0n,
+              C.MOCK_SACD_SOURCE
+            )
+        ).to.be.revertedWithCustomError(sacd, 'ZeroAddress')
+      })
+      it('Should revert if templateId != 0 and template contract address is not set', async () => {
+        const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        await sacd.setTemplateContract(hre.ethers.ZeroAddress)
+
+        await expect(
+          sacd
+            .connect(grantor)
+            .setAccountPermissions(
+              grantee.address,
+              C.MOCK_PERMISSIONS,
+              DEFAULT_EXPIRATION,
+              C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET,
+              C.MOCK_SACD_SOURCE
+            )
+        ).to.be.revertedWithCustomError(sacd, 'TemplateContractNotSet')
+      })
+      it('Should revert if template asset do not match', async () => {
+        const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        await expect(
+          sacd
+            .connect(grantor)
+            .setAccountPermissions(
+              grantee.address,
+              C.MOCK_PERMISSIONS,
+              DEFAULT_EXPIRATION,
+              C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET,
+              C.MOCK_SACD_SOURCE
+            )
+        )
+          .to.be.revertedWithCustomError(sacd, 'TemplateAssetMismatch')
+          .withArgs(C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET, await mockErc721.getAddress(), hre.ethers.ZeroAddress)
+      })
+      it('Should revert if template permissions do not match', async () => {
+        const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        // Try to set permissions with different permissions than template
+        const differentPermissions = 0x87654321n
+        await expect(
+          sacd
+            .connect(grantor)
+            .setAccountPermissions(
+              grantee.address,
+              differentPermissions,
+              DEFAULT_EXPIRATION,
+              C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET,
+              C.MOCK_SACD_SOURCE
+            )
+        )
+          .to.be.revertedWithCustomError(sacd, 'TemplatePermissionsMismatch')
+          .withArgs(C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET, C.MOCK_TEMPLATE_PERMISSIONS, differentPermissions)
+      })
+      it('Should revert if template is not active', async () => {
+        const { sacd, template, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        await template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET)
+
+        await expect(
+          sacd
+            .connect(grantor)
+            .setAccountPermissions(
+              grantee.address,
+              C.MOCK_TEMPLATE_PERMISSIONS,
+              DEFAULT_EXPIRATION,
+              C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET,
+              C.MOCK_SACD_SOURCE
+            )
+        )
+          .to.be.revertedWithCustomError(sacd, 'TemplateNotActive')
+          .withArgs(C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET)
+      })
+      it('Should revert if template does not exist', async () => {
+        const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        await expect(
+          sacd
+            .connect(grantor)
+            .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 99n, C.MOCK_SACD_SOURCE)
+        )
+          .to.be.revertedWithCustomError(sacd, 'TemplateNotActive')
+          .withArgs(99n)
+      })
+    })
+
+    context('State', () => {
+      it('Should correctly set new permissions with no template', async () => {
+        const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        await sacd
+          .connect(grantor)
+          .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+        const accountPermissionRecord = await sacd.accountPermissionRecords(grantor.address, grantee.address)
+
+        expect(accountPermissionRecord.permissions).to.equal(C.MOCK_PERMISSIONS)
+        expect(accountPermissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
+        expect(accountPermissionRecord.templateId).to.equal(0n)
+        expect(accountPermissionRecord.source).to.equal(C.MOCK_SACD_SOURCE)
+      })
+      it('Should correclty set new permissions with matching template permissions', async () => {
+        const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        // Set permissions with matching template permissions
+        await sacd
+          .connect(grantor)
+          .setAccountPermissions(
+            grantee.address,
+            C.MOCK_TEMPLATE_PERMISSIONS,
+            DEFAULT_EXPIRATION,
+            C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET,
+            C.MOCK_SACD_SOURCE
+          )
+
+        const accountPermissionRecord = await sacd.accountPermissionRecords(grantor.address, grantee.address)
+
+        expect(accountPermissionRecord.permissions).to.equal(C.MOCK_TEMPLATE_PERMISSIONS)
+        expect(accountPermissionRecord.expiration).to.equal(DEFAULT_EXPIRATION)
+        expect(accountPermissionRecord.templateId).to.equal(C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET)
+        expect(accountPermissionRecord.source).to.equal(C.MOCK_SACD_SOURCE)
+      })
+    })
+
+    context('Events', () => {
+      it('Should emit PermissionsSet with correct params', async () => {
+        const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        await expect(
+          sacd
+            .connect(grantor)
+            .setAccountPermissions(
+              grantee.address,
+              C.MOCK_TEMPLATE_PERMISSIONS,
+              DEFAULT_EXPIRATION,
+              C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET,
+              C.MOCK_SACD_SOURCE
+            )
+        )
+          .to.emit(sacd, 'PermissionsSet')
+          .withArgs(
+            grantor.address,
+            0n,
+            C.MOCK_TEMPLATE_PERMISSIONS,
+            grantee.address,
+            DEFAULT_EXPIRATION,
+            C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET,
+            C.MOCK_SACD_SOURCE
+          )
       })
     })
   })
@@ -577,11 +758,11 @@ describe('Sacd', function () {
         .connect(grantor)
         [
           'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
-        ](mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 2)).to.be.true
 
-      await template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID)
+      await template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET)
 
       expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 2)).to.be.false
     })
@@ -593,7 +774,7 @@ describe('Sacd', function () {
         .connect(grantor)
         [
           'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
-        ](mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 2)).to.be.true
 
@@ -611,12 +792,14 @@ describe('Sacd', function () {
           'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
         ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
 
+      expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 2)).to.be.true
       expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 4)).to.be.true
     })
     it('Should return true if grantee is the token owner', async () => {
       const { mockErc721, sacd, grantor } = await loadFixture(setup)
       const mockErc721Address = await mockErc721.getAddress()
 
+      expect(await sacd.hasPermission(mockErc721Address, 1n, grantor.address, 2)).to.be.true
       expect(await sacd.hasPermission(mockErc721Address, 1n, grantor.address, 4)).to.be.true
     })
 
@@ -717,11 +900,11 @@ describe('Sacd', function () {
         .connect(grantor)
         [
           'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
-        ](mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.be.true
 
-      await template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID)
+      await template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET)
 
       expect(await sacd.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.be.false
     })
@@ -733,7 +916,7 @@ describe('Sacd', function () {
         .connect(grantor)
         [
           'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
-        ](mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.hasPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.be.true
 
@@ -790,6 +973,179 @@ describe('Sacd', function () {
     })
   })
 
+  describe('hasAccountPermission', () => {
+    it('Should return false if grantee does not match', async () => {
+      const { sacd, grantor, grantee, otherAccount, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+      expect(await sacd.hasAccountPermission(grantor.address, otherAccount.address, 0)).to.be.false
+    })
+    it('Should return false if permission is already expired', async () => {
+      const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+      await time.increase(time.duration.years(5))
+
+      expect(await sacd.hasAccountPermission(grantor.address, grantee.address, 0)).to.be.false
+    })
+    it('Should return false if it does not have permission', async () => {
+      const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+      expect(await sacd.hasAccountPermission(grantor.address, grantee.address, 0)).to.be.false
+    })
+    it('Should return false if template is not active', async () => {
+      const { sacd, grantor, grantee, template, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(
+          grantee.address,
+          C.MOCK_TEMPLATE_PERMISSIONS,
+          DEFAULT_EXPIRATION,
+          C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET,
+          C.MOCK_SACD_SOURCE
+        )
+
+      expect(await sacd.hasAccountPermission(grantor.address, grantee.address, 2)).to.be.true
+
+      await template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET)
+
+      expect(await sacd.hasAccountPermission(grantor.address, grantee.address, 2)).to.be.false
+    })
+    it('Should return false if template ID is defined, but no template contract is set', async () => {
+      const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(
+          grantee.address,
+          C.MOCK_TEMPLATE_PERMISSIONS,
+          DEFAULT_EXPIRATION,
+          C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET,
+          C.MOCK_SACD_SOURCE
+        )
+
+      expect(await sacd.hasAccountPermission(grantor.address, grantee.address, 2)).to.be.true
+
+      await sacd.setTemplateContract(hre.ethers.ZeroAddress)
+
+      expect(await sacd.hasAccountPermission(grantor.address, grantee.address, 2)).to.be.false
+    })
+    it('Should return true if it has permission', async () => {
+      const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+      expect(await sacd.hasAccountPermission(grantor.address, grantee.address, 2)).to.be.true
+      expect(await sacd.hasAccountPermission(grantor.address, grantee.address, 4)).to.be.true
+    })
+    it('Should return true if grantor and grantee are the same', async () => {
+      const { sacd, grantor } = await loadFixture(setup)
+
+      expect(await sacd.hasAccountPermission(grantor.address, grantor.address, 2)).to.be.true
+      expect(await sacd.hasAccountPermission(grantor.address, grantor.address, 4)).to.be.true
+    })
+  })
+
+  describe('hasAccountPermissions', () => {
+    it('Should return false if grantee does not match', async () => {
+      const { sacd, grantor, grantee, otherAccount, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+      expect(await sacd.hasAccountPermissions(grantor.address, otherAccount.address, C.MOCK_PERMISSIONS)).to.be.false
+    })
+    it('Should return false if permission is already expired', async () => {
+      const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+      await time.increase(time.duration.years(5))
+
+      expect(await sacd.hasAccountPermissions(grantor.address, grantee.address, C.MOCK_PERMISSIONS)).to.be.false
+    })
+    it('Should return false if it does not have permission', async () => {
+      const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+      // C.MOCK_PERMISSIONS 816 11 00 11 00 00
+      // Test               819 11 00 11 00 11
+      expect(await sacd.hasAccountPermissions(grantor.address, grantee.address, 819)).to.be.false
+    })
+    it('Should return false if template is not active', async () => {
+      const { sacd, grantor, grantee, template, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(
+          grantee.address,
+          C.MOCK_TEMPLATE_PERMISSIONS,
+          DEFAULT_EXPIRATION,
+          C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET,
+          C.MOCK_SACD_SOURCE
+        )
+
+      expect(await sacd.hasAccountPermissions(grantor.address, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.be.true
+
+      await template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET)
+
+      expect(await sacd.hasAccountPermissions(grantor.address, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.be
+        .false
+    })
+    it('Should return false if template ID is defined, but no template contract is set', async () => {
+      const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(
+          grantee.address,
+          C.MOCK_TEMPLATE_PERMISSIONS,
+          DEFAULT_EXPIRATION,
+          C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET,
+          C.MOCK_SACD_SOURCE
+        )
+
+      expect(await sacd.hasAccountPermissions(grantor.address, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.be.true
+
+      await sacd.setTemplateContract(hre.ethers.ZeroAddress)
+
+      expect(await sacd.hasAccountPermissions(grantor.address, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.be
+        .false
+    })
+    it('Should return true if it has permission', async () => {
+      const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+      expect(await sacd.hasAccountPermissions(grantor.address, grantee.address, C.MOCK_PERMISSIONS)).to.be.true
+    })
+    it('Should return true if grantor and grantee are the same', async () => {
+      const { sacd, grantor } = await loadFixture(setup)
+
+      expect(await sacd.hasAccountPermissions(grantor.address, grantor.address, C.MOCK_PERMISSIONS)).to.be.true
+    })
+  })
+
   describe('getPermissions', () => {
     it('Should return 0 if token Id does not exist', async () => {
       const { mockErc721, sacd, grantee } = await loadFixture(setup)
@@ -843,25 +1199,25 @@ describe('Sacd', function () {
         .connect(grantor)
         [
           'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
-        ](mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.getPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.equal(
         C.MOCK_TEMPLATE_PERMISSIONS
       )
 
-      await template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID)
+      await template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET)
 
       expect(await sacd.getPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.equal(0)
     })
     it('Should return 0 if template ID is defined, but no template contract is set', async () => {
-      const { mockErc721, sacd, template, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+      const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
       const mockErc721Address = await mockErc721.getAddress()
 
       await sacd
         .connect(grantor)
         [
           'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
-        ](mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID, C.MOCK_SACD_SOURCE)
+        ](mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS, DEFAULT_EXPIRATION, C.MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET, C.MOCK_SACD_SOURCE)
 
       expect(await sacd.getPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.equal(
         C.MOCK_TEMPLATE_PERMISSIONS
@@ -914,6 +1270,94 @@ describe('Sacd', function () {
 
         expect(await sacd.getPermissions(mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS)).to.equal(0)
       })
+    })
+  })
+
+  describe('getAccountPermissions', () => {
+    it('Should return 0 if grantee does not match', async () => {
+      const { sacd, grantor, grantee, otherAccount, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+      expect(await sacd.getAccountPermissions(grantor.address, otherAccount.address, C.MOCK_PERMISSIONS)).to.equal(0)
+    })
+    it('Should return 0 if permission is already expired', async () => {
+      const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+      await time.increase(time.duration.years(5))
+
+      expect(await sacd.getAccountPermissions(grantor.address, grantee.address, C.MOCK_PERMISSIONS)).to.equal(0)
+    })
+    it('Should return 0 if template is not active', async () => {
+      const { sacd, template, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(
+          grantee.address,
+          C.MOCK_TEMPLATE_PERMISSIONS,
+          DEFAULT_EXPIRATION,
+          C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET,
+          C.MOCK_SACD_SOURCE
+        )
+
+      expect(await sacd.getAccountPermissions(grantor.address, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.equal(
+        C.MOCK_TEMPLATE_PERMISSIONS
+      )
+
+      await template.deactivateTemplate(C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET)
+
+      expect(await sacd.getAccountPermissions(grantor.address, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.equal(
+        0
+      )
+    })
+    it('Should return 0 if template ID is defined, but no template contract is set', async () => {
+      const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(
+          grantee.address,
+          C.MOCK_TEMPLATE_PERMISSIONS,
+          DEFAULT_EXPIRATION,
+          C.MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET,
+          C.MOCK_SACD_SOURCE
+        )
+
+      expect(await sacd.getAccountPermissions(grantor.address, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.equal(
+        C.MOCK_TEMPLATE_PERMISSIONS
+      )
+
+      await sacd.setTemplateContract(hre.ethers.ZeroAddress)
+
+      expect(await sacd.getAccountPermissions(grantor.address, grantee.address, C.MOCK_TEMPLATE_PERMISSIONS)).to.equal(
+        0
+      )
+    })
+    it('Should correctly return intersected permissions', async () => {
+      const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+      await sacd
+        .connect(grantor)
+        .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+      // C.MOCK_PERMISSIONS 816 11 00 11 00 00
+      // Test               771 11 00 00 00 11
+      // Result             768 11 00 00 00 00
+      expect(await sacd.getAccountPermissions(grantor.address, grantee.address, 771)).to.equal(768)
+    })
+    it('Should return the input permissions if grantor and grantee are the same', async () => {
+      const { sacd, grantor } = await loadFixture(setup)
+
+      // Test               771 11 00 00 00 11
+      // Result             768 11 00 00 00 00
+      expect(await sacd.getAccountPermissions(grantor.address, grantor.address, 771)).to.equal(771)
     })
   })
 

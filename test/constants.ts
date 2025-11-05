@@ -4,8 +4,10 @@ import { stringToUint256WithHash } from '../utils/helpers'
 
 export const TEMPLATE_BASE_URI = 'https://assets.dimo.xyz/ipfs/'
 export const MOCK_TEMPLATE_PERMISSIONS = 3888n // 11 11 00 11 00 00
-export const MOCK_TEMPLATE_SOURCE = 'QmYA2fn8cMbVWo4v95RwcwJVyQsNtnEwHerfWR8UNtEwoE' // TODO Update when we have a actual example
-export const MOCK_TEMPLATE_TOKEN_ID = stringToUint256WithHash(MOCK_TEMPLATE_SOURCE)
+export const MOCK_TEMPLATE_SOURCE_WITH_ASSET = 'QmYoWDRp6yXc53rZBaWrz56XEaDm7heoDNx6s5ttESiXHX'
+export const MOCK_TEMPLATE_SOURCE_WITHOUT_ASSET = 'QmYA2fn8cMbVWo4v95RwcwJVyQsNtnEwHerfWR8UNtEwoE'
+export const MOCK_TEMPLATE_TOKEN_ID_WITH_ASSET = stringToUint256WithHash(MOCK_TEMPLATE_SOURCE_WITH_ASSET)
+export const MOCK_TEMPLATE_TOKEN_ID_WITHOUT_ASSET = stringToUint256WithHash(MOCK_TEMPLATE_SOURCE_WITHOUT_ASSET)
 
 export const MOCK_PERMISSIONS = 816n // 11 00 11 00 00
 export const MOCK_SACD_SOURCE = 'ipfs://QmYA2fn8cMbVWo4v95RwcwJVyQsNtnEwHerfWR8UNtEwoE'

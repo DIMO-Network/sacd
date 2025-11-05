@@ -1,6 +1,6 @@
 {
     "specversion": "1.0",
-    "time": "2025-03-11T14:30:00Z",
+    "time": "2025-10-07T05:43:00Z",
     "type": "dimo.sacd",
     "data": {
         "grantor": {
@@ -8,13 +8,13 @@
             "name": "Alice"
         },
         "grantee": {
-            "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+            "address": "0x15b8aB8022eDA0B9b15D78EC7b39Df795fa30ff2",
             "name": "Bob"
         },
-        "effectiveAt": "2025-03-11T14:30:00Z",
+        "effectiveAt": "2025-10-07T05:43:00Z",
         "expiresAt": "2030-12-20T05:20:45Z",
         "additionalDates": {},
-        "permissionTemplateId": "42450912898054052389966093156672567802032497359412869612766600782099724167695",
+        "permissionTemplateId": "",
         "agreements": [
             {
                 "type": "permission",
@@ -38,5 +38,5 @@
             }
         ]
     },
-    "signature": "0x19857ea640279860e38bd8d636b17d961f42c18718ff825d89a725013a6a57c0579cbc339d0c2eab0a424c0c0d2ac0bba612e612611ebbae7c0d975123346be11c"
+    "signature": "0x33e2a141e3e91e722ac6ea6a6ae8acc8e696705795546f06cc4542e8fd866d5c14a8afac4136d18e1130587521de88725285bf45f0ce307a89c9d22dfdabd9001b"
 }
