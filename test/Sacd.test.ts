@@ -527,6 +527,225 @@ describe('Sacd', function () {
     })
   })
 
+  describe('renouncePermissions', () => {
+    context('State', () => {
+      it('Should clear the permission record for the renouncing grantee', async () => {
+        const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+
+        await sacd
+          .connect(grantor)
+          [
+            'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+          ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+        expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 2)).to.be.true
+
+        await sacd.connect(grantee).renouncePermissions(mockErc721Address, 1n)
+
+        const pr = await sacd.permissionRecords(mockErc721Address, 1n, 1n, grantee.address)
+        expect(pr.permissions).to.equal(0n)
+        expect(pr.expiration).to.equal(0n)
+        expect(pr.templateId).to.equal(0n)
+        expect(pr.source).to.equal('')
+        expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 2)).to.be.false
+      })
+      it('Should be a no-op on state when the grantee has no record under (asset, tokenId)', async () => {
+        const { mockErc721, sacd, grantee } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+
+        await expect(sacd.connect(grantee).renouncePermissions(mockErc721Address, 1n)).to.not.be.reverted
+
+        const pr = await sacd.permissionRecords(mockErc721Address, 1n, 1n, grantee.address)
+        expect(pr.permissions).to.equal(0n)
+        expect(pr.expiration).to.equal(0n)
+      })
+      it('Should not affect other grantees on the same token', async () => {
+        const { mockErc721, sacd, grantor, grantee, otherAccount, DEFAULT_EXPIRATION } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+
+        await sacd
+          .connect(grantor)
+          [
+            'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+          ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+        await sacd
+          .connect(grantor)
+          [
+            'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+          ](mockErc721Address, 1n, otherAccount.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+        await sacd.connect(grantee).renouncePermissions(mockErc721Address, 1n)
+
+        const renouncedPr = await sacd.permissionRecords(mockErc721Address, 1n, 1n, grantee.address)
+        expect(renouncedPr.permissions).to.equal(0n)
+
+        const otherPr = await sacd.permissionRecords(mockErc721Address, 1n, 1n, otherAccount.address)
+        expect(otherPr.permissions).to.equal(C.MOCK_PERMISSIONS)
+        expect(await sacd.hasPermission(mockErc721Address, 1n, otherAccount.address, 2)).to.be.true
+      })
+      it('Should not affect grants on other tokens', async () => {
+        const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+
+        await mockErc721.mint(grantor.address)
+
+        await sacd
+          .connect(grantor)
+          [
+            'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+          ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+        await sacd
+          .connect(grantor)
+          [
+            'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+          ](mockErc721Address, 2n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+        await sacd.connect(grantee).renouncePermissions(mockErc721Address, 1n)
+
+        expect(await sacd.hasPermission(mockErc721Address, 1n, grantee.address, 2)).to.be.false
+        expect(await sacd.hasPermission(mockErc721Address, 2n, grantee.address, 2)).to.be.true
+      })
+      it('Should not change the token-owner permission short-circuit', async () => {
+        const { mockErc721, sacd, grantor } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+
+        // grantor is the token owner; their renounce clears any explicit record
+        // but ownerOf-based permissions in hasPermission still return true.
+        await sacd.connect(grantor).renouncePermissions(mockErc721Address, 1n)
+
+        expect(await sacd.hasPermission(mockErc721Address, 1n, grantor.address, 2)).to.be.true
+        expect(await sacd.hasPermission(mockErc721Address, 1n, grantor.address, 4)).to.be.true
+      })
+    })
+
+    context('Events', () => {
+      it('Should emit PermissionsRenounced with correct params', async () => {
+        const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+
+        await sacd
+          .connect(grantor)
+          [
+            'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+          ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+        await expect(sacd.connect(grantee).renouncePermissions(mockErc721Address, 1n))
+          .to.emit(sacd, 'PermissionsRenounced')
+          .withArgs(mockErc721Address, 1n, grantee.address)
+      })
+      it('Should not emit PermissionsSet on the renounce path', async () => {
+        const { mockErc721, sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+
+        await sacd
+          .connect(grantor)
+          [
+            'setPermissions(address,uint256,address,uint256,uint256,uint256,string)'
+          ](mockErc721Address, 1n, grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+        await expect(sacd.connect(grantee).renouncePermissions(mockErc721Address, 1n)).to.not.emit(
+          sacd,
+          'PermissionsSet'
+        )
+      })
+      it('Should still emit when no record exists', async () => {
+        const { mockErc721, sacd, grantee } = await loadFixture(setup)
+        const mockErc721Address = await mockErc721.getAddress()
+
+        await expect(sacd.connect(grantee).renouncePermissions(mockErc721Address, 1n))
+          .to.emit(sacd, 'PermissionsRenounced')
+          .withArgs(mockErc721Address, 1n, grantee.address)
+      })
+    })
+  })
+
+  describe('renounceAccountPermissions', () => {
+    context('State', () => {
+      it('Should clear the account permission record for the renouncing grantee', async () => {
+        const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        await sacd
+          .connect(grantor)
+          .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+        expect(await sacd.hasAccountPermission(grantor.address, grantee.address, 2)).to.be.true
+
+        await sacd.connect(grantee).renounceAccountPermissions(grantor.address)
+
+        const pr = await sacd.accountPermissionRecords(grantor.address, grantee.address)
+        expect(pr.permissions).to.equal(0n)
+        expect(pr.expiration).to.equal(0n)
+        expect(pr.templateId).to.equal(0n)
+        expect(pr.source).to.equal('')
+        expect(await sacd.hasAccountPermission(grantor.address, grantee.address, 2)).to.be.false
+      })
+      it('Should be a no-op on state when the grantee has no record under the grantor', async () => {
+        const { sacd, grantor, grantee } = await loadFixture(setup)
+
+        await expect(sacd.connect(grantee).renounceAccountPermissions(grantor.address)).to.not.be.reverted
+
+        const pr = await sacd.accountPermissionRecords(grantor.address, grantee.address)
+        expect(pr.permissions).to.equal(0n)
+      })
+      it('Should not affect a separate grant from a different grantor to the same grantee', async () => {
+        const { sacd, grantor, grantee, otherAccount, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        await sacd
+          .connect(grantor)
+          .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+        await sacd
+          .connect(otherAccount)
+          .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+        await sacd.connect(grantee).renounceAccountPermissions(grantor.address)
+
+        expect(await sacd.hasAccountPermission(grantor.address, grantee.address, 2)).to.be.false
+        expect(await sacd.hasAccountPermission(otherAccount.address, grantee.address, 2)).to.be.true
+      })
+      it('Self-renounce does not break the grantor==grantee short-circuit', async () => {
+        const { sacd, grantor } = await loadFixture(setup)
+
+        await sacd.connect(grantor).renounceAccountPermissions(grantor.address)
+
+        expect(await sacd.hasAccountPermission(grantor.address, grantor.address, 2)).to.be.true
+      })
+    })
+
+    context('Events', () => {
+      it('Should emit PermissionsRenounced with grantor in asset slot and tokenId=0', async () => {
+        const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        await sacd
+          .connect(grantor)
+          .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+        await expect(sacd.connect(grantee).renounceAccountPermissions(grantor.address))
+          .to.emit(sacd, 'PermissionsRenounced')
+          .withArgs(grantor.address, 0n, grantee.address)
+      })
+      it('Should not emit PermissionsSet on the renounce path', async () => {
+        const { sacd, grantor, grantee, DEFAULT_EXPIRATION } = await loadFixture(setup)
+
+        await sacd
+          .connect(grantor)
+          .setAccountPermissions(grantee.address, C.MOCK_PERMISSIONS, DEFAULT_EXPIRATION, 0n, C.MOCK_SACD_SOURCE)
+
+        await expect(sacd.connect(grantee).renounceAccountPermissions(grantor.address)).to.not.emit(
+          sacd,
+          'PermissionsSet'
+        )
+      })
+      it('Should still emit when no record exists', async () => {
+        const { sacd, grantor, grantee } = await loadFixture(setup)
+
+        await expect(sacd.connect(grantee).renounceAccountPermissions(grantor.address))
+          .to.emit(sacd, 'PermissionsRenounced')
+          .withArgs(grantor.address, 0n, grantee.address)
+      })
+    })
+  })
+
   describe('setPayment', () => {
     context('Error handling', () => {
       it('Should revert if grantor is address(0)', async () => {

@@ -42,7 +42,7 @@ type ISacdPermissionRecord struct {
 
 // SacdMetaData contains all meta data concerning the Sacd contract.
 var SacdMetaData = bind.MetaData{
-	ABI: "[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"AccessControlBadConfirmation\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"neededRole\",\"type\":\"bytes32\"}],\"name\":\"AccessControlUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"}],\"name\":\"AddressEmptyCode\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"ERC1967InvalidImplementation\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ERC1967NonPayable\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"FailedInnerCall\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidCurrency\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidInitialization\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"InvalidTokenId\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotInitializing\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"templateId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"expectedAsset\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"providedAsset\",\"type\":\"address\"}],\"name\":\"TemplateAssetMismatch\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"TemplateContractNotSet\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"templateId\",\"type\":\"uint256\"}],\"name\":\"TemplateNotActive\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"templateId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"expectedPermissions\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"providedPermissions\",\"type\":\"uint256\"}],\"name\":\"TemplatePermissionsMismatch\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"UUPSUnauthorizedCallContext\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"slot\",\"type\":\"bytes32\"}],\"name\":\"UUPSUnsupportedProxiableUUID\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"Unauthorized\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ZeroAddress\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"version\",\"type\":\"uint64\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"expiration\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"}],\"name\":\"PaymentSet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"expiration\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"templateId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"}],\"name\":\"PermissionsSet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"previousAdminRole\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"newAdminRole\",\"type\":\"bytes32\"}],\"name\":\"RoleAdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleGranted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleRevoked\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"Upgraded\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"DEFAULT_ADMIN_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"UPGRADE_INTERFACE_VERSION\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"}],\"name\":\"accountPermissionRecords\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"expiration\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"templateId\",\"type\":\"uint256\"}],\"internalType\":\"structISacd.PermissionRecord\",\"name\":\"permissionRecord\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"}],\"name\":\"currentPaymentRecord\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"uint64\",\"name\":\"expiration\",\"type\":\"uint64\"},{\"internalType\":\"bytes3\",\"name\":\"currency\",\"type\":\"bytes3\"},{\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"}],\"internalType\":\"structISacd.PaymentRecord\",\"name\":\"paymentRecord\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"}],\"name\":\"currentPermissionRecord\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"expiration\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"templateId\",\"type\":\"uint256\"}],\"internalType\":\"structISacd.PermissionRecord\",\"name\":\"permissionRecord\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"}],\"name\":\"getAccountPermissions\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"}],\"name\":\"getPermissions\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"}],\"name\":\"getRoleAdmin\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"grantRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"uint8\",\"name\":\"permissionIndex\",\"type\":\"uint8\"}],\"name\":\"hasAccountPermission\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"}],\"name\":\"hasAccountPermissions\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"uint8\",\"name\":\"permissionIndex\",\"type\":\"uint8\"}],\"name\":\"hasPermission\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"}],\"name\":\"hasPermissions\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"hasRole\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"templateContractAddress\",\"type\":\"address\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"}],\"name\":\"nextPaymentId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"paymentId\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"onTransfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"paymentId\",\"type\":\"uint256\"}],\"name\":\"paymentRecords\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"uint64\",\"name\":\"expiration\",\"type\":\"uint64\"},{\"internalType\":\"bytes3\",\"name\":\"currency\",\"type\":\"bytes3\"},{\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"}],\"internalType\":\"structISacd.PaymentRecord\",\"name\":\"paymentRecord\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"}],\"name\":\"permissionRecords\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"expiration\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"templateId\",\"type\":\"uint256\"}],\"internalType\":\"structISacd.PermissionRecord\",\"name\":\"permissionRecord\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"proxiableUUID\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"callerConfirmation\",\"type\":\"address\"}],\"name\":\"renounceRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"revokeRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"expiration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"templateId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"}],\"name\":\"setAccountPermissions\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"uint64\",\"name\":\"expiration\",\"type\":\"uint64\"},{\"internalType\":\"bytes3\",\"name\":\"currency\",\"type\":\"bytes3\"},{\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"}],\"name\":\"setPayment\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"expiration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"templateId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"}],\"name\":\"setPermissions\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"expiration\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"}],\"name\":\"setPermissions\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"templateContractAddress\",\"type\":\"address\"}],\"name\":\"setTemplateContract\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"interfaceId\",\"type\":\"bytes4\"}],\"name\":\"supportsInterface\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"templateContract\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"template_\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"tokenIdToVersion\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"upgradeToAndCall\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"AccessControlBadConfirmation\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"neededRole\",\"type\":\"bytes32\"}],\"name\":\"AccessControlUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"}],\"name\":\"AddressEmptyCode\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"ERC1967InvalidImplementation\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ERC1967NonPayable\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"FailedInnerCall\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidCurrency\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidInitialization\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"InvalidTokenId\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotInitializing\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"templateId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"expectedAsset\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"providedAsset\",\"type\":\"address\"}],\"name\":\"TemplateAssetMismatch\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"TemplateContractNotSet\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"templateId\",\"type\":\"uint256\"}],\"name\":\"TemplateNotActive\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"templateId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"expectedPermissions\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"providedPermissions\",\"type\":\"uint256\"}],\"name\":\"TemplatePermissionsMismatch\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"UUPSUnauthorizedCallContext\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"slot\",\"type\":\"bytes32\"}],\"name\":\"UUPSUnsupportedProxiableUUID\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"Unauthorized\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ZeroAddress\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"version\",\"type\":\"uint64\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"expiration\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"}],\"name\":\"PaymentSet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"}],\"name\":\"PermissionsRenounced\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"expiration\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"templateId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"}],\"name\":\"PermissionsSet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"previousAdminRole\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"newAdminRole\",\"type\":\"bytes32\"}],\"name\":\"RoleAdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleGranted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleRevoked\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"Upgraded\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"DEFAULT_ADMIN_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"UPGRADE_INTERFACE_VERSION\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"}],\"name\":\"accountPermissionRecords\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"expiration\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"templateId\",\"type\":\"uint256\"}],\"internalType\":\"structISacd.PermissionRecord\",\"name\":\"permissionRecord\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"}],\"name\":\"currentPaymentRecord\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"uint64\",\"name\":\"expiration\",\"type\":\"uint64\"},{\"internalType\":\"bytes3\",\"name\":\"currency\",\"type\":\"bytes3\"},{\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"}],\"internalType\":\"structISacd.PaymentRecord\",\"name\":\"paymentRecord\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"}],\"name\":\"currentPermissionRecord\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"expiration\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"templateId\",\"type\":\"uint256\"}],\"internalType\":\"structISacd.PermissionRecord\",\"name\":\"permissionRecord\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"}],\"name\":\"getAccountPermissions\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"}],\"name\":\"getPermissions\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"}],\"name\":\"getRoleAdmin\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"grantRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"uint8\",\"name\":\"permissionIndex\",\"type\":\"uint8\"}],\"name\":\"hasAccountPermission\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"}],\"name\":\"hasAccountPermissions\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"uint8\",\"name\":\"permissionIndex\",\"type\":\"uint8\"}],\"name\":\"hasPermission\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"}],\"name\":\"hasPermissions\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"hasRole\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"templateContractAddress\",\"type\":\"address\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"}],\"name\":\"nextPaymentId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"paymentId\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"onTransfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"paymentId\",\"type\":\"uint256\"}],\"name\":\"paymentRecords\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"uint64\",\"name\":\"expiration\",\"type\":\"uint64\"},{\"internalType\":\"bytes3\",\"name\":\"currency\",\"type\":\"bytes3\"},{\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"}],\"internalType\":\"structISacd.PaymentRecord\",\"name\":\"paymentRecord\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"}],\"name\":\"permissionRecords\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"expiration\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"templateId\",\"type\":\"uint256\"}],\"internalType\":\"structISacd.PermissionRecord\",\"name\":\"permissionRecord\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"proxiableUUID\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"}],\"name\":\"renounceAccountPermissions\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"renouncePermissions\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"callerConfirmation\",\"type\":\"address\"}],\"name\":\"renounceRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"revokeRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"expiration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"templateId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"}],\"name\":\"setAccountPermissions\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"grantor\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"uint64\",\"name\":\"expiration\",\"type\":\"uint64\"},{\"internalType\":\"bytes3\",\"name\":\"currency\",\"type\":\"bytes3\"},{\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"}],\"name\":\"setPayment\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"expiration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"templateId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"}],\"name\":\"setPermissions\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"grantee\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"permissions\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"expiration\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"source\",\"type\":\"string\"}],\"name\":\"setPermissions\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"templateContractAddress\",\"type\":\"address\"}],\"name\":\"setTemplateContract\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"interfaceId\",\"type\":\"bytes4\"}],\"name\":\"supportsInterface\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"templateContract\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"template_\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"tokenIdToVersion\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"upgradeToAndCall\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"}]",
 	ID:  "Sacd",
 }
 
@@ -67,7 +67,8 @@ func (c *Sacd) Instance(backend bind.ContractBackend, addr common.Address) *bind
 }
 
 // PackDEFAULTADMINROLE is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xa217fddf.
+// the contract method with ID 0xa217fddf.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function DEFAULT_ADMIN_ROLE() view returns(bytes32)
 func (sacd *Sacd) PackDEFAULTADMINROLE() []byte {
@@ -76,6 +77,15 @@ func (sacd *Sacd) PackDEFAULTADMINROLE() []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackDEFAULTADMINROLE is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xa217fddf.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function DEFAULT_ADMIN_ROLE() view returns(bytes32)
+func (sacd *Sacd) TryPackDEFAULTADMINROLE() ([]byte, error) {
+	return sacd.abi.Pack("DEFAULT_ADMIN_ROLE")
 }
 
 // UnpackDEFAULTADMINROLE is the Go binding that unpacks the parameters returned
@@ -88,11 +98,12 @@ func (sacd *Sacd) UnpackDEFAULTADMINROLE(data []byte) ([32]byte, error) {
 		return *new([32]byte), err
 	}
 	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
-	return out0, err
+	return out0, nil
 }
 
 // PackUPGRADEINTERFACEVERSION is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xad3cb1cc.
+// the contract method with ID 0xad3cb1cc.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function UPGRADE_INTERFACE_VERSION() view returns(string)
 func (sacd *Sacd) PackUPGRADEINTERFACEVERSION() []byte {
@@ -101,6 +112,15 @@ func (sacd *Sacd) PackUPGRADEINTERFACEVERSION() []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackUPGRADEINTERFACEVERSION is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xad3cb1cc.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function UPGRADE_INTERFACE_VERSION() view returns(string)
+func (sacd *Sacd) TryPackUPGRADEINTERFACEVERSION() ([]byte, error) {
+	return sacd.abi.Pack("UPGRADE_INTERFACE_VERSION")
 }
 
 // UnpackUPGRADEINTERFACEVERSION is the Go binding that unpacks the parameters returned
@@ -113,11 +133,12 @@ func (sacd *Sacd) UnpackUPGRADEINTERFACEVERSION(data []byte) (string, error) {
 		return *new(string), err
 	}
 	out0 := *abi.ConvertType(out[0], new(string)).(*string)
-	return out0, err
+	return out0, nil
 }
 
 // PackAccountPermissionRecords is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x30eaba75.
+// the contract method with ID 0x30eaba75.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function accountPermissionRecords(address grantor, address grantee) view returns((uint256,uint256,string,uint256) permissionRecord)
 func (sacd *Sacd) PackAccountPermissionRecords(grantor common.Address, grantee common.Address) []byte {
@@ -126,6 +147,15 @@ func (sacd *Sacd) PackAccountPermissionRecords(grantor common.Address, grantee c
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackAccountPermissionRecords is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x30eaba75.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function accountPermissionRecords(address grantor, address grantee) view returns((uint256,uint256,string,uint256) permissionRecord)
+func (sacd *Sacd) TryPackAccountPermissionRecords(grantor common.Address, grantee common.Address) ([]byte, error) {
+	return sacd.abi.Pack("accountPermissionRecords", grantor, grantee)
 }
 
 // UnpackAccountPermissionRecords is the Go binding that unpacks the parameters returned
@@ -138,11 +168,12 @@ func (sacd *Sacd) UnpackAccountPermissionRecords(data []byte) (ISacdPermissionRe
 		return *new(ISacdPermissionRecord), err
 	}
 	out0 := *abi.ConvertType(out[0], new(ISacdPermissionRecord)).(*ISacdPermissionRecord)
-	return out0, err
+	return out0, nil
 }
 
 // PackCurrentPaymentRecord is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x0f7d31f6.
+// the contract method with ID 0x0f7d31f6.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function currentPaymentRecord(address asset, address grantee, address grantor) view returns((uint256,uint64,bytes3,string) paymentRecord)
 func (sacd *Sacd) PackCurrentPaymentRecord(asset common.Address, grantee common.Address, grantor common.Address) []byte {
@@ -151,6 +182,15 @@ func (sacd *Sacd) PackCurrentPaymentRecord(asset common.Address, grantee common.
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackCurrentPaymentRecord is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x0f7d31f6.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function currentPaymentRecord(address asset, address grantee, address grantor) view returns((uint256,uint64,bytes3,string) paymentRecord)
+func (sacd *Sacd) TryPackCurrentPaymentRecord(asset common.Address, grantee common.Address, grantor common.Address) ([]byte, error) {
+	return sacd.abi.Pack("currentPaymentRecord", asset, grantee, grantor)
 }
 
 // UnpackCurrentPaymentRecord is the Go binding that unpacks the parameters returned
@@ -163,11 +203,12 @@ func (sacd *Sacd) UnpackCurrentPaymentRecord(data []byte) (ISacdPaymentRecord, e
 		return *new(ISacdPaymentRecord), err
 	}
 	out0 := *abi.ConvertType(out[0], new(ISacdPaymentRecord)).(*ISacdPaymentRecord)
-	return out0, err
+	return out0, nil
 }
 
 // PackCurrentPermissionRecord is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x426d9e4a.
+// the contract method with ID 0x426d9e4a.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function currentPermissionRecord(address asset, uint256 tokenId, address grantee) view returns((uint256,uint256,string,uint256) permissionRecord)
 func (sacd *Sacd) PackCurrentPermissionRecord(asset common.Address, tokenId *big.Int, grantee common.Address) []byte {
@@ -176,6 +217,15 @@ func (sacd *Sacd) PackCurrentPermissionRecord(asset common.Address, tokenId *big
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackCurrentPermissionRecord is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x426d9e4a.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function currentPermissionRecord(address asset, uint256 tokenId, address grantee) view returns((uint256,uint256,string,uint256) permissionRecord)
+func (sacd *Sacd) TryPackCurrentPermissionRecord(asset common.Address, tokenId *big.Int, grantee common.Address) ([]byte, error) {
+	return sacd.abi.Pack("currentPermissionRecord", asset, tokenId, grantee)
 }
 
 // UnpackCurrentPermissionRecord is the Go binding that unpacks the parameters returned
@@ -188,11 +238,12 @@ func (sacd *Sacd) UnpackCurrentPermissionRecord(data []byte) (ISacdPermissionRec
 		return *new(ISacdPermissionRecord), err
 	}
 	out0 := *abi.ConvertType(out[0], new(ISacdPermissionRecord)).(*ISacdPermissionRecord)
-	return out0, err
+	return out0, nil
 }
 
 // PackGetAccountPermissions is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x6805e547.
+// the contract method with ID 0x6805e547.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function getAccountPermissions(address grantor, address grantee, uint256 permissions) view returns(uint256)
 func (sacd *Sacd) PackGetAccountPermissions(grantor common.Address, grantee common.Address, permissions *big.Int) []byte {
@@ -201,6 +252,15 @@ func (sacd *Sacd) PackGetAccountPermissions(grantor common.Address, grantee comm
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackGetAccountPermissions is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x6805e547.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function getAccountPermissions(address grantor, address grantee, uint256 permissions) view returns(uint256)
+func (sacd *Sacd) TryPackGetAccountPermissions(grantor common.Address, grantee common.Address, permissions *big.Int) ([]byte, error) {
+	return sacd.abi.Pack("getAccountPermissions", grantor, grantee, permissions)
 }
 
 // UnpackGetAccountPermissions is the Go binding that unpacks the parameters returned
@@ -213,11 +273,12 @@ func (sacd *Sacd) UnpackGetAccountPermissions(data []byte) (*big.Int, error) {
 		return new(big.Int), err
 	}
 	out0 := abi.ConvertType(out[0], new(big.Int)).(*big.Int)
-	return out0, err
+	return out0, nil
 }
 
 // PackGetPermissions is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x68233c61.
+// the contract method with ID 0x68233c61.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function getPermissions(address asset, uint256 tokenId, address grantee, uint256 permissions) view returns(uint256)
 func (sacd *Sacd) PackGetPermissions(asset common.Address, tokenId *big.Int, grantee common.Address, permissions *big.Int) []byte {
@@ -226,6 +287,15 @@ func (sacd *Sacd) PackGetPermissions(asset common.Address, tokenId *big.Int, gra
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackGetPermissions is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x68233c61.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function getPermissions(address asset, uint256 tokenId, address grantee, uint256 permissions) view returns(uint256)
+func (sacd *Sacd) TryPackGetPermissions(asset common.Address, tokenId *big.Int, grantee common.Address, permissions *big.Int) ([]byte, error) {
+	return sacd.abi.Pack("getPermissions", asset, tokenId, grantee, permissions)
 }
 
 // UnpackGetPermissions is the Go binding that unpacks the parameters returned
@@ -238,11 +308,12 @@ func (sacd *Sacd) UnpackGetPermissions(data []byte) (*big.Int, error) {
 		return new(big.Int), err
 	}
 	out0 := abi.ConvertType(out[0], new(big.Int)).(*big.Int)
-	return out0, err
+	return out0, nil
 }
 
 // PackGetRoleAdmin is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x248a9ca3.
+// the contract method with ID 0x248a9ca3.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function getRoleAdmin(bytes32 role) view returns(bytes32)
 func (sacd *Sacd) PackGetRoleAdmin(role [32]byte) []byte {
@@ -251,6 +322,15 @@ func (sacd *Sacd) PackGetRoleAdmin(role [32]byte) []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackGetRoleAdmin is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x248a9ca3.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function getRoleAdmin(bytes32 role) view returns(bytes32)
+func (sacd *Sacd) TryPackGetRoleAdmin(role [32]byte) ([]byte, error) {
+	return sacd.abi.Pack("getRoleAdmin", role)
 }
 
 // UnpackGetRoleAdmin is the Go binding that unpacks the parameters returned
@@ -263,11 +343,12 @@ func (sacd *Sacd) UnpackGetRoleAdmin(data []byte) ([32]byte, error) {
 		return *new([32]byte), err
 	}
 	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
-	return out0, err
+	return out0, nil
 }
 
 // PackGrantRole is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x2f2ff15d.
+// the contract method with ID 0x2f2ff15d.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function grantRole(bytes32 role, address account) returns()
 func (sacd *Sacd) PackGrantRole(role [32]byte, account common.Address) []byte {
@@ -278,8 +359,18 @@ func (sacd *Sacd) PackGrantRole(role [32]byte, account common.Address) []byte {
 	return enc
 }
 
+// TryPackGrantRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x2f2ff15d.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function grantRole(bytes32 role, address account) returns()
+func (sacd *Sacd) TryPackGrantRole(role [32]byte, account common.Address) ([]byte, error) {
+	return sacd.abi.Pack("grantRole", role, account)
+}
+
 // PackHasAccountPermission is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x4fbaaafd.
+// the contract method with ID 0x4fbaaafd.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function hasAccountPermission(address grantor, address grantee, uint8 permissionIndex) view returns(bool)
 func (sacd *Sacd) PackHasAccountPermission(grantor common.Address, grantee common.Address, permissionIndex uint8) []byte {
@@ -288,6 +379,15 @@ func (sacd *Sacd) PackHasAccountPermission(grantor common.Address, grantee commo
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackHasAccountPermission is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x4fbaaafd.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function hasAccountPermission(address grantor, address grantee, uint8 permissionIndex) view returns(bool)
+func (sacd *Sacd) TryPackHasAccountPermission(grantor common.Address, grantee common.Address, permissionIndex uint8) ([]byte, error) {
+	return sacd.abi.Pack("hasAccountPermission", grantor, grantee, permissionIndex)
 }
 
 // UnpackHasAccountPermission is the Go binding that unpacks the parameters returned
@@ -300,11 +400,12 @@ func (sacd *Sacd) UnpackHasAccountPermission(data []byte) (bool, error) {
 		return *new(bool), err
 	}
 	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
-	return out0, err
+	return out0, nil
 }
 
 // PackHasAccountPermissions is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x64e2cd2c.
+// the contract method with ID 0x64e2cd2c.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function hasAccountPermissions(address grantor, address grantee, uint256 permissions) view returns(bool)
 func (sacd *Sacd) PackHasAccountPermissions(grantor common.Address, grantee common.Address, permissions *big.Int) []byte {
@@ -313,6 +414,15 @@ func (sacd *Sacd) PackHasAccountPermissions(grantor common.Address, grantee comm
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackHasAccountPermissions is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x64e2cd2c.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function hasAccountPermissions(address grantor, address grantee, uint256 permissions) view returns(bool)
+func (sacd *Sacd) TryPackHasAccountPermissions(grantor common.Address, grantee common.Address, permissions *big.Int) ([]byte, error) {
+	return sacd.abi.Pack("hasAccountPermissions", grantor, grantee, permissions)
 }
 
 // UnpackHasAccountPermissions is the Go binding that unpacks the parameters returned
@@ -325,11 +435,12 @@ func (sacd *Sacd) UnpackHasAccountPermissions(data []byte) (bool, error) {
 		return *new(bool), err
 	}
 	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
-	return out0, err
+	return out0, nil
 }
 
 // PackHasPermission is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x48eb48f5.
+// the contract method with ID 0x48eb48f5.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function hasPermission(address asset, uint256 tokenId, address grantee, uint8 permissionIndex) view returns(bool)
 func (sacd *Sacd) PackHasPermission(asset common.Address, tokenId *big.Int, grantee common.Address, permissionIndex uint8) []byte {
@@ -338,6 +449,15 @@ func (sacd *Sacd) PackHasPermission(asset common.Address, tokenId *big.Int, gran
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackHasPermission is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x48eb48f5.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function hasPermission(address asset, uint256 tokenId, address grantee, uint8 permissionIndex) view returns(bool)
+func (sacd *Sacd) TryPackHasPermission(asset common.Address, tokenId *big.Int, grantee common.Address, permissionIndex uint8) ([]byte, error) {
+	return sacd.abi.Pack("hasPermission", asset, tokenId, grantee, permissionIndex)
 }
 
 // UnpackHasPermission is the Go binding that unpacks the parameters returned
@@ -350,11 +470,12 @@ func (sacd *Sacd) UnpackHasPermission(data []byte) (bool, error) {
 		return *new(bool), err
 	}
 	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
-	return out0, err
+	return out0, nil
 }
 
 // PackHasPermissions is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x16bc016c.
+// the contract method with ID 0x16bc016c.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function hasPermissions(address asset, uint256 tokenId, address grantee, uint256 permissions) view returns(bool)
 func (sacd *Sacd) PackHasPermissions(asset common.Address, tokenId *big.Int, grantee common.Address, permissions *big.Int) []byte {
@@ -363,6 +484,15 @@ func (sacd *Sacd) PackHasPermissions(asset common.Address, tokenId *big.Int, gra
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackHasPermissions is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x16bc016c.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function hasPermissions(address asset, uint256 tokenId, address grantee, uint256 permissions) view returns(bool)
+func (sacd *Sacd) TryPackHasPermissions(asset common.Address, tokenId *big.Int, grantee common.Address, permissions *big.Int) ([]byte, error) {
+	return sacd.abi.Pack("hasPermissions", asset, tokenId, grantee, permissions)
 }
 
 // UnpackHasPermissions is the Go binding that unpacks the parameters returned
@@ -375,11 +505,12 @@ func (sacd *Sacd) UnpackHasPermissions(data []byte) (bool, error) {
 		return *new(bool), err
 	}
 	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
-	return out0, err
+	return out0, nil
 }
 
 // PackHasRole is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x91d14854.
+// the contract method with ID 0x91d14854.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function hasRole(bytes32 role, address account) view returns(bool)
 func (sacd *Sacd) PackHasRole(role [32]byte, account common.Address) []byte {
@@ -388,6 +519,15 @@ func (sacd *Sacd) PackHasRole(role [32]byte, account common.Address) []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackHasRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x91d14854.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function hasRole(bytes32 role, address account) view returns(bool)
+func (sacd *Sacd) TryPackHasRole(role [32]byte, account common.Address) ([]byte, error) {
+	return sacd.abi.Pack("hasRole", role, account)
 }
 
 // UnpackHasRole is the Go binding that unpacks the parameters returned
@@ -400,11 +540,12 @@ func (sacd *Sacd) UnpackHasRole(data []byte) (bool, error) {
 		return *new(bool), err
 	}
 	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
-	return out0, err
+	return out0, nil
 }
 
 // PackInitialize is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xc4d66de8.
+// the contract method with ID 0xc4d66de8.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function initialize(address templateContractAddress) returns()
 func (sacd *Sacd) PackInitialize(templateContractAddress common.Address) []byte {
@@ -415,8 +556,18 @@ func (sacd *Sacd) PackInitialize(templateContractAddress common.Address) []byte 
 	return enc
 }
 
+// TryPackInitialize is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xc4d66de8.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function initialize(address templateContractAddress) returns()
+func (sacd *Sacd) TryPackInitialize(templateContractAddress common.Address) ([]byte, error) {
+	return sacd.abi.Pack("initialize", templateContractAddress)
+}
+
 // PackNextPaymentId is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x8f4390ac.
+// the contract method with ID 0x8f4390ac.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function nextPaymentId(address asset, address grantee, address grantor) view returns(uint256 paymentId)
 func (sacd *Sacd) PackNextPaymentId(asset common.Address, grantee common.Address, grantor common.Address) []byte {
@@ -425,6 +576,15 @@ func (sacd *Sacd) PackNextPaymentId(asset common.Address, grantee common.Address
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackNextPaymentId is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x8f4390ac.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function nextPaymentId(address asset, address grantee, address grantor) view returns(uint256 paymentId)
+func (sacd *Sacd) TryPackNextPaymentId(asset common.Address, grantee common.Address, grantor common.Address) ([]byte, error) {
+	return sacd.abi.Pack("nextPaymentId", asset, grantee, grantor)
 }
 
 // UnpackNextPaymentId is the Go binding that unpacks the parameters returned
@@ -437,11 +597,12 @@ func (sacd *Sacd) UnpackNextPaymentId(data []byte) (*big.Int, error) {
 		return new(big.Int), err
 	}
 	out0 := abi.ConvertType(out[0], new(big.Int)).(*big.Int)
-	return out0, err
+	return out0, nil
 }
 
 // PackOnTransfer is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xe81e9b64.
+// the contract method with ID 0xe81e9b64.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function onTransfer(address asset, uint256 tokenId) returns()
 func (sacd *Sacd) PackOnTransfer(asset common.Address, tokenId *big.Int) []byte {
@@ -452,8 +613,18 @@ func (sacd *Sacd) PackOnTransfer(asset common.Address, tokenId *big.Int) []byte 
 	return enc
 }
 
+// TryPackOnTransfer is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xe81e9b64.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function onTransfer(address asset, uint256 tokenId) returns()
+func (sacd *Sacd) TryPackOnTransfer(asset common.Address, tokenId *big.Int) ([]byte, error) {
+	return sacd.abi.Pack("onTransfer", asset, tokenId)
+}
+
 // PackPaymentRecords is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x51f88a65.
+// the contract method with ID 0x51f88a65.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function paymentRecords(address asset, address grantee, address grantor, uint256 paymentId) view returns((uint256,uint64,bytes3,string) paymentRecord)
 func (sacd *Sacd) PackPaymentRecords(asset common.Address, grantee common.Address, grantor common.Address, paymentId *big.Int) []byte {
@@ -462,6 +633,15 @@ func (sacd *Sacd) PackPaymentRecords(asset common.Address, grantee common.Addres
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackPaymentRecords is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x51f88a65.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function paymentRecords(address asset, address grantee, address grantor, uint256 paymentId) view returns((uint256,uint64,bytes3,string) paymentRecord)
+func (sacd *Sacd) TryPackPaymentRecords(asset common.Address, grantee common.Address, grantor common.Address, paymentId *big.Int) ([]byte, error) {
+	return sacd.abi.Pack("paymentRecords", asset, grantee, grantor, paymentId)
 }
 
 // UnpackPaymentRecords is the Go binding that unpacks the parameters returned
@@ -474,11 +654,12 @@ func (sacd *Sacd) UnpackPaymentRecords(data []byte) (ISacdPaymentRecord, error) 
 		return *new(ISacdPaymentRecord), err
 	}
 	out0 := *abi.ConvertType(out[0], new(ISacdPaymentRecord)).(*ISacdPaymentRecord)
-	return out0, err
+	return out0, nil
 }
 
 // PackPermissionRecords is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x15e7d96b.
+// the contract method with ID 0x15e7d96b.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function permissionRecords(address asset, uint256 tokenId, uint256 version, address grantee) view returns((uint256,uint256,string,uint256) permissionRecord)
 func (sacd *Sacd) PackPermissionRecords(asset common.Address, tokenId *big.Int, version *big.Int, grantee common.Address) []byte {
@@ -487,6 +668,15 @@ func (sacd *Sacd) PackPermissionRecords(asset common.Address, tokenId *big.Int, 
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackPermissionRecords is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x15e7d96b.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function permissionRecords(address asset, uint256 tokenId, uint256 version, address grantee) view returns((uint256,uint256,string,uint256) permissionRecord)
+func (sacd *Sacd) TryPackPermissionRecords(asset common.Address, tokenId *big.Int, version *big.Int, grantee common.Address) ([]byte, error) {
+	return sacd.abi.Pack("permissionRecords", asset, tokenId, version, grantee)
 }
 
 // UnpackPermissionRecords is the Go binding that unpacks the parameters returned
@@ -499,11 +689,12 @@ func (sacd *Sacd) UnpackPermissionRecords(data []byte) (ISacdPermissionRecord, e
 		return *new(ISacdPermissionRecord), err
 	}
 	out0 := *abi.ConvertType(out[0], new(ISacdPermissionRecord)).(*ISacdPermissionRecord)
-	return out0, err
+	return out0, nil
 }
 
 // PackProxiableUUID is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x52d1902d.
+// the contract method with ID 0x52d1902d.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function proxiableUUID() view returns(bytes32)
 func (sacd *Sacd) PackProxiableUUID() []byte {
@@ -512,6 +703,15 @@ func (sacd *Sacd) PackProxiableUUID() []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackProxiableUUID is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x52d1902d.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function proxiableUUID() view returns(bytes32)
+func (sacd *Sacd) TryPackProxiableUUID() ([]byte, error) {
+	return sacd.abi.Pack("proxiableUUID")
 }
 
 // UnpackProxiableUUID is the Go binding that unpacks the parameters returned
@@ -524,11 +724,56 @@ func (sacd *Sacd) UnpackProxiableUUID(data []byte) ([32]byte, error) {
 		return *new([32]byte), err
 	}
 	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
-	return out0, err
+	return out0, nil
+}
+
+// PackRenounceAccountPermissions is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x16d78242.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function renounceAccountPermissions(address grantor) returns()
+func (sacd *Sacd) PackRenounceAccountPermissions(grantor common.Address) []byte {
+	enc, err := sacd.abi.Pack("renounceAccountPermissions", grantor)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackRenounceAccountPermissions is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x16d78242.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function renounceAccountPermissions(address grantor) returns()
+func (sacd *Sacd) TryPackRenounceAccountPermissions(grantor common.Address) ([]byte, error) {
+	return sacd.abi.Pack("renounceAccountPermissions", grantor)
+}
+
+// PackRenouncePermissions is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x290a7e7e.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function renouncePermissions(address asset, uint256 tokenId) returns()
+func (sacd *Sacd) PackRenouncePermissions(asset common.Address, tokenId *big.Int) []byte {
+	enc, err := sacd.abi.Pack("renouncePermissions", asset, tokenId)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackRenouncePermissions is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x290a7e7e.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function renouncePermissions(address asset, uint256 tokenId) returns()
+func (sacd *Sacd) TryPackRenouncePermissions(asset common.Address, tokenId *big.Int) ([]byte, error) {
+	return sacd.abi.Pack("renouncePermissions", asset, tokenId)
 }
 
 // PackRenounceRole is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x36568abe.
+// the contract method with ID 0x36568abe.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function renounceRole(bytes32 role, address callerConfirmation) returns()
 func (sacd *Sacd) PackRenounceRole(role [32]byte, callerConfirmation common.Address) []byte {
@@ -539,8 +784,18 @@ func (sacd *Sacd) PackRenounceRole(role [32]byte, callerConfirmation common.Addr
 	return enc
 }
 
+// TryPackRenounceRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x36568abe.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function renounceRole(bytes32 role, address callerConfirmation) returns()
+func (sacd *Sacd) TryPackRenounceRole(role [32]byte, callerConfirmation common.Address) ([]byte, error) {
+	return sacd.abi.Pack("renounceRole", role, callerConfirmation)
+}
+
 // PackRevokeRole is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xd547741f.
+// the contract method with ID 0xd547741f.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function revokeRole(bytes32 role, address account) returns()
 func (sacd *Sacd) PackRevokeRole(role [32]byte, account common.Address) []byte {
@@ -551,8 +806,18 @@ func (sacd *Sacd) PackRevokeRole(role [32]byte, account common.Address) []byte {
 	return enc
 }
 
+// TryPackRevokeRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xd547741f.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function revokeRole(bytes32 role, address account) returns()
+func (sacd *Sacd) TryPackRevokeRole(role [32]byte, account common.Address) ([]byte, error) {
+	return sacd.abi.Pack("revokeRole", role, account)
+}
+
 // PackSetAccountPermissions is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x271c6d39.
+// the contract method with ID 0x271c6d39.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function setAccountPermissions(address grantee, uint256 permissions, uint256 expiration, uint256 templateId, string source) returns()
 func (sacd *Sacd) PackSetAccountPermissions(grantee common.Address, permissions *big.Int, expiration *big.Int, templateId *big.Int, source string) []byte {
@@ -563,8 +828,18 @@ func (sacd *Sacd) PackSetAccountPermissions(grantee common.Address, permissions 
 	return enc
 }
 
+// TryPackSetAccountPermissions is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x271c6d39.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function setAccountPermissions(address grantee, uint256 permissions, uint256 expiration, uint256 templateId, string source) returns()
+func (sacd *Sacd) TryPackSetAccountPermissions(grantee common.Address, permissions *big.Int, expiration *big.Int, templateId *big.Int, source string) ([]byte, error) {
+	return sacd.abi.Pack("setAccountPermissions", grantee, permissions, expiration, templateId, source)
+}
+
 // PackSetPayment is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xa23cac39.
+// the contract method with ID 0xa23cac39.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function setPayment(address asset, address grantor, uint256 amount, uint64 expiration, bytes3 currency, string source) returns()
 func (sacd *Sacd) PackSetPayment(asset common.Address, grantor common.Address, amount *big.Int, expiration uint64, currency [3]byte, source string) []byte {
@@ -575,8 +850,18 @@ func (sacd *Sacd) PackSetPayment(asset common.Address, grantor common.Address, a
 	return enc
 }
 
+// TryPackSetPayment is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xa23cac39.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function setPayment(address asset, address grantor, uint256 amount, uint64 expiration, bytes3 currency, string source) returns()
+func (sacd *Sacd) TryPackSetPayment(asset common.Address, grantor common.Address, amount *big.Int, expiration uint64, currency [3]byte, source string) ([]byte, error) {
+	return sacd.abi.Pack("setPayment", asset, grantor, amount, expiration, currency, source)
+}
+
 // PackSetPermissions is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x02e690e4.
+// the contract method with ID 0x02e690e4.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function setPermissions(address asset, uint256 tokenId, address grantee, uint256 permissions, uint256 expiration, uint256 templateId, string source) returns()
 func (sacd *Sacd) PackSetPermissions(asset common.Address, tokenId *big.Int, grantee common.Address, permissions *big.Int, expiration *big.Int, templateId *big.Int, source string) []byte {
@@ -587,8 +872,18 @@ func (sacd *Sacd) PackSetPermissions(asset common.Address, tokenId *big.Int, gra
 	return enc
 }
 
+// TryPackSetPermissions is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x02e690e4.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function setPermissions(address asset, uint256 tokenId, address grantee, uint256 permissions, uint256 expiration, uint256 templateId, string source) returns()
+func (sacd *Sacd) TryPackSetPermissions(asset common.Address, tokenId *big.Int, grantee common.Address, permissions *big.Int, expiration *big.Int, templateId *big.Int, source string) ([]byte, error) {
+	return sacd.abi.Pack("setPermissions", asset, tokenId, grantee, permissions, expiration, templateId, source)
+}
+
 // PackSetPermissions0 is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xe711f339.
+// the contract method with ID 0xe711f339.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function setPermissions(address asset, uint256 tokenId, address grantee, uint256 permissions, uint256 expiration, string source) returns()
 func (sacd *Sacd) PackSetPermissions0(asset common.Address, tokenId *big.Int, grantee common.Address, permissions *big.Int, expiration *big.Int, source string) []byte {
@@ -599,8 +894,18 @@ func (sacd *Sacd) PackSetPermissions0(asset common.Address, tokenId *big.Int, gr
 	return enc
 }
 
+// TryPackSetPermissions0 is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xe711f339.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function setPermissions(address asset, uint256 tokenId, address grantee, uint256 permissions, uint256 expiration, string source) returns()
+func (sacd *Sacd) TryPackSetPermissions0(asset common.Address, tokenId *big.Int, grantee common.Address, permissions *big.Int, expiration *big.Int, source string) ([]byte, error) {
+	return sacd.abi.Pack("setPermissions0", asset, tokenId, grantee, permissions, expiration, source)
+}
+
 // PackSetTemplateContract is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x670983fa.
+// the contract method with ID 0x670983fa.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function setTemplateContract(address templateContractAddress) returns()
 func (sacd *Sacd) PackSetTemplateContract(templateContractAddress common.Address) []byte {
@@ -611,8 +916,18 @@ func (sacd *Sacd) PackSetTemplateContract(templateContractAddress common.Address
 	return enc
 }
 
+// TryPackSetTemplateContract is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x670983fa.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function setTemplateContract(address templateContractAddress) returns()
+func (sacd *Sacd) TryPackSetTemplateContract(templateContractAddress common.Address) ([]byte, error) {
+	return sacd.abi.Pack("setTemplateContract", templateContractAddress)
+}
+
 // PackSupportsInterface is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x01ffc9a7.
+// the contract method with ID 0x01ffc9a7.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (sacd *Sacd) PackSupportsInterface(interfaceId [4]byte) []byte {
@@ -621,6 +936,15 @@ func (sacd *Sacd) PackSupportsInterface(interfaceId [4]byte) []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackSupportsInterface is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x01ffc9a7.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
+func (sacd *Sacd) TryPackSupportsInterface(interfaceId [4]byte) ([]byte, error) {
+	return sacd.abi.Pack("supportsInterface", interfaceId)
 }
 
 // UnpackSupportsInterface is the Go binding that unpacks the parameters returned
@@ -633,11 +957,12 @@ func (sacd *Sacd) UnpackSupportsInterface(data []byte) (bool, error) {
 		return *new(bool), err
 	}
 	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
-	return out0, err
+	return out0, nil
 }
 
 // PackTemplateContract is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x72be06d8.
+// the contract method with ID 0x72be06d8.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function templateContract() view returns(address template_)
 func (sacd *Sacd) PackTemplateContract() []byte {
@@ -646,6 +971,15 @@ func (sacd *Sacd) PackTemplateContract() []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackTemplateContract is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x72be06d8.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function templateContract() view returns(address template_)
+func (sacd *Sacd) TryPackTemplateContract() ([]byte, error) {
+	return sacd.abi.Pack("templateContract")
 }
 
 // UnpackTemplateContract is the Go binding that unpacks the parameters returned
@@ -658,11 +992,12 @@ func (sacd *Sacd) UnpackTemplateContract(data []byte) (common.Address, error) {
 		return *new(common.Address), err
 	}
 	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
-	return out0, err
+	return out0, nil
 }
 
 // PackTokenIdToVersion is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xeba57928.
+// the contract method with ID 0xeba57928.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function tokenIdToVersion(address asset, uint256 tokenId) view returns(uint256 version)
 func (sacd *Sacd) PackTokenIdToVersion(asset common.Address, tokenId *big.Int) []byte {
@@ -671,6 +1006,15 @@ func (sacd *Sacd) PackTokenIdToVersion(asset common.Address, tokenId *big.Int) [
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackTokenIdToVersion is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xeba57928.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function tokenIdToVersion(address asset, uint256 tokenId) view returns(uint256 version)
+func (sacd *Sacd) TryPackTokenIdToVersion(asset common.Address, tokenId *big.Int) ([]byte, error) {
+	return sacd.abi.Pack("tokenIdToVersion", asset, tokenId)
 }
 
 // UnpackTokenIdToVersion is the Go binding that unpacks the parameters returned
@@ -683,11 +1027,12 @@ func (sacd *Sacd) UnpackTokenIdToVersion(data []byte) (*big.Int, error) {
 		return new(big.Int), err
 	}
 	out0 := abi.ConvertType(out[0], new(big.Int)).(*big.Int)
-	return out0, err
+	return out0, nil
 }
 
 // PackUpgradeToAndCall is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x4f1ef286.
+// the contract method with ID 0x4f1ef286.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function upgradeToAndCall(address newImplementation, bytes data) payable returns()
 func (sacd *Sacd) PackUpgradeToAndCall(newImplementation common.Address, data []byte) []byte {
@@ -696,6 +1041,15 @@ func (sacd *Sacd) PackUpgradeToAndCall(newImplementation common.Address, data []
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackUpgradeToAndCall is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x4f1ef286.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function upgradeToAndCall(address newImplementation, bytes data) payable returns()
+func (sacd *Sacd) TryPackUpgradeToAndCall(newImplementation common.Address, data []byte) ([]byte, error) {
+	return sacd.abi.Pack("upgradeToAndCall", newImplementation, data)
 }
 
 // SacdInitialized represents a Initialized event raised by the Sacd contract.
@@ -717,7 +1071,7 @@ func (SacdInitialized) ContractEventName() string {
 // Solidity: event Initialized(uint64 version)
 func (sacd *Sacd) UnpackInitializedEvent(log *types.Log) (*SacdInitialized, error) {
 	event := "Initialized"
-	if log.Topics[0] != sacd.abi.Events[event].ID {
+	if len(log.Topics) == 0 || log.Topics[0] != sacd.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(SacdInitialized)
@@ -763,10 +1117,53 @@ func (SacdPaymentSet) ContractEventName() string {
 // Solidity: event PaymentSet(address indexed asset, address indexed grantee, address indexed grantor, uint256 amount, uint256 expiration, string source)
 func (sacd *Sacd) UnpackPaymentSetEvent(log *types.Log) (*SacdPaymentSet, error) {
 	event := "PaymentSet"
-	if log.Topics[0] != sacd.abi.Events[event].ID {
+	if len(log.Topics) == 0 || log.Topics[0] != sacd.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(SacdPaymentSet)
+	if len(log.Data) > 0 {
+		if err := sacd.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
+			return nil, err
+		}
+	}
+	var indexed abi.Arguments
+	for _, arg := range sacd.abi.Events[event].Inputs {
+		if arg.Indexed {
+			indexed = append(indexed, arg)
+		}
+	}
+	if err := abi.ParseTopics(out, indexed, log.Topics[1:]); err != nil {
+		return nil, err
+	}
+	out.Raw = log
+	return out, nil
+}
+
+// SacdPermissionsRenounced represents a PermissionsRenounced event raised by the Sacd contract.
+type SacdPermissionsRenounced struct {
+	Asset   common.Address
+	TokenId *big.Int
+	Grantee common.Address
+	Raw     *types.Log // Blockchain specific contextual infos
+}
+
+const SacdPermissionsRenouncedEventName = "PermissionsRenounced"
+
+// ContractEventName returns the user-defined event name.
+func (SacdPermissionsRenounced) ContractEventName() string {
+	return SacdPermissionsRenouncedEventName
+}
+
+// UnpackPermissionsRenouncedEvent is the Go binding that unpacks the event data emitted
+// by contract.
+//
+// Solidity: event PermissionsRenounced(address indexed asset, uint256 indexed tokenId, address indexed grantee)
+func (sacd *Sacd) UnpackPermissionsRenouncedEvent(log *types.Log) (*SacdPermissionsRenounced, error) {
+	event := "PermissionsRenounced"
+	if len(log.Topics) == 0 || log.Topics[0] != sacd.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
+	}
+	out := new(SacdPermissionsRenounced)
 	if len(log.Data) > 0 {
 		if err := sacd.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
 			return nil, err
@@ -810,7 +1207,7 @@ func (SacdPermissionsSet) ContractEventName() string {
 // Solidity: event PermissionsSet(address indexed asset, uint256 indexed tokenId, uint256 permissions, address indexed grantee, uint256 expiration, uint256 templateId, string source)
 func (sacd *Sacd) UnpackPermissionsSetEvent(log *types.Log) (*SacdPermissionsSet, error) {
 	event := "PermissionsSet"
-	if log.Topics[0] != sacd.abi.Events[event].ID {
+	if len(log.Topics) == 0 || log.Topics[0] != sacd.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(SacdPermissionsSet)
@@ -853,7 +1250,7 @@ func (SacdRoleAdminChanged) ContractEventName() string {
 // Solidity: event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)
 func (sacd *Sacd) UnpackRoleAdminChangedEvent(log *types.Log) (*SacdRoleAdminChanged, error) {
 	event := "RoleAdminChanged"
-	if log.Topics[0] != sacd.abi.Events[event].ID {
+	if len(log.Topics) == 0 || log.Topics[0] != sacd.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(SacdRoleAdminChanged)
@@ -896,7 +1293,7 @@ func (SacdRoleGranted) ContractEventName() string {
 // Solidity: event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)
 func (sacd *Sacd) UnpackRoleGrantedEvent(log *types.Log) (*SacdRoleGranted, error) {
 	event := "RoleGranted"
-	if log.Topics[0] != sacd.abi.Events[event].ID {
+	if len(log.Topics) == 0 || log.Topics[0] != sacd.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(SacdRoleGranted)
@@ -939,7 +1336,7 @@ func (SacdRoleRevoked) ContractEventName() string {
 // Solidity: event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)
 func (sacd *Sacd) UnpackRoleRevokedEvent(log *types.Log) (*SacdRoleRevoked, error) {
 	event := "RoleRevoked"
-	if log.Topics[0] != sacd.abi.Events[event].ID {
+	if len(log.Topics) == 0 || log.Topics[0] != sacd.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(SacdRoleRevoked)
@@ -980,7 +1377,7 @@ func (SacdUpgraded) ContractEventName() string {
 // Solidity: event Upgraded(address indexed implementation)
 func (sacd *Sacd) UnpackUpgradedEvent(log *types.Log) (*SacdUpgraded, error) {
 	event := "Upgraded"
-	if log.Topics[0] != sacd.abi.Events[event].ID {
+	if len(log.Topics) == 0 || log.Topics[0] != sacd.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(SacdUpgraded)

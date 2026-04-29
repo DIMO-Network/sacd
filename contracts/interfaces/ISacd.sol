@@ -39,6 +39,7 @@ interface ISacd {
     uint256 expiration,
     string source
   );
+  event PermissionsRenounced(address indexed asset, uint256 indexed tokenId, address indexed grantee);
 
   error ZeroAddress();
   error Unauthorized(address addr);
@@ -67,6 +68,10 @@ interface ISacd {
     uint256 templateId,
     string calldata source
   ) external;
+
+  function renouncePermissions(address asset, uint256 tokenId) external;
+
+  function renounceAccountPermissions(address grantor) external;
 
   function setTemplateContract(address templateContractAddress) external;
 
