@@ -4,7 +4,7 @@
         "safe": "0xCED3c922200559128930180d3f0bfFd4d9f4F123",
         "Sacd": {
             "proxy": "0x3c152B5d96769661008Ff404224d6530FCAC766d",
-            "implementation": "0x910d8Ab4e9a78D7f641BBC5DA3997fd21E5d7A30"
+            "implementation": "0x6Ba9636612f259c43FE8F92aCAc94Aea1c99f6ce"
         },
         "Template": {
             "proxy": "0x666309adbec298bb332c722f0303ce883f895750",
