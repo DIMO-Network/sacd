@@ -59,7 +59,8 @@ func (c *Template) Instance(backend bind.ContractBackend, addr common.Address) *
 }
 
 // PackDEFAULTADMINROLE is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xa217fddf.
+// the contract method with ID 0xa217fddf.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function DEFAULT_ADMIN_ROLE() view returns(bytes32)
 func (template *Template) PackDEFAULTADMINROLE() []byte {
@@ -68,6 +69,15 @@ func (template *Template) PackDEFAULTADMINROLE() []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackDEFAULTADMINROLE is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xa217fddf.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function DEFAULT_ADMIN_ROLE() view returns(bytes32)
+func (template *Template) TryPackDEFAULTADMINROLE() ([]byte, error) {
+	return template.abi.Pack("DEFAULT_ADMIN_ROLE")
 }
 
 // UnpackDEFAULTADMINROLE is the Go binding that unpacks the parameters returned
@@ -80,11 +90,12 @@ func (template *Template) UnpackDEFAULTADMINROLE(data []byte) ([32]byte, error) 
 		return *new([32]byte), err
 	}
 	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
-	return out0, err
+	return out0, nil
 }
 
 // PackUPGRADEINTERFACEVERSION is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xad3cb1cc.
+// the contract method with ID 0xad3cb1cc.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function UPGRADE_INTERFACE_VERSION() view returns(string)
 func (template *Template) PackUPGRADEINTERFACEVERSION() []byte {
@@ -93,6 +104,15 @@ func (template *Template) PackUPGRADEINTERFACEVERSION() []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackUPGRADEINTERFACEVERSION is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xad3cb1cc.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function UPGRADE_INTERFACE_VERSION() view returns(string)
+func (template *Template) TryPackUPGRADEINTERFACEVERSION() ([]byte, error) {
+	return template.abi.Pack("UPGRADE_INTERFACE_VERSION")
 }
 
 // UnpackUPGRADEINTERFACEVERSION is the Go binding that unpacks the parameters returned
@@ -105,11 +125,12 @@ func (template *Template) UnpackUPGRADEINTERFACEVERSION(data []byte) (string, er
 		return *new(string), err
 	}
 	out0 := *abi.ConvertType(out[0], new(string)).(*string)
-	return out0, err
+	return out0, nil
 }
 
 // PackActivateTemplate is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x9e060763.
+// the contract method with ID 0x9e060763.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function activateTemplate(uint256 templateId) returns()
 func (template *Template) PackActivateTemplate(templateId *big.Int) []byte {
@@ -120,8 +141,18 @@ func (template *Template) PackActivateTemplate(templateId *big.Int) []byte {
 	return enc
 }
 
+// TryPackActivateTemplate is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x9e060763.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function activateTemplate(uint256 templateId) returns()
+func (template *Template) TryPackActivateTemplate(templateId *big.Int) ([]byte, error) {
+	return template.abi.Pack("activateTemplate", templateId)
+}
+
 // PackApprove is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x095ea7b3.
+// the contract method with ID 0x095ea7b3.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function approve(address to, uint256 tokenId) returns()
 func (template *Template) PackApprove(to common.Address, tokenId *big.Int) []byte {
@@ -132,8 +163,18 @@ func (template *Template) PackApprove(to common.Address, tokenId *big.Int) []byt
 	return enc
 }
 
+// TryPackApprove is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x095ea7b3.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function approve(address to, uint256 tokenId) returns()
+func (template *Template) TryPackApprove(to common.Address, tokenId *big.Int) ([]byte, error) {
+	return template.abi.Pack("approve", to, tokenId)
+}
+
 // PackBalanceOf is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x70a08231.
+// the contract method with ID 0x70a08231.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function balanceOf(address owner) view returns(uint256)
 func (template *Template) PackBalanceOf(owner common.Address) []byte {
@@ -142,6 +183,15 @@ func (template *Template) PackBalanceOf(owner common.Address) []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackBalanceOf is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x70a08231.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function balanceOf(address owner) view returns(uint256)
+func (template *Template) TryPackBalanceOf(owner common.Address) ([]byte, error) {
+	return template.abi.Pack("balanceOf", owner)
 }
 
 // UnpackBalanceOf is the Go binding that unpacks the parameters returned
@@ -154,11 +204,12 @@ func (template *Template) UnpackBalanceOf(data []byte) (*big.Int, error) {
 		return new(big.Int), err
 	}
 	out0 := abi.ConvertType(out[0], new(big.Int)).(*big.Int)
-	return out0, err
+	return out0, nil
 }
 
 // PackBaseURI is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x6c0360eb.
+// the contract method with ID 0x6c0360eb.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function baseURI() view returns(string)
 func (template *Template) PackBaseURI() []byte {
@@ -167,6 +218,15 @@ func (template *Template) PackBaseURI() []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackBaseURI is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x6c0360eb.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function baseURI() view returns(string)
+func (template *Template) TryPackBaseURI() ([]byte, error) {
+	return template.abi.Pack("baseURI")
 }
 
 // UnpackBaseURI is the Go binding that unpacks the parameters returned
@@ -179,11 +239,12 @@ func (template *Template) UnpackBaseURI(data []byte) (string, error) {
 		return *new(string), err
 	}
 	out0 := *abi.ConvertType(out[0], new(string)).(*string)
-	return out0, err
+	return out0, nil
 }
 
 // PackCreateTemplate is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x060ff5b9.
+// the contract method with ID 0x060ff5b9.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function createTemplate(address owner, address asset, uint256 permissions, string cid) returns(uint256 templateId)
 func (template *Template) PackCreateTemplate(owner common.Address, asset common.Address, permissions *big.Int, cid string) []byte {
@@ -192,6 +253,15 @@ func (template *Template) PackCreateTemplate(owner common.Address, asset common.
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackCreateTemplate is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x060ff5b9.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function createTemplate(address owner, address asset, uint256 permissions, string cid) returns(uint256 templateId)
+func (template *Template) TryPackCreateTemplate(owner common.Address, asset common.Address, permissions *big.Int, cid string) ([]byte, error) {
+	return template.abi.Pack("createTemplate", owner, asset, permissions, cid)
 }
 
 // UnpackCreateTemplate is the Go binding that unpacks the parameters returned
@@ -204,11 +274,12 @@ func (template *Template) UnpackCreateTemplate(data []byte) (*big.Int, error) {
 		return new(big.Int), err
 	}
 	out0 := abi.ConvertType(out[0], new(big.Int)).(*big.Int)
-	return out0, err
+	return out0, nil
 }
 
 // PackDeactivateTemplate is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x1d1a689e.
+// the contract method with ID 0x1d1a689e.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function deactivateTemplate(uint256 templateId) returns()
 func (template *Template) PackDeactivateTemplate(templateId *big.Int) []byte {
@@ -219,8 +290,18 @@ func (template *Template) PackDeactivateTemplate(templateId *big.Int) []byte {
 	return enc
 }
 
+// TryPackDeactivateTemplate is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x1d1a689e.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function deactivateTemplate(uint256 templateId) returns()
+func (template *Template) TryPackDeactivateTemplate(templateId *big.Int) ([]byte, error) {
+	return template.abi.Pack("deactivateTemplate", templateId)
+}
+
 // PackGetApproved is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x081812fc.
+// the contract method with ID 0x081812fc.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function getApproved(uint256 tokenId) view returns(address)
 func (template *Template) PackGetApproved(tokenId *big.Int) []byte {
@@ -229,6 +310,15 @@ func (template *Template) PackGetApproved(tokenId *big.Int) []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackGetApproved is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x081812fc.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function getApproved(uint256 tokenId) view returns(address)
+func (template *Template) TryPackGetApproved(tokenId *big.Int) ([]byte, error) {
+	return template.abi.Pack("getApproved", tokenId)
 }
 
 // UnpackGetApproved is the Go binding that unpacks the parameters returned
@@ -241,11 +331,12 @@ func (template *Template) UnpackGetApproved(data []byte) (common.Address, error)
 		return *new(common.Address), err
 	}
 	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
-	return out0, err
+	return out0, nil
 }
 
 // PackGetRoleAdmin is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x248a9ca3.
+// the contract method with ID 0x248a9ca3.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function getRoleAdmin(bytes32 role) view returns(bytes32)
 func (template *Template) PackGetRoleAdmin(role [32]byte) []byte {
@@ -254,6 +345,15 @@ func (template *Template) PackGetRoleAdmin(role [32]byte) []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackGetRoleAdmin is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x248a9ca3.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function getRoleAdmin(bytes32 role) view returns(bytes32)
+func (template *Template) TryPackGetRoleAdmin(role [32]byte) ([]byte, error) {
+	return template.abi.Pack("getRoleAdmin", role)
 }
 
 // UnpackGetRoleAdmin is the Go binding that unpacks the parameters returned
@@ -266,11 +366,12 @@ func (template *Template) UnpackGetRoleAdmin(data []byte) ([32]byte, error) {
 		return *new([32]byte), err
 	}
 	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
-	return out0, err
+	return out0, nil
 }
 
 // PackGetTemplate is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x31543cf4.
+// the contract method with ID 0x31543cf4.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function getTemplate(uint256 templateId) view returns((address,uint256,string,bool) template)
 func (template *Template) PackGetTemplate(templateId *big.Int) []byte {
@@ -279,6 +380,15 @@ func (template *Template) PackGetTemplate(templateId *big.Int) []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackGetTemplate is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x31543cf4.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function getTemplate(uint256 templateId) view returns((address,uint256,string,bool) template)
+func (template *Template) TryPackGetTemplate(templateId *big.Int) ([]byte, error) {
+	return template.abi.Pack("getTemplate", templateId)
 }
 
 // UnpackGetTemplate is the Go binding that unpacks the parameters returned
@@ -291,11 +401,12 @@ func (template *Template) UnpackGetTemplate(data []byte) (ITemplateTemplateData,
 		return *new(ITemplateTemplateData), err
 	}
 	out0 := *abi.ConvertType(out[0], new(ITemplateTemplateData)).(*ITemplateTemplateData)
-	return out0, err
+	return out0, nil
 }
 
 // PackGrantRole is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x2f2ff15d.
+// the contract method with ID 0x2f2ff15d.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function grantRole(bytes32 role, address account) returns()
 func (template *Template) PackGrantRole(role [32]byte, account common.Address) []byte {
@@ -306,8 +417,18 @@ func (template *Template) PackGrantRole(role [32]byte, account common.Address) [
 	return enc
 }
 
+// TryPackGrantRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x2f2ff15d.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function grantRole(bytes32 role, address account) returns()
+func (template *Template) TryPackGrantRole(role [32]byte, account common.Address) ([]byte, error) {
+	return template.abi.Pack("grantRole", role, account)
+}
+
 // PackHasRole is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x91d14854.
+// the contract method with ID 0x91d14854.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function hasRole(bytes32 role, address account) view returns(bool)
 func (template *Template) PackHasRole(role [32]byte, account common.Address) []byte {
@@ -316,6 +437,15 @@ func (template *Template) PackHasRole(role [32]byte, account common.Address) []b
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackHasRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x91d14854.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function hasRole(bytes32 role, address account) view returns(bool)
+func (template *Template) TryPackHasRole(role [32]byte, account common.Address) ([]byte, error) {
+	return template.abi.Pack("hasRole", role, account)
 }
 
 // UnpackHasRole is the Go binding that unpacks the parameters returned
@@ -328,11 +458,12 @@ func (template *Template) UnpackHasRole(data []byte) (bool, error) {
 		return *new(bool), err
 	}
 	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
-	return out0, err
+	return out0, nil
 }
 
 // PackInitialize is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xf399e22e.
+// the contract method with ID 0xf399e22e.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function initialize(address admin, string baseURI_) returns()
 func (template *Template) PackInitialize(admin common.Address, baseURI string) []byte {
@@ -343,8 +474,18 @@ func (template *Template) PackInitialize(admin common.Address, baseURI string) [
 	return enc
 }
 
+// TryPackInitialize is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xf399e22e.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function initialize(address admin, string baseURI_) returns()
+func (template *Template) TryPackInitialize(admin common.Address, baseURI string) ([]byte, error) {
+	return template.abi.Pack("initialize", admin, baseURI)
+}
+
 // PackIsApprovedForAll is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xe985e9c5.
+// the contract method with ID 0xe985e9c5.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
 func (template *Template) PackIsApprovedForAll(owner common.Address, operator common.Address) []byte {
@@ -353,6 +494,15 @@ func (template *Template) PackIsApprovedForAll(owner common.Address, operator co
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackIsApprovedForAll is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xe985e9c5.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function isApprovedForAll(address owner, address operator) view returns(bool)
+func (template *Template) TryPackIsApprovedForAll(owner common.Address, operator common.Address) ([]byte, error) {
+	return template.abi.Pack("isApprovedForAll", owner, operator)
 }
 
 // UnpackIsApprovedForAll is the Go binding that unpacks the parameters returned
@@ -365,11 +515,12 @@ func (template *Template) UnpackIsApprovedForAll(data []byte) (bool, error) {
 		return *new(bool), err
 	}
 	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
-	return out0, err
+	return out0, nil
 }
 
 // PackIsTemplateActive is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xe0a0d933.
+// the contract method with ID 0xe0a0d933.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function isTemplateActive(uint256 templateId) view returns(bool isActive)
 func (template *Template) PackIsTemplateActive(templateId *big.Int) []byte {
@@ -378,6 +529,15 @@ func (template *Template) PackIsTemplateActive(templateId *big.Int) []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackIsTemplateActive is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xe0a0d933.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function isTemplateActive(uint256 templateId) view returns(bool isActive)
+func (template *Template) TryPackIsTemplateActive(templateId *big.Int) ([]byte, error) {
+	return template.abi.Pack("isTemplateActive", templateId)
 }
 
 // UnpackIsTemplateActive is the Go binding that unpacks the parameters returned
@@ -390,11 +550,12 @@ func (template *Template) UnpackIsTemplateActive(data []byte) (bool, error) {
 		return *new(bool), err
 	}
 	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
-	return out0, err
+	return out0, nil
 }
 
 // PackName is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x06fdde03.
+// the contract method with ID 0x06fdde03.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function name() view returns(string)
 func (template *Template) PackName() []byte {
@@ -403,6 +564,15 @@ func (template *Template) PackName() []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackName is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x06fdde03.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function name() view returns(string)
+func (template *Template) TryPackName() ([]byte, error) {
+	return template.abi.Pack("name")
 }
 
 // UnpackName is the Go binding that unpacks the parameters returned
@@ -415,11 +585,12 @@ func (template *Template) UnpackName(data []byte) (string, error) {
 		return *new(string), err
 	}
 	out0 := *abi.ConvertType(out[0], new(string)).(*string)
-	return out0, err
+	return out0, nil
 }
 
 // PackOwnerOf is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x6352211e.
+// the contract method with ID 0x6352211e.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function ownerOf(uint256 tokenId) view returns(address)
 func (template *Template) PackOwnerOf(tokenId *big.Int) []byte {
@@ -428,6 +599,15 @@ func (template *Template) PackOwnerOf(tokenId *big.Int) []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackOwnerOf is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x6352211e.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function ownerOf(uint256 tokenId) view returns(address)
+func (template *Template) TryPackOwnerOf(tokenId *big.Int) ([]byte, error) {
+	return template.abi.Pack("ownerOf", tokenId)
 }
 
 // UnpackOwnerOf is the Go binding that unpacks the parameters returned
@@ -440,11 +620,12 @@ func (template *Template) UnpackOwnerOf(data []byte) (common.Address, error) {
 		return *new(common.Address), err
 	}
 	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
-	return out0, err
+	return out0, nil
 }
 
 // PackProxiableUUID is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x52d1902d.
+// the contract method with ID 0x52d1902d.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function proxiableUUID() view returns(bytes32)
 func (template *Template) PackProxiableUUID() []byte {
@@ -453,6 +634,15 @@ func (template *Template) PackProxiableUUID() []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackProxiableUUID is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x52d1902d.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function proxiableUUID() view returns(bytes32)
+func (template *Template) TryPackProxiableUUID() ([]byte, error) {
+	return template.abi.Pack("proxiableUUID")
 }
 
 // UnpackProxiableUUID is the Go binding that unpacks the parameters returned
@@ -465,11 +655,12 @@ func (template *Template) UnpackProxiableUUID(data []byte) ([32]byte, error) {
 		return *new([32]byte), err
 	}
 	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
-	return out0, err
+	return out0, nil
 }
 
 // PackRenounceRole is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x36568abe.
+// the contract method with ID 0x36568abe.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function renounceRole(bytes32 role, address callerConfirmation) returns()
 func (template *Template) PackRenounceRole(role [32]byte, callerConfirmation common.Address) []byte {
@@ -480,8 +671,18 @@ func (template *Template) PackRenounceRole(role [32]byte, callerConfirmation com
 	return enc
 }
 
+// TryPackRenounceRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x36568abe.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function renounceRole(bytes32 role, address callerConfirmation) returns()
+func (template *Template) TryPackRenounceRole(role [32]byte, callerConfirmation common.Address) ([]byte, error) {
+	return template.abi.Pack("renounceRole", role, callerConfirmation)
+}
+
 // PackRevokeRole is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xd547741f.
+// the contract method with ID 0xd547741f.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function revokeRole(bytes32 role, address account) returns()
 func (template *Template) PackRevokeRole(role [32]byte, account common.Address) []byte {
@@ -492,8 +693,18 @@ func (template *Template) PackRevokeRole(role [32]byte, account common.Address) 
 	return enc
 }
 
+// TryPackRevokeRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xd547741f.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function revokeRole(bytes32 role, address account) returns()
+func (template *Template) TryPackRevokeRole(role [32]byte, account common.Address) ([]byte, error) {
+	return template.abi.Pack("revokeRole", role, account)
+}
+
 // PackSafeTransferFrom is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x42842e0e.
+// the contract method with ID 0x42842e0e.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
 func (template *Template) PackSafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) []byte {
@@ -504,8 +715,18 @@ func (template *Template) PackSafeTransferFrom(from common.Address, to common.Ad
 	return enc
 }
 
+// TryPackSafeTransferFrom is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x42842e0e.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId) returns()
+func (template *Template) TryPackSafeTransferFrom(from common.Address, to common.Address, tokenId *big.Int) ([]byte, error) {
+	return template.abi.Pack("safeTransferFrom", from, to, tokenId)
+}
+
 // PackSafeTransferFrom0 is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xb88d4fde.
+// the contract method with ID 0xb88d4fde.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) returns()
 func (template *Template) PackSafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, data []byte) []byte {
@@ -516,8 +737,18 @@ func (template *Template) PackSafeTransferFrom0(from common.Address, to common.A
 	return enc
 }
 
+// TryPackSafeTransferFrom0 is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xb88d4fde.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) returns()
+func (template *Template) TryPackSafeTransferFrom0(from common.Address, to common.Address, tokenId *big.Int, data []byte) ([]byte, error) {
+	return template.abi.Pack("safeTransferFrom0", from, to, tokenId, data)
+}
+
 // PackSetApprovalForAll is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xa22cb465.
+// the contract method with ID 0xa22cb465.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function setApprovalForAll(address operator, bool approved) returns()
 func (template *Template) PackSetApprovalForAll(operator common.Address, approved bool) []byte {
@@ -528,8 +759,18 @@ func (template *Template) PackSetApprovalForAll(operator common.Address, approve
 	return enc
 }
 
+// TryPackSetApprovalForAll is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xa22cb465.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function setApprovalForAll(address operator, bool approved) returns()
+func (template *Template) TryPackSetApprovalForAll(operator common.Address, approved bool) ([]byte, error) {
+	return template.abi.Pack("setApprovalForAll", operator, approved)
+}
+
 // PackSupportsInterface is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x01ffc9a7.
+// the contract method with ID 0x01ffc9a7.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
 func (template *Template) PackSupportsInterface(interfaceId [4]byte) []byte {
@@ -538,6 +779,15 @@ func (template *Template) PackSupportsInterface(interfaceId [4]byte) []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackSupportsInterface is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x01ffc9a7.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
+func (template *Template) TryPackSupportsInterface(interfaceId [4]byte) ([]byte, error) {
+	return template.abi.Pack("supportsInterface", interfaceId)
 }
 
 // UnpackSupportsInterface is the Go binding that unpacks the parameters returned
@@ -550,11 +800,12 @@ func (template *Template) UnpackSupportsInterface(data []byte) (bool, error) {
 		return *new(bool), err
 	}
 	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
-	return out0, err
+	return out0, nil
 }
 
 // PackSymbol is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x95d89b41.
+// the contract method with ID 0x95d89b41.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function symbol() view returns(string)
 func (template *Template) PackSymbol() []byte {
@@ -563,6 +814,15 @@ func (template *Template) PackSymbol() []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackSymbol is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x95d89b41.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function symbol() view returns(string)
+func (template *Template) TryPackSymbol() ([]byte, error) {
+	return template.abi.Pack("symbol")
 }
 
 // UnpackSymbol is the Go binding that unpacks the parameters returned
@@ -575,11 +835,12 @@ func (template *Template) UnpackSymbol(data []byte) (string, error) {
 		return *new(string), err
 	}
 	out0 := *abi.ConvertType(out[0], new(string)).(*string)
-	return out0, err
+	return out0, nil
 }
 
 // PackTemplates is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xbc525652.
+// the contract method with ID 0xbc525652.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function templates(uint256 templateId) view returns((address,uint256,string,bool) templateData)
 func (template *Template) PackTemplates(templateId *big.Int) []byte {
@@ -588,6 +849,15 @@ func (template *Template) PackTemplates(templateId *big.Int) []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackTemplates is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xbc525652.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function templates(uint256 templateId) view returns((address,uint256,string,bool) templateData)
+func (template *Template) TryPackTemplates(templateId *big.Int) ([]byte, error) {
+	return template.abi.Pack("templates", templateId)
 }
 
 // UnpackTemplates is the Go binding that unpacks the parameters returned
@@ -600,11 +870,12 @@ func (template *Template) UnpackTemplates(data []byte) (ITemplateTemplateData, e
 		return *new(ITemplateTemplateData), err
 	}
 	out0 := *abi.ConvertType(out[0], new(ITemplateTemplateData)).(*ITemplateTemplateData)
-	return out0, err
+	return out0, nil
 }
 
 // PackTokenURI is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xc87b56dd.
+// the contract method with ID 0xc87b56dd.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function tokenURI(uint256 tokenId) view returns(string)
 func (template *Template) PackTokenURI(tokenId *big.Int) []byte {
@@ -613,6 +884,15 @@ func (template *Template) PackTokenURI(tokenId *big.Int) []byte {
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackTokenURI is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xc87b56dd.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function tokenURI(uint256 tokenId) view returns(string)
+func (template *Template) TryPackTokenURI(tokenId *big.Int) ([]byte, error) {
+	return template.abi.Pack("tokenURI", tokenId)
 }
 
 // UnpackTokenURI is the Go binding that unpacks the parameters returned
@@ -625,11 +905,12 @@ func (template *Template) UnpackTokenURI(data []byte) (string, error) {
 		return *new(string), err
 	}
 	out0 := *abi.ConvertType(out[0], new(string)).(*string)
-	return out0, err
+	return out0, nil
 }
 
 // PackTransferFrom is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x23b872dd.
+// the contract method with ID 0x23b872dd.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
 func (template *Template) PackTransferFrom(from common.Address, to common.Address, tokenId *big.Int) []byte {
@@ -640,8 +921,18 @@ func (template *Template) PackTransferFrom(from common.Address, to common.Addres
 	return enc
 }
 
+// TryPackTransferFrom is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x23b872dd.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function transferFrom(address from, address to, uint256 tokenId) returns()
+func (template *Template) TryPackTransferFrom(from common.Address, to common.Address, tokenId *big.Int) ([]byte, error) {
+	return template.abi.Pack("transferFrom", from, to, tokenId)
+}
+
 // PackUpgradeToAndCall is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x4f1ef286.
+// the contract method with ID 0x4f1ef286.  This method will panic if any
+// invalid/nil inputs are passed.
 //
 // Solidity: function upgradeToAndCall(address newImplementation, bytes data) payable returns()
 func (template *Template) PackUpgradeToAndCall(newImplementation common.Address, data []byte) []byte {
@@ -650,6 +941,15 @@ func (template *Template) PackUpgradeToAndCall(newImplementation common.Address,
 		panic(err)
 	}
 	return enc
+}
+
+// TryPackUpgradeToAndCall is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x4f1ef286.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function upgradeToAndCall(address newImplementation, bytes data) payable returns()
+func (template *Template) TryPackUpgradeToAndCall(newImplementation common.Address, data []byte) ([]byte, error) {
+	return template.abi.Pack("upgradeToAndCall", newImplementation, data)
 }
 
 // TemplateApproval represents a Approval event raised by the Template contract.
@@ -673,7 +973,7 @@ func (TemplateApproval) ContractEventName() string {
 // Solidity: event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId)
 func (template *Template) UnpackApprovalEvent(log *types.Log) (*TemplateApproval, error) {
 	event := "Approval"
-	if log.Topics[0] != template.abi.Events[event].ID {
+	if len(log.Topics) == 0 || log.Topics[0] != template.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(TemplateApproval)
@@ -716,7 +1016,7 @@ func (TemplateApprovalForAll) ContractEventName() string {
 // Solidity: event ApprovalForAll(address indexed owner, address indexed operator, bool approved)
 func (template *Template) UnpackApprovalForAllEvent(log *types.Log) (*TemplateApprovalForAll, error) {
 	event := "ApprovalForAll"
-	if log.Topics[0] != template.abi.Events[event].ID {
+	if len(log.Topics) == 0 || log.Topics[0] != template.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(TemplateApprovalForAll)
@@ -757,7 +1057,7 @@ func (TemplateInitialized) ContractEventName() string {
 // Solidity: event Initialized(uint64 version)
 func (template *Template) UnpackInitializedEvent(log *types.Log) (*TemplateInitialized, error) {
 	event := "Initialized"
-	if log.Topics[0] != template.abi.Events[event].ID {
+	if len(log.Topics) == 0 || log.Topics[0] != template.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(TemplateInitialized)
@@ -800,7 +1100,7 @@ func (TemplateRoleAdminChanged) ContractEventName() string {
 // Solidity: event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)
 func (template *Template) UnpackRoleAdminChangedEvent(log *types.Log) (*TemplateRoleAdminChanged, error) {
 	event := "RoleAdminChanged"
-	if log.Topics[0] != template.abi.Events[event].ID {
+	if len(log.Topics) == 0 || log.Topics[0] != template.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(TemplateRoleAdminChanged)
@@ -843,7 +1143,7 @@ func (TemplateRoleGranted) ContractEventName() string {
 // Solidity: event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)
 func (template *Template) UnpackRoleGrantedEvent(log *types.Log) (*TemplateRoleGranted, error) {
 	event := "RoleGranted"
-	if log.Topics[0] != template.abi.Events[event].ID {
+	if len(log.Topics) == 0 || log.Topics[0] != template.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(TemplateRoleGranted)
@@ -886,7 +1186,7 @@ func (TemplateRoleRevoked) ContractEventName() string {
 // Solidity: event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)
 func (template *Template) UnpackRoleRevokedEvent(log *types.Log) (*TemplateRoleRevoked, error) {
 	event := "RoleRevoked"
-	if log.Topics[0] != template.abi.Events[event].ID {
+	if len(log.Topics) == 0 || log.Topics[0] != template.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(TemplateRoleRevoked)
@@ -927,7 +1227,7 @@ func (TemplateTemplateActivated) ContractEventName() string {
 // Solidity: event TemplateActivated(uint256 indexed templateId)
 func (template *Template) UnpackTemplateActivatedEvent(log *types.Log) (*TemplateTemplateActivated, error) {
 	event := "TemplateActivated"
-	if log.Topics[0] != template.abi.Events[event].ID {
+	if len(log.Topics) == 0 || log.Topics[0] != template.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(TemplateTemplateActivated)
@@ -972,7 +1272,7 @@ func (TemplateTemplateCreated) ContractEventName() string {
 // Solidity: event TemplateCreated(uint256 indexed templateId, address indexed creator, address indexed asset, uint256 permissions, string cid)
 func (template *Template) UnpackTemplateCreatedEvent(log *types.Log) (*TemplateTemplateCreated, error) {
 	event := "TemplateCreated"
-	if log.Topics[0] != template.abi.Events[event].ID {
+	if len(log.Topics) == 0 || log.Topics[0] != template.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(TemplateTemplateCreated)
@@ -1013,7 +1313,7 @@ func (TemplateTemplateDeactivated) ContractEventName() string {
 // Solidity: event TemplateDeactivated(uint256 indexed templateId)
 func (template *Template) UnpackTemplateDeactivatedEvent(log *types.Log) (*TemplateTemplateDeactivated, error) {
 	event := "TemplateDeactivated"
-	if log.Topics[0] != template.abi.Events[event].ID {
+	if len(log.Topics) == 0 || log.Topics[0] != template.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(TemplateTemplateDeactivated)
@@ -1056,7 +1356,7 @@ func (TemplateTransfer) ContractEventName() string {
 // Solidity: event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)
 func (template *Template) UnpackTransferEvent(log *types.Log) (*TemplateTransfer, error) {
 	event := "Transfer"
-	if log.Topics[0] != template.abi.Events[event].ID {
+	if len(log.Topics) == 0 || log.Topics[0] != template.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(TemplateTransfer)
@@ -1097,7 +1397,7 @@ func (TemplateUpgraded) ContractEventName() string {
 // Solidity: event Upgraded(address indexed implementation)
 func (template *Template) UnpackUpgradedEvent(log *types.Log) (*TemplateUpgraded, error) {
 	event := "Upgraded"
-	if log.Topics[0] != template.abi.Events[event].ID {
+	if len(log.Topics) == 0 || log.Topics[0] != template.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(TemplateUpgraded)

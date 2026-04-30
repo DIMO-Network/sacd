@@ -146,6 +146,39 @@ contract Sacd is ISacd, Initializable, AccessControlUpgradeable, UUPSUpgradeable
   }
 
   /**
+   * @notice Allows a grantee to renounce their own asset-tied permission record
+   * @dev The caller (msg.sender) is the grantee. Clears the permission record at the
+   *      current token version. Emits PermissionsRenounced as a self-contained signal
+   *      that the grantee cleared the record. Does not emit PermissionsSet.
+   *      Always emits, even if no record exists, mirroring setPermissions' unconditional
+   *      emit semantics.
+   * @param asset The contract address of the ERC721
+   * @param tokenId Token ID associated with the permissions
+   */
+  function renouncePermissions(address asset, uint256 tokenId) external {
+    SacdStorage storage $ = _getSacdStorage();
+    uint256 version = $.tokenIdToVersion[asset][tokenId];
+    delete $.permissionRecords[asset][tokenId][version][msg.sender];
+
+    emit PermissionsRenounced(asset, tokenId, msg.sender);
+  }
+
+  /**
+   * @notice Allows a grantee to renounce their own account-level permission record from a grantor
+   * @dev The caller (msg.sender) is the grantee. Clears accountPermissionRecords[grantor][msg.sender].
+   *      Emits PermissionsRenounced with asset=grantor and tokenId=0, mirroring the convention
+   *      used by setAccountPermissions for PermissionsSet emits.
+   *      Always emits, even if no record exists.
+   * @param grantor The address that granted the permissions
+   */
+  function renounceAccountPermissions(address grantor) external {
+    SacdStorage storage $ = _getSacdStorage();
+    delete $.accountPermissionRecords[grantor][msg.sender];
+
+    emit PermissionsRenounced(grantor, 0, msg.sender);
+  }
+
+  /**
    * @notice Sets a payment record from the caller to a grantor
    * @dev Creates a new payment record and increments the payment ID counter.
    *      Either asset or currency must be specified, but not both.
