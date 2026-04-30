@@ -13,44 +13,140 @@ async function getGasPrice(bump: bigint = 20n): Promise<bigint> {
   return (price * bump) / 100n + price
 }
 
+const networkChainIds: Record<string, number> = {
+  polygon: 137,
+  amoy: 80002,
+}
+
 /**
- * Upgrades the Sacd contract (uses regular deployment)
+ * Deploys a new Sacd implementation and writes it to addresses.json.
+ * Does not touch the proxy. Any funded signer can call this — implementation
+ * deploys are not access-controlled.
  */
-async function upgradeSacd(signer: HardhatEthersSigner, networkName: string) {
+async function deploySacdImplementation(deployer: HardhatEthersSigner, networkName: string): Promise<string> {
   const gasPrice = await getGasPrice(20n)
-  const instances = getAddresses()
 
-  const sacdProxy = instances[networkName].Sacd.proxy
+  console.log(`\n===== Deploying Sacd Implementation =====`)
+  console.log(`Network: ${networkName}`)
+  console.log(`Deployer: ${deployer.address}\n`)
 
-  if (!sacdProxy) {
-    throw new Error(`Sacd proxy address not found for network: ${networkName}`)
-  }
-
-  console.log(`\n===== Upgrading Sacd Contract =====`)
-  console.log(`Proxy: ${sacdProxy}`)
-  console.log(`Current Implementation: ${instances[networkName].Sacd.implementation}\n`)
-
-  const factory = await ethers.getContractFactory('Sacd', signer)
-
-  const impl = await factory.deploy({ gasPrice: gasPrice })
+  const factory = await ethers.getContractFactory('Sacd', deployer)
+  const impl = await factory.deploy({ gasPrice })
   await impl.waitForDeployment()
   const addressImpl = await impl.getAddress()
 
   console.log(`New implementation deployed at: ${addressImpl}`)
 
-  const proxy = await ethers.getContractAt('Sacd', sacdProxy, signer)
-  const upgradeTx = await proxy.upgradeToAndCall(addressImpl, '0x')
+  const instances = getAddresses()
+  instances[networkName].Sacd.implementation = addressImpl
+  writeAddresses(instances, networkName)
+
+  return addressImpl
+}
+
+/**
+ * Calls upgradeToAndCall on the Sacd proxy. The signer must hold UPGRADER_ROLE.
+ * Reads the new implementation address from addresses.json (must already be deployed).
+ */
+async function upgradeSacdProxy(upgrader: HardhatEthersSigner, networkName: string) {
+  const instances = getAddresses()
+  const sacdProxy = instances[networkName].Sacd.proxy
+  const newImpl = instances[networkName].Sacd.implementation
+
+  if (!sacdProxy) {
+    throw new Error(`Sacd proxy address not found for network: ${networkName}`)
+  }
+  if (!newImpl) {
+    throw new Error(`Sacd implementation address not found for network: ${networkName}. Run the deploy step first.`)
+  }
+
+  console.log(`\n===== Upgrading Sacd Proxy =====`)
+  console.log(`Proxy: ${sacdProxy}`)
+  console.log(`New Implementation: ${newImpl}`)
+  console.log(`Upgrader: ${upgrader.address}\n`)
+
+  const proxy = await ethers.getContractAt('Sacd', sacdProxy, upgrader)
+  const upgradeTx = await proxy.upgradeToAndCall(newImpl, '0x')
   console.log(`Upgrade transaction sent: ${upgradeTx.hash}`)
 
   const upgradeReceipt = await upgradeTx.wait()
   console.log(`Upgrade confirmed in block: ${upgradeReceipt?.blockNumber}`)
 
-  console.log(`\nSacd contract upgraded successfully!`)
+  console.log(`\nSacd proxy upgraded successfully!`)
   console.log(`Proxy: ${sacdProxy}`)
-  console.log(`New Implementation: ${addressImpl}\n`)
+  console.log(`Now pointing to: ${newImpl}\n`)
+}
 
-  instances[networkName].Sacd.implementation = addressImpl
-  writeAddresses(instances, networkName)
+/**
+ * Single-shot Sacd upgrade for the EOA path: same signer deploys and upgrades.
+ * Used on networks where UPGRADER_ROLE is held by an EOA we control (e.g. Amoy).
+ */
+async function upgradeSacd(signer: HardhatEthersSigner, networkName: string) {
+  await deploySacdImplementation(signer, networkName)
+  await upgradeSacdProxy(signer, networkName)
+}
+
+/**
+ * Prints the calldata and Safe Tx Builder JSON for upgradeToAndCall(newImpl, "0x").
+ * Use on networks where UPGRADER_ROLE is held by a Safe (e.g. Polygon).
+ * Assumes the new implementation has already been deployed and recorded.
+ */
+async function printSacdSafeUpgradeCalldata(networkName: string) {
+  const instances = getAddresses()
+  const sacdProxy = instances[networkName].Sacd.proxy
+  const newImpl = instances[networkName].Sacd.implementation
+  const safe = instances[networkName].safe
+
+  if (!sacdProxy) {
+    throw new Error(`Sacd proxy address not found for network: ${networkName}`)
+  }
+  if (!newImpl) {
+    throw new Error(`Sacd implementation address not found for network: ${networkName}. Run the deploy step first.`)
+  }
+  if (!safe) {
+    throw new Error(
+      `Safe address not set for network "${networkName}". Add the "safe" field in scripts/data/addresses.json.`
+    )
+  }
+  const chainId = networkChainIds[networkName]
+  if (!chainId) {
+    throw new Error(`Unknown chainId for network "${networkName}".`)
+  }
+
+  const factory = await ethers.getContractFactory('Sacd')
+  const data = factory.interface.encodeFunctionData('upgradeToAndCall', [newImpl, '0x'])
+
+  console.log(`\n===== Safe Transaction =====`)
+  console.log(`Submit from Safe: ${safe} (chainId ${chainId})`)
+  console.log(`  to:    ${sacdProxy}`)
+  console.log(`  value: 0`)
+  console.log(`  data:  ${data}`)
+
+  const txBuilder = {
+    version: '1.0',
+    chainId: String(chainId),
+    createdAt: Date.now(),
+    meta: {
+      name: 'Sacd upgradeToAndCall',
+      description: `Upgrade Sacd proxy ${sacdProxy} to implementation ${newImpl}`,
+      txBuilderVersion: '1.16.5',
+      createdFromSafeAddress: safe,
+      createdFromOwnerAddress: '',
+    },
+    transactions: [
+      {
+        to: sacdProxy,
+        value: '0',
+        data,
+        contractMethod: null,
+        contractInputsValues: null,
+      },
+    ],
+  }
+
+  console.log(`\nTx Builder JSON (paste into Safe Tx Builder → Import):\n`)
+  console.log(JSON.stringify(txBuilder, null, 2))
+  console.log()
 }
 
 /**
@@ -149,22 +245,24 @@ async function upgradeTemplateProxy(upgrader: HardhatEthersSigner, networkName: 
 async function main() {
   let [deployer, user1] = await ethers.getSigners()
   let { name } = await ethers.provider.getNetwork()
+  const isLocalhost = name === 'localhost'
 
   // Signers for different roles
   let create3Deployer = deployer
   let upgrader = deployer
 
-  if (name === 'localhost') {
-    name = 'polygon'
-    // 0xCED3c922200559128930180d3f0bfFd4d9f4F123 Prod account
-    // 0x1741ec2915ab71fc03492715b5640133da69420b Prod deployer/manager
-    // 0xC008EF40B0b42AAD7e34879EB024385024f753ea Shared dev account (has UPGRADER_ROLE)
+  if (isLocalhost) {
+    // FORK selects which chain we're forking; defaults to polygon for back-compat.
+    name = process.env.FORK?.toLowerCase() || 'polygon'
+    // 0xCED3c922200559128930180d3f0bfFd4d9f4F123 Deployer Safe (holds UPGRADER_ROLE on Polygon — use MODE=safe)
+    // 0x1741ec2915ab71fc03492715b5640133da69420b Prod deployer/manager EOA
+    // 0xC008EF40B0b42AAD7e34879EB024385024f753ea Shared dev account (has UPGRADER_ROLE on Amoy)
     // 0xD64b27cA7F7d4447dFa8cb8701497Fb6eE774F6a Deployer create3 (designated CREATE3 deployer)
 
     const designatedDeployer = getCreate3Deployer()
     create3Deployer = await ethers.getImpersonatedSigner(designatedDeployer)
     upgrader = await ethers.getImpersonatedSigner(
-      name == 'polygon' ? '0x1741ec2915ab71fc03492715b5640133da69420b' : '0xC008EF40B0b42AAD7e34879EB024385024f753ea'
+      name === 'polygon' ? '0x1741ec2915ab71fc03492715b5640133da69420b' : '0xC008EF40B0b42AAD7e34879EB024385024f753ea'
     )
 
     // Fund both accounts
@@ -179,18 +277,47 @@ async function main() {
   }
 
   console.log(`\n========================================`)
-  console.log(`Network: ${name}`)
+  console.log(`Network: ${name}${isLocalhost ? ' (forked via localhost)' : ''}`)
   console.log(`CREATE3 Deployer: ${create3Deployer.address}`)
   console.log(`Upgrader: ${upgrader.address}`)
   console.log(`========================================`)
 
   try {
-    // Get contract and version from environment variables
+    // Get contract, mode, and version from environment variables
     const contract = process.env.CONTRACT?.toLowerCase()
+    const mode = process.env.MODE?.toLowerCase()
     const version = process.env.VERSION || '1.0.2'
 
     if (contract === 'sacd') {
-      await upgradeSacd(upgrader, name)
+      if (mode === 'safe') {
+        // Safe path: deploy impl with the funded EOA, then either execute (localhost
+        // simulation by impersonating the Safe) or print calldata for Safe submission.
+        const safe = getAddresses()[name].safe
+        if (!safe) {
+          throw new Error(
+            `Safe address not set for "${name}" in scripts/data/addresses.json. Fill in the "safe" field before running MODE=safe.`
+          )
+        }
+
+        await deploySacdImplementation(deployer, name)
+
+        if (isLocalhost) {
+          console.log(`\n===== Simulating Safe Upgrade =====`)
+          console.log(`Impersonating Safe: ${safe}`)
+          const safeSigner = await ethers.getImpersonatedSigner(safe)
+          await user1.sendTransaction({
+            to: safe,
+            value: ethers.parseEther('10'),
+          })
+          await upgradeSacdProxy(safeSigner, name)
+          console.log(`✅ Safe upgrade simulation complete on forked ${name}.`)
+        } else {
+          await printSacdSafeUpgradeCalldata(name)
+          console.log(`\nNext: import the JSON above into the Safe Tx Builder, collect signatures, execute.`)
+        }
+      } else {
+        await upgradeSacd(upgrader, name)
+      }
     } else if (contract === 'template-impl') {
       // Step 1: Deploy new implementation with CREATE3
       await deployTemplateImplementation(create3Deployer, name, version)
@@ -210,8 +337,16 @@ async function main() {
       await upgradeTemplateProxy(upgrader, name)
     } else {
       console.log('\nUsage with environment variables:')
-      console.log('\nSacd Contract:')
-      console.log('  CONTRACT=sacd npx hardhat run scripts/upgrade.ts')
+      console.log('\nSacd Contract (EOA path — UPGRADER_ROLE held by signer):')
+      console.log('  CONTRACT=sacd npx hardhat run scripts/upgrade.ts --network amoy')
+      console.log('\nSacd Contract (Safe path — UPGRADER_ROLE held by Gnosis Safe):')
+      console.log('  Real:    CONTRACT=sacd MODE=safe npx hardhat run scripts/upgrade.ts --network polygon')
+      console.log(
+        '  Forked:  CONTRACT=sacd MODE=safe FORK=polygon npx hardhat run scripts/upgrade.ts --network localhost'
+      )
+      console.log(
+        '  (real network deploys impl + prints Safe Tx Builder JSON; localhost impersonates the Safe and executes)'
+      )
       console.log('\nTemplate Contract (two-step process):')
       console.log('  Step 1: Deploy implementation')
       console.log('    CONTRACT=template-impl VERSION=1.0.2 npx hardhat run scripts/upgrade.ts')
@@ -236,7 +371,14 @@ async function main() {
   }
 }
 
-export { upgradeSacd, deployTemplateImplementation, upgradeTemplateProxy }
+export {
+  upgradeSacd,
+  deploySacdImplementation,
+  upgradeSacdProxy,
+  printSacdSafeUpgradeCalldata,
+  deployTemplateImplementation,
+  upgradeTemplateProxy,
+}
 
 if (require.main === module) {
   main()
