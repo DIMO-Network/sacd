@@ -15,7 +15,7 @@
         "safe": "",
         "Sacd": {
             "proxy": "0x4E5F9320b1c7cB3DE5ebDD760aD67375B66cF8a3",
-            "implementation": "0x3d02BABb490A68977b3760fed85Ce877907c200C"
+            "implementation": "0xa91fAC6bf66dC55c023cc7A3586C3ef82E96AcEE"
         },
         "Template": {
             "proxy": "0x666309adbec298bb332c722f0303ce883f895750",
