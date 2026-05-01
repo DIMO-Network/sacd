@@ -101,6 +101,11 @@ async function main() {
   const identityApiUrl = process.env.IDENTITY_API_URL || 'https://identity-api.dimo.zone/query'
   const sampleSize = Number(process.env.SAMPLE_SIZE || 3)
   const skipMutation = process.env.SKIP_MUTATION === '1'
+  // identity-api lists vehicles newest-first. Tenderly vnets are typically forked
+  // a day or more behind tip, so the newest vehicles don't exist on the fork yet
+  // and parity reads come back as "vnet reverted but ref succeeded" — a false
+  // alarm. Skip vehicles minted within this window.
+  const minAgeDays = Number(process.env.MIN_VEHICLE_AGE_DAYS || 7)
 
   const provider = new ethers.JsonRpcProvider(rpcUrl)
   const refRpcUrl = process.env.REFERENCE_RPC_URL
@@ -116,6 +121,7 @@ async function main() {
   console.log(`Reference RPC:     ${refRpcUrl || '(none — set REFERENCE_RPC_URL for parity checks)'}`)
   console.log(`Vehicle NFT:       ${vehicleNftAddr || '(unset — real-data section will be skipped)'}`)
   console.log(`Identity API:      ${identityApiUrl}`)
+  console.log(`Min vehicle age:   ${minAgeDays} days (avoids vehicles minted after the vnet fork)`)
   console.log('')
 
   const checks: Check[] = []
@@ -240,7 +246,7 @@ async function main() {
     })
   } else {
     try {
-      samples = await fetchSacdSamples(identityApiUrl, sampleSize)
+      samples = await fetchSacdSamples(identityApiUrl, sampleSize, minAgeDays * 24 * 60 * 60 * 1000)
     } catch (e: any) {
       realChecks.push({
         label: 'Real-data fetch from identity-api',
@@ -569,44 +575,63 @@ async function runEndToEndRenounce(
   })
 }
 
-async function fetchSacdSamples(url: string, sampleSize: number): Promise<SacdSample[]> {
-  // Fetch enough vehicles to find `sampleSize` with a non-empty SACD list and
-  // grantee != owner (so the owner shortcut doesn't mask post-renounce state).
-  const want = Math.max(sampleSize * 5, 20)
-  const query = `{
-    vehicles(first: ${want}) {
-      nodes {
-        tokenId
-        owner
-        sacds(first: 5) {
-          nodes { grantee permissions expiresAt }
-        }
-      }
-    }
-  }`
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ query }),
-  })
-  if (!res.ok) throw new Error(`identity-api returned HTTP ${res.status}`)
-  const json: any = await res.json()
-  if (json.errors) throw new Error(`identity-api: ${JSON.stringify(json.errors)}`)
-  const vehicles: any[] = json.data?.vehicles?.nodes || []
+async function fetchSacdSamples(url: string, sampleSize: number, minAgeMs: number): Promise<SacdSample[]> {
+  // Pages newest-first through identity-api looking for `sampleSize` SACDs that
+  // satisfy: grantee != owner (owner shortcut would mask post-renounce state),
+  // vehicle minted before now-minAgeMs (so it exists on the forked vnet), and
+  // not already expired (so hasPermissions is true pre-renounce).
+  const cutoffMintedAt = Date.now() - minAgeMs
+  const nowSec = Date.now() / 1000
+  const PAGE_SIZE = 100
+  const MAX_PAGES = 8
 
   const out: SacdSample[] = []
-  for (const v of vehicles) {
-    for (const sacd of v.sacds?.nodes || []) {
-      if (sacd.grantee.toLowerCase() === v.owner.toLowerCase()) continue
-      out.push({
-        tokenId: v.tokenId,
-        owner: v.owner,
-        grantee: sacd.grantee,
-        permissions: sacd.permissions,
-        expiresAt: sacd.expiresAt,
-      })
-      if (out.length >= sampleSize) return out
+  let after: string | null = null
+
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const afterClause = after ? `, after: "${after}"` : ''
+    const query = `{
+      vehicles(first: ${PAGE_SIZE}${afterClause}) {
+        nodes {
+          tokenId
+          owner
+          mintedAt
+          sacds(first: 5) {
+            nodes { grantee permissions expiresAt }
+          }
+        }
+        pageInfo { hasNextPage endCursor }
+      }
+    }`
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query }),
+    })
+    if (!res.ok) throw new Error(`identity-api returned HTTP ${res.status}`)
+    const json: any = await res.json()
+    if (json.errors) throw new Error(`identity-api: ${JSON.stringify(json.errors)}`)
+    const conn = json.data?.vehicles
+    const vehicles: any[] = conn?.nodes || []
+
+    for (const v of vehicles) {
+      if (new Date(v.mintedAt).getTime() > cutoffMintedAt) continue
+      for (const sacd of v.sacds?.nodes || []) {
+        if (sacd.grantee.toLowerCase() === v.owner.toLowerCase()) continue
+        if (new Date(sacd.expiresAt).getTime() / 1000 <= nowSec) continue
+        out.push({
+          tokenId: v.tokenId,
+          owner: v.owner,
+          grantee: sacd.grantee,
+          permissions: sacd.permissions,
+          expiresAt: sacd.expiresAt,
+        })
+        if (out.length >= sampleSize) return out
+      }
     }
+
+    if (!conn?.pageInfo?.hasNextPage) break
+    after = conn.pageInfo.endCursor
   }
   return out
 }
