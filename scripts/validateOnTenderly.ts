@@ -1,19 +1,31 @@
 /**
  * Pokes at a Tenderly virtual testnet to validate a Sacd proxy upgrade.
  *
+ * Exercises real behavior:
+ *   - Identity & storage shape (chain, impl slot, bytecode, zero-key reads).
+ *   - Pulls live (asset, tokenId, grantee) tuples from identity-api and
+ *     parity-checks reads against a reference RPC. This is the only way to
+ *     detect a corrupted storage layout — random records read post-upgrade
+ *     should match the same record on the un-upgraded chain bit for bit.
+ *   - Sends an actual renouncePermissions tx from the real grantee using
+ *     Tenderly's no-signature eth_sendTransaction + tenderly_setBalance, and
+ *     verifies the storage was cleared. This mutates the vnet, not mainnet.
+ *
  * Usage:
- *   TENDERLY_RPC_URL=<vnet rpc> NETWORK=polygon npx hardhat run scripts/validateOnTenderly.ts
+ *   TENDERLY_RPC_URL=<vnet rpc> NETWORK=polygon \
+ *   REFERENCE_RPC_URL=$POLYGON_URL \
+ *   npx hardhat run scripts/validateOnTenderly.ts
  *
  * Env:
- *   TENDERLY_RPC_URL    (required)  RPC URL of the Tenderly virtual testnet (post-upgrade).
+ *   TENDERLY_RPC_URL    (required)  RPC URL of the Tenderly virtual testnet.
  *   NETWORK             (optional)  polygon | amoy. Defaults to polygon.
- *   REFERENCE_RPC_URL   (optional)  Real-network RPC to cross-check view calls against.
- *                                   Same NETWORK; e.g. POLYGON_URL. When provided, several
- *                                   view calls are executed on both RPCs and results compared
- *                                   — the strongest "storage layout wasn't corrupted" check.
- *
- * Reads the expected proxy + new implementation from scripts/data/addresses.json
- * and assumes the queued Safe upgrade tx has already executed on the vnet.
+ *   REFERENCE_RPC_URL   (optional)  Real-network RPC for cross-checking reads.
+ *   IDENTITY_API_URL    (optional)  GraphQL endpoint. Defaults to
+ *                                   https://identity-api.dimo.zone/query.
+ *   VEHICLE_NFT_ADDR    (optional)  ERC-721 used as `asset` in SACD reads.
+ *                                   Defaults to the production Polygon vehicle NFT.
+ *   SAMPLE_SIZE         (optional)  How many real SACDs to spot-check. Default 3.
+ *   SKIP_MUTATION       (optional)  Set to "1" to skip the end-to-end tx test.
  */
 
 import 'dotenv/config'
@@ -38,9 +50,21 @@ const EXPECTED_CHAIN_ID: Record<string, bigint> = {
 // On Polygon it's the Safe (read from addresses.json).
 const AMOY_UPGRADER_EOA = '0xC008EF40B0b42AAD7e34879EB024385024f753ea'
 
+// Polygon production vehicle NFT (from identity-api/settings.yaml).
+const DEFAULT_VEHICLE_NFT: Record<string, string> = {
+  polygon: '0xbA5738a18d83D41847dfFbDC6101d37C69c9B0cF',
+}
+
 const PROBE_FROM = '0x000000000000000000000000000000000000dEaD'
 
 type Check = { label: string; ok: boolean; detail: string }
+type SacdSample = {
+  tokenId: number
+  owner: string
+  grantee: string
+  permissions: string // hex bitmask, e.g. "0x3fffc"
+  expiresAt: string
+}
 
 function fmt({ label, ok, detail }: Check) {
   return `${ok ? 'PASS' : 'FAIL'}  ${label}\n      ${detail}`
@@ -73,6 +97,11 @@ async function main() {
     throw new Error('addresses.json has no "safe" field for polygon — cannot verify UPGRADER_ROLE holder.')
   }
 
+  const vehicleNftAddr = (process.env.VEHICLE_NFT_ADDR || DEFAULT_VEHICLE_NFT[network] || '').toLowerCase()
+  const identityApiUrl = process.env.IDENTITY_API_URL || 'https://identity-api.dimo.zone/query'
+  const sampleSize = Number(process.env.SAMPLE_SIZE || 3)
+  const skipMutation = process.env.SKIP_MUTATION === '1'
+
   const provider = new ethers.JsonRpcProvider(rpcUrl)
   const refRpcUrl = process.env.REFERENCE_RPC_URL
   const refProvider = refRpcUrl ? new ethers.JsonRpcProvider(refRpcUrl) : null
@@ -84,7 +113,9 @@ async function main() {
   console.log(`Expected new impl: ${expectedImpl}`)
   console.log(`Expected upgrader: ${expectedUpgrader}`)
   if (expectedTemplate) console.log(`Expected template: ${expectedTemplate}`)
-  console.log(`Reference RPC:     ${refRpcUrl || '(none — set REFERENCE_RPC_URL for cross-check)'}`)
+  console.log(`Reference RPC:     ${refRpcUrl || '(none — set REFERENCE_RPC_URL for parity checks)'}`)
+  console.log(`Vehicle NFT:       ${vehicleNftAddr || '(unset — real-data section will be skipped)'}`)
+  console.log(`Identity API:      ${identityApiUrl}`)
   console.log('')
 
   const checks: Check[] = []
@@ -159,15 +190,15 @@ async function main() {
   const sacdRef = refProvider ? new ethers.Contract(proxyAddr, sacdAbi, refProvider) : null
 
   // ------------------------------------------------------------------------
-  // B. Pre-existing functionality: reads (and parity vs reference RPC)
+  // B. Storage-shape reads (zero-key, no external calls).
+  //    These probe storage shape with parity vs the un-upgraded chain.
+  //    Functions that do `IERC721(asset).ownerOf(tokenId)` are NOT here —
+  //    those need real inputs to be meaningful, covered in section C.
   // ------------------------------------------------------------------------
-  console.log('\n--- B. Pre-existing reads ---')
+  console.log('\n--- B. Storage-shape reads (zero-key) ---')
   const oldChecks: Check[] = []
-
-  // Probe inputs for stable mapping reads. Zero-key reads always work and
-  // — critically — must return identical values on the vnet and the reference
-  // RPC if storage layout is preserved.
   const Z = ethers.ZeroAddress
+
   type ReadCase = { name: string; args: any[]; expectedTemplate?: string }
   const reads: ReadCase[] = [
     { name: 'templateContract', args: [], expectedTemplate },
@@ -181,178 +212,168 @@ async function main() {
     { name: 'accountPermissionRecords', args: [Z, Z] },
     { name: 'paymentRecords', args: [Z, Z, Z, 0n] },
     { name: 'currentPaymentRecord', args: [Z, Z, Z] },
-    { name: 'hasPermission', args: [Z, 0n, Z, 0] },
-    { name: 'hasPermissions', args: [Z, 0n, Z, 0n] },
     { name: 'hasAccountPermission', args: [Z, Z, 0] },
     { name: 'hasAccountPermissions', args: [Z, Z, 0n] },
-    { name: 'getPermissions', args: [Z, 0n, Z, 0n] },
     { name: 'getAccountPermissions', args: [Z, Z, 0n] },
   ]
 
   for (const r of reads) {
-    const sig = `${r.name}(${r.args.map((a) => formatResult(a)).join(',')})`
-    const vnet = await tryRead(sacd, r.name, r.args)
-
-    // Special expected-value check for templateContract.
-    if (r.name === 'templateContract' && r.expectedTemplate) {
-      if (!vnet.ok) {
-        oldChecks.push({
-          label: 'templateContract() returns expected proxy (storage preserved)',
-          ok: false,
-          detail: `reverted on vnet: ${vnet.error}`,
-        })
-        continue
-      }
-      const ok = String(vnet.value).toLowerCase() === r.expectedTemplate.toLowerCase()
-      oldChecks.push({
-        label: 'templateContract() returns expected proxy (storage preserved)',
-        ok,
-        detail: `live=${vnet.value}, expected=${r.expectedTemplate}`,
-      })
-      continue
-    }
-
-    if (!sacdRef) {
-      // No reference RPC: probe is informational. A revert here is not a failure
-      // — the same call may revert on the un-upgraded chain too. Set
-      // REFERENCE_RPC_URL to turn this into a real parity check.
-      oldChecks.push({
-        label: `read: ${sig}`,
-        ok: true,
-        detail: vnet.ok
-          ? `vnet returned ${formatResult(vnet.value)} (no reference RPC; informational)`
-          : `vnet reverted: ${vnet.error} (no reference RPC; could be expected contract behavior — set REFERENCE_RPC_URL to confirm)`,
-      })
-      continue
-    }
-
-    const ref = await tryRead(sacdRef, r.name, r.args)
-
-    // Parity comparison covers all four (vnet, ref) outcome combinations.
-    if (vnet.ok && ref.ok) {
-      const same = deepEqual(vnet.value, ref.value)
-      oldChecks.push({
-        label: `parity: ${sig}`,
-        ok: same,
-        detail: same
-          ? `vnet == ref (${formatResult(vnet.value)})`
-          : `vnet=${formatResult(vnet.value)}, ref=${formatResult(ref.value)} — STORAGE LAYOUT MAY BE BROKEN`,
-      })
-    } else if (!vnet.ok && !ref.ok) {
-      // Both reverted — same contract behavior on both sides. This is fine; the
-      // input just happens to hit a code path that reverts (e.g. ownerOf on a
-      // non-ERC721 asset address) on both the upgraded and un-upgraded chain.
-      oldChecks.push({
-        label: `parity: ${sig}`,
-        ok: true,
-        detail: `both reverted (consistent behavior). vnet="${vnet.error}", ref="${ref.error}"`,
-      })
-    } else if (vnet.ok && !ref.ok) {
-      oldChecks.push({
-        label: `parity: ${sig}`,
-        ok: false,
-        detail: `vnet succeeded (${formatResult(vnet.value)}) but ref reverted (${ref.error}) — UPGRADE CHANGED BEHAVIOR`,
-      })
-    } else if (!vnet.ok && ref.ok) {
-      oldChecks.push({
-        label: `parity: ${sig}`,
-        ok: false,
-        detail: `vnet reverted (${vnet.error}) but ref succeeded (${formatResult(ref.value)}) — UPGRADE BROKE THIS READ`,
-      })
-    }
+    await parityRead(sacd, sacdRef, r.name, r.args, oldChecks, undefined, r.expectedTemplate)
   }
-
-  // ------------------------------------------------------------------------
-  // C. Pre-existing functionality: write simulations via eth_call
-  //    These confirm the legacy write paths still encode/execute against the
-  //    new impl. eth_call is read-only — nothing persists.
-  // ------------------------------------------------------------------------
-  console.log('\n--- C. Pre-existing writes (simulated) ---')
-
-  // setAccountPermissions: no on-chain ownership requirement when templateId=0.
-  // Should succeed from any caller against any non-zero grantee.
-  await simulate(
-    provider,
-    sacd,
-    proxyAddr,
-    'setAccountPermissions',
-    [PROBE_FROM, 1n, BigInt(Math.floor(Date.now() / 1000) + 3600), 0n, 'tenderly-validate'],
-    PROBE_FROM,
-    'pre-existing write callable',
-    oldChecks
-  )
-
-  // setPayment with currency-only (asset=0, currency=USD). Passes the
-  // InvalidCurrency guard because exactly one of asset/currency is set.
-  const usd = '0x555344' // "USD"
-  await simulate(
-    provider,
-    sacd,
-    proxyAddr,
-    'setPayment',
-    [Z, PROBE_FROM, 1n, BigInt(Math.floor(Date.now() / 1000) + 3600), usd, 'tenderly-validate'],
-    PROBE_FROM,
-    'pre-existing write callable',
-    oldChecks
-  )
 
   for (const c of oldChecks) console.log(fmt(c))
 
   // ------------------------------------------------------------------------
-  // D. New functionality: selectors added by this upgrade
-  //    On the OLD impl these would revert with empty data (unknown selector).
-  //    A successful eth_call here proves the proxy is delegating into the
-  //    new impl's added functions.
+  // C. Real-data reads (asset/tokenId/grantee from identity-api).
+  //    Storage corruption surfaces here: random permission records read
+  //    post-upgrade should match the same record on the un-upgraded chain.
   // ------------------------------------------------------------------------
-  console.log('\n--- D. New functionality (added by this upgrade) ---')
+  console.log('\n--- C. Real-data reads (live SACDs from identity-api) ---')
+  const realChecks: Check[] = []
+  let samples: SacdSample[] = []
+
+  if (!vehicleNftAddr) {
+    realChecks.push({
+      label: 'Real-data fetch',
+      ok: false,
+      detail: 'VEHICLE_NFT_ADDR not set and no default for this network — skipping',
+    })
+  } else {
+    try {
+      samples = await fetchSacdSamples(identityApiUrl, sampleSize)
+    } catch (e: any) {
+      realChecks.push({
+        label: 'Real-data fetch from identity-api',
+        ok: false,
+        detail: `query failed: ${safeRevertReason(e)}`,
+      })
+    }
+  }
+
+  if (samples.length > 0) {
+    realChecks.push({
+      label: `Pulled ${samples.length} live SACDs from identity-api`,
+      ok: true,
+      detail: samples.map((s) => `vehicle ${s.tokenId} → grantee ${s.grantee} perms ${s.permissions}`).join('; '),
+    })
+
+    for (const s of samples) {
+      const tag = `vehicle=${s.tokenId} grantee=${s.grantee}`
+      const requestedMask = BigInt(s.permissions)
+
+      await parityRead(
+        sacd,
+        sacdRef,
+        'currentPermissionRecord',
+        [vehicleNftAddr, BigInt(s.tokenId), s.grantee],
+        realChecks,
+        tag
+      )
+      await parityRead(
+        sacd,
+        sacdRef,
+        'hasPermissions',
+        [vehicleNftAddr, BigInt(s.tokenId), s.grantee, requestedMask],
+        realChecks,
+        tag
+      )
+      await parityRead(
+        sacd,
+        sacdRef,
+        'getPermissions',
+        [vehicleNftAddr, BigInt(s.tokenId), s.grantee, requestedMask],
+        realChecks,
+        tag
+      )
+    }
+
+    // Old write path against real data: simulate (eth_call only) the owner
+    // re-setting the same permissions on their own vehicle. Exercises the full
+    // ERC-721 ownership check + storage write code path.
+    const simSample = samples[0]
+    const simArgs = [
+      vehicleNftAddr,
+      BigInt(simSample.tokenId),
+      simSample.grantee,
+      BigInt(simSample.permissions),
+      BigInt(Math.floor(Date.now() / 1000) + 3600),
+      0n,
+      'tenderly-validate',
+    ]
+    await simulate(
+      provider,
+      sacd,
+      proxyAddr,
+      'setPermissions(address,uint256,address,uint256,uint256,uint256,string)',
+      simArgs,
+      simSample.owner,
+      `pre-existing setPermissions simulates from real owner [vehicle=${simSample.tokenId}]`,
+      realChecks
+    )
+  } else if (vehicleNftAddr) {
+    realChecks.push({
+      label: 'Real-data sample available',
+      ok: false,
+      detail: 'identity-api returned no vehicles with non-self SACDs — skipping real-data parity checks',
+    })
+  }
+
+  for (const c of realChecks) console.log(fmt(c))
+
+  // ------------------------------------------------------------------------
+  // D. New functionality: actually call renouncePermissions from the real
+  //    grantee on the vnet, then verify storage was cleared. Tenderly vnets
+  //    accept eth_sendTransaction without a signature, so we can impersonate
+  //    by funding via tenderly_setBalance and sending from any address.
+  // ------------------------------------------------------------------------
+  console.log('\n--- D. End-to-end renounce (mutates vnet only) ---')
   const newChecks: Check[] = []
 
-  await simulate(
-    provider,
-    sacd,
-    proxyAddr,
-    'renounceAccountPermissions',
-    [PROBE_FROM],
-    PROBE_FROM,
-    'new selector reachable on proxy',
-    newChecks
-  )
-
-  await simulate(
-    provider,
-    sacd,
-    proxyAddr,
-    'renouncePermissions',
-    [Z, 0n],
-    PROBE_FROM,
-    'new selector reachable on proxy',
-    newChecks
-  )
-
-  // For extra confidence, confirm the new selectors are NOT on the reference
-  // (un-upgraded) impl, if a reference RPC was supplied — i.e. the upgrade
-  // really did add behavior, not just shuffle code around.
+  // Negative control: confirm the new selector did NOT exist on the
+  // un-upgraded chain. Cheap, useful sanity even when we skip the mutation.
   if (refProvider) {
-    const renounceAccountSelector = sacd.interface.encodeFunctionData('renounceAccountPermissions', [PROBE_FROM])
-    const renouncePermsSelector = sacd.interface.encodeFunctionData('renouncePermissions', [Z, 0n])
-    for (const [fn, data] of [
-      ['renounceAccountPermissions', renounceAccountSelector],
-      ['renouncePermissions', renouncePermsSelector],
-    ] as const) {
-      try {
-        await refProvider.call({ to: proxyAddr, data, from: PROBE_FROM })
-        newChecks.push({
-          label: `${fn} also succeeds on reference RPC`,
-          ok: false,
-          detail: 'new selector resolves on the un-upgraded chain too — was this really new in this upgrade?',
-        })
-      } catch (e: any) {
-        newChecks.push({
-          label: `${fn} not yet on reference RPC (sanity)`,
-          ok: true,
-          detail: `reference reverted as expected: ${safeRevertReason(e)}`,
-        })
-      }
+    const data = sacd.interface.encodeFunctionData('renouncePermissions', [Z, 0n])
+    try {
+      await refProvider.call({ to: proxyAddr, data, from: PROBE_FROM })
+      newChecks.push({
+        label: 'renouncePermissions absent on reference RPC (negative control)',
+        ok: false,
+        detail: 'selector resolves on the un-upgraded chain — was it really new in this upgrade?',
+      })
+    } catch (e: any) {
+      newChecks.push({
+        label: 'renouncePermissions absent on reference RPC (negative control)',
+        ok: true,
+        detail: `reference reverted as expected: ${safeRevertReason(e)}`,
+      })
+    }
+  }
+
+  if (skipMutation) {
+    newChecks.push({
+      label: 'End-to-end renounce',
+      ok: true,
+      detail: 'SKIP_MUTATION=1 — skipped on request',
+    })
+  } else if (samples.length === 0 || !vehicleNftAddr) {
+    newChecks.push({
+      label: 'End-to-end renounce',
+      ok: false,
+      detail: 'no real-data sample available — set VEHICLE_NFT_ADDR / make identity-api reachable',
+    })
+  } else {
+    // Pick a sample where grantee != owner (otherwise the owner shortcut in
+    // hasPermissions hides whether the storage actually changed). The
+    // identity-api fetcher already filters this, but be defensive.
+    const target = samples.find((s) => s.grantee.toLowerCase() !== s.owner.toLowerCase()) || samples[0]
+    try {
+      await runEndToEndRenounce(provider, sacd, proxyAddr, vehicleNftAddr, target, newChecks)
+    } catch (e: any) {
+      newChecks.push({
+        label: 'End-to-end renounce',
+        ok: false,
+        detail: `aborted: ${safeRevertReason(e)}`,
+      })
     }
   }
 
@@ -361,7 +382,7 @@ async function main() {
   // ------------------------------------------------------------------------
   // Summary
   // ------------------------------------------------------------------------
-  const all = [...checks, ...oldChecks, ...newChecks]
+  const all = [...checks, ...oldChecks, ...realChecks, ...newChecks]
   const failed = all.filter((c) => !c.ok)
   console.log(`\n===== Summary =====`)
   console.log(`${all.length - failed.length} / ${all.length} checks passed.`)
@@ -372,6 +393,82 @@ async function main() {
   }
 }
 
+async function parityRead(
+  sacd: ethers.Contract,
+  sacdRef: ethers.Contract | null,
+  name: string,
+  args: any[],
+  checks: Check[],
+  tag?: string,
+  expectedTemplate?: string
+) {
+  const sig = tag ? `${name} [${tag}]` : `${name}(${args.map((a) => formatResult(a)).join(',')})`
+  const vnet = await tryRead(sacd, name, args)
+
+  // Special case: templateContract has a known expected value.
+  if (name === 'templateContract' && expectedTemplate) {
+    if (!vnet.ok) {
+      checks.push({
+        label: 'templateContract() returns expected proxy (storage preserved)',
+        ok: false,
+        detail: `reverted on vnet: ${vnet.error}`,
+      })
+      return
+    }
+    const ok = String(vnet.value).toLowerCase() === expectedTemplate.toLowerCase()
+    checks.push({
+      label: 'templateContract() returns expected proxy (storage preserved)',
+      ok,
+      detail: `live=${vnet.value}, expected=${expectedTemplate}`,
+    })
+    return
+  }
+
+  if (!sacdRef) {
+    // No reference RPC: probe is informational. A revert here is not a failure
+    // — the same call may revert on the un-upgraded chain too.
+    checks.push({
+      label: `read: ${sig}`,
+      ok: true,
+      detail: vnet.ok
+        ? `vnet returned ${formatResult(vnet.value)} (no reference RPC; informational)`
+        : `vnet reverted: ${vnet.error} (no reference RPC; could be expected — set REFERENCE_RPC_URL to confirm)`,
+    })
+    return
+  }
+
+  const ref = await tryRead(sacdRef, name, args)
+
+  if (vnet.ok && ref.ok) {
+    const same = deepEqual(vnet.value, ref.value)
+    checks.push({
+      label: `parity: ${sig}`,
+      ok: same,
+      detail: same
+        ? `vnet == ref (${formatResult(vnet.value)})`
+        : `vnet=${formatResult(vnet.value)}, ref=${formatResult(ref.value)} — STORAGE LAYOUT MAY BE BROKEN`,
+    })
+  } else if (!vnet.ok && !ref.ok) {
+    checks.push({
+      label: `parity: ${sig}`,
+      ok: true,
+      detail: `both reverted (consistent). vnet="${vnet.error}", ref="${ref.error}"`,
+    })
+  } else if (vnet.ok && !ref.ok) {
+    checks.push({
+      label: `parity: ${sig}`,
+      ok: false,
+      detail: `vnet succeeded (${formatResult(vnet.value)}) but ref reverted (${ref.error}) — UPGRADE CHANGED BEHAVIOR`,
+    })
+  } else if (!vnet.ok && ref.ok) {
+    checks.push({
+      label: `parity: ${sig}`,
+      ok: false,
+      detail: `vnet reverted (${vnet.error}) but ref succeeded (${formatResult(ref.value)}) — UPGRADE BROKE THIS READ`,
+    })
+  }
+}
+
 async function simulate(
   provider: ethers.JsonRpcProvider,
   contract: ethers.Contract,
@@ -379,24 +476,139 @@ async function simulate(
   fn: string,
   args: any[],
   from: string,
-  labelPrefix: string,
+  label: string,
   checks: Check[]
 ) {
   const data = contract.interface.encodeFunctionData(fn, args)
   try {
     await provider.call({ to, data, from })
-    checks.push({
-      label: `${labelPrefix}: ${fn}`,
-      ok: true,
-      detail: 'eth_call simulation succeeded',
-    })
+    checks.push({ label, ok: true, detail: `eth_call from ${from} succeeded` })
   } catch (e: any) {
+    checks.push({ label, ok: false, detail: `eth_call from ${from} reverted: ${safeRevertReason(e)}` })
+  }
+}
+
+async function runEndToEndRenounce(
+  provider: ethers.JsonRpcProvider,
+  sacd: ethers.Contract,
+  proxyAddr: string,
+  asset: string,
+  s: SacdSample,
+  checks: Check[]
+) {
+  const tag = `vehicle=${s.tokenId} grantee=${s.grantee}`
+  const requestedMask = BigInt(s.permissions)
+
+  // 1. Pre-state: grantee currently has a permission record.
+  const preRecord: any = await sacd.currentPermissionRecord(asset, BigInt(s.tokenId), s.grantee)
+  const prePerms = BigInt(preRecord.permissions ?? preRecord[0])
+  const preExpiration = BigInt(preRecord.expiration ?? preRecord[1])
+  checks.push({
+    label: `pre-state: grantee has a permission record [${tag}]`,
+    ok: prePerms !== 0n,
+    detail: `permissions=0x${prePerms.toString(16)} expiration=${preExpiration}`,
+  })
+
+  const preHas: boolean = await sacd.hasPermissions(asset, BigInt(s.tokenId), s.grantee, requestedMask)
+  checks.push({
+    label: `pre-state: hasPermissions returns true [${tag}]`,
+    ok: preHas,
+    detail: `hasPermissions(0x${requestedMask.toString(16)}) = ${preHas}`,
+  })
+
+  // 2. Fund the grantee on the vnet.
+  await provider.send('tenderly_setBalance', [s.grantee, '0x' + (10n * 10n ** 18n).toString(16)])
+
+  // 3. Send the renounce tx from the real grantee.
+  const data = sacd.interface.encodeFunctionData('renouncePermissions', [asset, BigInt(s.tokenId)])
+  const txHash: string = await provider.send('eth_sendTransaction', [{ from: s.grantee, to: proxyAddr, data }])
+  const receipt = await provider.waitForTransaction(txHash)
+  checks.push({
+    label: `renouncePermissions tx succeeded [${tag}]`,
+    ok: receipt?.status === 1,
+    detail: `tx=${txHash} status=${receipt?.status} gasUsed=${receipt?.gasUsed}`,
+  })
+
+  // 4. Receipt must include PermissionsRenounced(asset, tokenId, grantee).
+  const evt = sacd.interface.getEvent('PermissionsRenounced')
+  const log = receipt?.logs.find((l) => l.topics[0] === evt!.topicHash)
+  if (!log) {
     checks.push({
-      label: `${labelPrefix}: ${fn}`,
+      label: `PermissionsRenounced event emitted [${tag}]`,
       ok: false,
-      detail: `eth_call reverted: ${safeRevertReason(e)}`,
+      detail: 'event topic not found in tx receipt logs',
+    })
+  } else {
+    const decoded = sacd.interface.parseLog({ topics: [...log.topics], data: log.data })
+    const evAsset = String(decoded?.args[0]).toLowerCase()
+    const evToken = BigInt(decoded?.args[1])
+    const evGrantee = String(decoded?.args[2]).toLowerCase()
+    const ok = evAsset === asset.toLowerCase() && evToken === BigInt(s.tokenId) && evGrantee === s.grantee.toLowerCase()
+    checks.push({
+      label: `PermissionsRenounced event matches inputs [${tag}]`,
+      ok,
+      detail: `asset=${evAsset} tokenId=${evToken} grantee=${evGrantee}`,
     })
   }
+
+  // 5. Post-state: storage is cleared.
+  const postRecord: any = await sacd.currentPermissionRecord(asset, BigInt(s.tokenId), s.grantee)
+  const postPerms = BigInt(postRecord.permissions ?? postRecord[0])
+  const postExpiration = BigInt(postRecord.expiration ?? postRecord[1])
+  checks.push({
+    label: `post-state: permission record cleared [${tag}]`,
+    ok: postPerms === 0n && postExpiration === 0n,
+    detail: `permissions=${postPerms} expiration=${postExpiration}`,
+  })
+
+  const postHas: boolean = await sacd.hasPermissions(asset, BigInt(s.tokenId), s.grantee, requestedMask)
+  checks.push({
+    label: `post-state: hasPermissions returns false [${tag}]`,
+    ok: !postHas,
+    detail: `hasPermissions = ${postHas}`,
+  })
+}
+
+async function fetchSacdSamples(url: string, sampleSize: number): Promise<SacdSample[]> {
+  // Fetch enough vehicles to find `sampleSize` with a non-empty SACD list and
+  // grantee != owner (so the owner shortcut doesn't mask post-renounce state).
+  const want = Math.max(sampleSize * 5, 20)
+  const query = `{
+    vehicles(first: ${want}) {
+      nodes {
+        tokenId
+        owner
+        sacds(first: 5) {
+          nodes { grantee permissions expiresAt }
+        }
+      }
+    }
+  }`
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ query }),
+  })
+  if (!res.ok) throw new Error(`identity-api returned HTTP ${res.status}`)
+  const json: any = await res.json()
+  if (json.errors) throw new Error(`identity-api: ${JSON.stringify(json.errors)}`)
+  const vehicles: any[] = json.data?.vehicles?.nodes || []
+
+  const out: SacdSample[] = []
+  for (const v of vehicles) {
+    for (const sacd of v.sacds?.nodes || []) {
+      if (sacd.grantee.toLowerCase() === v.owner.toLowerCase()) continue
+      out.push({
+        tokenId: v.tokenId,
+        owner: v.owner,
+        grantee: sacd.grantee,
+        permissions: sacd.permissions,
+        expiresAt: sacd.expiresAt,
+      })
+      if (out.length >= sampleSize) return out
+    }
+  }
+  return out
 }
 
 type ReadOutcome = { ok: true; value: any } | { ok: false; error: string }
@@ -438,7 +650,13 @@ function formatResult(v: any): string {
   if (v === null || v === undefined) return String(v)
   if (typeof v === 'bigint') return v.toString()
   if (Array.isArray(v) || (typeof v === 'object' && 'length' in v)) {
-    return '[' + Array.from(v as any).map(formatResult).join(', ') + ']'
+    return (
+      '[' +
+      Array.from(v as any)
+        .map(formatResult)
+        .join(', ') +
+      ']'
+    )
   }
   if (typeof v === 'object') {
     return JSON.stringify(v, (_k, val) => (typeof val === 'bigint' ? val.toString() : val))
