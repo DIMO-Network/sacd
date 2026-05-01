@@ -162,23 +162,39 @@ async function main() {
     checks.push({ label: 'Implementation address has code', ok: false, detail: 'no code at impl address' })
   } else {
     const artifact = await hre.artifacts.readArtifact('Sacd')
-    // Solidity appends a CBOR metadata blob (IPFS hash + solc version) to runtime
-    // bytecode. Its content varies with source-file paths and compile timestamp,
-    // so two compiles of identical source from different machines disagree there.
-    // Polygonscan verification strips it; we do the same before comparing.
+    // Two things make a deployed runtime byte-different from a freshly compiled
+    // local artifact, even when the source is identical:
+    //   1. The CBOR metadata blob at the tail (IPFS hash of metadata.json +
+    //      solc version) varies with absolute source paths and compile times.
+    //   2. Solidity immutables get patched with their runtime values at deploy.
+    //      OZ's UUPSUpgradeable has `address immutable __self = address(this)`,
+    //      so the impl's own address gets baked in at the immutable slot.
+    // Strip metadata; mask out the immutable byte ranges (from solc's
+    // immutableReferences in the build-info); compare the remainder.
     const liveStripped = stripMetadata(liveCode)
     const localStripped = stripMetadata(artifact.deployedBytecode)
-    const exact = liveCode === artifact.deployedBytecode
-    const codeMatches = liveStripped === localStripped
+
+    const immRefs = await loadImmutableRefs(hre, artifact)
+    const liveMasked = maskImmutables(liveStripped, immRefs)
+    const localMasked = maskImmutables(localStripped, immRefs)
+    const immValues = readImmutableValues(liveStripped, immRefs)
+
+    const codeMatches = liveMasked === localMasked
+    const onlyMetadataDiffered = liveStripped === localStripped
+
     let detail: string
-    if (exact) {
+    if (liveCode === artifact.deployedBytecode) {
       detail = `exact match (${(liveCode.length - 2) / 2} bytes)`
     } else if (codeMatches) {
-      detail = `match after stripping Solidity metadata blob — code identical, only metadata differs (benign; expected when compiled on different machines)`
+      const immStr = immValues.length === 0 ? '' : ` Patched immutables: ${immValues.join(', ')}.`
+      const stripped = onlyMetadataDiffered
+        ? 'only the trailing CBOR metadata blob differs'
+        : 'differences are confined to metadata + immutable slots'
+      detail = `match after stripping Solidity metadata + masking immutables — code identical (${stripped}; benign).${immStr}`
     } else {
-      const div = firstDivergence(liveStripped, localStripped)
+      const div = firstDivergence(liveMasked, localMasked)
       detail =
-        `code differs even after stripping metadata; first divergence at byte ${div} ` +
+        `code differs even after stripping metadata and masking immutables; first divergence at byte ${div} ` +
         `(live ${(liveStripped.length - 2) / 2} bytes vs local ${(localStripped.length - 2) / 2} bytes) — ` +
         `the deployed impl is NOT the source you have checked out`
     }
@@ -187,6 +203,21 @@ async function main() {
       ok: codeMatches,
       detail,
     })
+
+    // Sanity check: the patched __self immutable, if present, should equal the
+    // impl address itself. If it doesn't, the deployed bytecode is something
+    // weird (different impl deployed at this address, or layout assumption
+    // wrong). This is a strong, focused check independent of the bulk compare.
+    const selfMatch = immValues.find((v) => v.toLowerCase() === liveImpl.toLowerCase())
+    if (immValues.length > 0) {
+      checks.push({
+        label: 'UUPS __self immutable equals impl address',
+        ok: !!selfMatch,
+        detail: selfMatch
+          ? `found ${selfMatch} baked into runtime bytecode`
+          : `expected ${liveImpl} among baked-in immutables but found only [${immValues.join(', ')}]`,
+      })
+    }
   }
 
   for (const c of checks) console.log(fmt(c))
@@ -659,6 +690,53 @@ function stripMetadata(bytecode: string): string {
   const totalToStripChars = (metadataLen + 2) * 2
   if (Number.isNaN(metadataLen) || totalToStripChars >= hex.length) return '0x' + hex
   return '0x' + hex.slice(0, hex.length - totalToStripChars)
+}
+
+type ImmRange = { start: number; length: number }
+
+// Pulls solc's immutableReferences out of the build-info for the given artifact.
+// The shape is { astId: [{start, length}, ...] }; we flatten to a list of
+// byte ranges in the runtime bytecode that hold immutable values.
+async function loadImmutableRefs(hreInst: typeof hre, artifact: any): Promise<ImmRange[]> {
+  const fqName = `${artifact.sourceName}:${artifact.contractName}`
+  const buildInfo = await hreInst.artifacts.getBuildInfo(fqName)
+  const out = buildInfo?.output?.contracts?.[artifact.sourceName]?.[artifact.contractName] as any
+  const refs = out?.evm?.deployedBytecode?.immutableReferences as Record<string, ImmRange[]> | undefined
+  if (!refs) return []
+  return Object.values(refs).flat()
+}
+
+// Replaces the bytes at each immutable range with zeros so two bytecodes that
+// only differ in their patched immutable values compare equal.
+function maskImmutables(hexCode: string, ranges: ImmRange[]): string {
+  if (ranges.length === 0) return hexCode
+  const hex = hexCode.startsWith('0x') ? hexCode.slice(2) : hexCode
+  const buf = Buffer.from(hex, 'hex')
+  for (const { start, length } of ranges) {
+    if (start + length > buf.length) continue
+    buf.fill(0, start, start + length)
+  }
+  return '0x' + buf.toString('hex')
+}
+
+// Reads the live values that solc patched into each immutable slot. For an
+// `address` immutable solc reserves a 32-byte slot with the address right-
+// aligned; we extract the low 20 bytes as a checksummed address.
+function readImmutableValues(hexCode: string, ranges: ImmRange[]): string[] {
+  const hex = hexCode.startsWith('0x') ? hexCode.slice(2) : hexCode
+  const out: string[] = []
+  for (const { start, length } of ranges) {
+    if (length !== 32) continue
+    const slot = hex.slice(start * 2, (start + length) * 2)
+    if (slot.length !== 64) continue
+    if (!/^0{24}/.test(slot)) continue // not address-shaped
+    try {
+      out.push(ethers.getAddress('0x' + slot.slice(24)))
+    } catch {
+      // not a valid address; skip
+    }
+  }
+  return out
 }
 
 function firstDivergence(a: string, b: string): number | string {
