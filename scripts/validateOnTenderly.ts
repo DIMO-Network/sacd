@@ -125,15 +125,30 @@ async function main() {
     checks.push({ label: 'Implementation address has code', ok: false, detail: 'no code at impl address' })
   } else {
     const artifact = await hre.artifacts.readArtifact('Sacd')
-    const localHash = ethers.keccak256(artifact.deployedBytecode)
-    const liveHash = ethers.keccak256(liveCode)
+    // Solidity appends a CBOR metadata blob (IPFS hash + solc version) to runtime
+    // bytecode. Its content varies with source-file paths and compile timestamp,
+    // so two compiles of identical source from different machines disagree there.
+    // Polygonscan verification strips it; we do the same before comparing.
+    const liveStripped = stripMetadata(liveCode)
+    const localStripped = stripMetadata(artifact.deployedBytecode)
+    const exact = liveCode === artifact.deployedBytecode
+    const codeMatches = liveStripped === localStripped
+    let detail: string
+    if (exact) {
+      detail = `exact match (${(liveCode.length - 2) / 2} bytes)`
+    } else if (codeMatches) {
+      detail = `match after stripping Solidity metadata blob — code identical, only metadata differs (benign; expected when compiled on different machines)`
+    } else {
+      const div = firstDivergence(liveStripped, localStripped)
+      detail =
+        `code differs even after stripping metadata; first divergence at byte ${div} ` +
+        `(live ${(liveStripped.length - 2) / 2} bytes vs local ${(localStripped.length - 2) / 2} bytes) — ` +
+        `the deployed impl is NOT the source you have checked out`
+    }
     checks.push({
       label: 'Implementation runtime bytecode matches local artifact',
-      ok: localHash === liveHash,
-      detail:
-        localHash === liveHash
-          ? `keccak=${liveHash} (${(liveCode.length - 2) / 2} bytes)`
-          : `live=${liveHash}, local=${localHash} — likely different solc settings or wrong commit checked out; verify before relying on this`,
+      ok: codeMatches,
+      detail,
     })
   }
 
@@ -175,58 +190,76 @@ async function main() {
   ]
 
   for (const r of reads) {
-    let liveResult: any
-    try {
-      liveResult = await (sacd as any)[r.name](...r.args)
-    } catch (e: any) {
-      oldChecks.push({
-        label: `read: ${r.name}(${r.args.join(',')})`,
-        ok: false,
-        detail: `reverted on vnet: ${safeRevertReason(e)}`,
-      })
-      continue
-    }
+    const sig = `${r.name}(${r.args.map((a) => formatResult(a)).join(',')})`
+    const vnet = await tryRead(sacd, r.name, r.args)
 
     // Special expected-value check for templateContract.
     if (r.name === 'templateContract' && r.expectedTemplate) {
-      const ok = String(liveResult).toLowerCase() === r.expectedTemplate.toLowerCase()
+      if (!vnet.ok) {
+        oldChecks.push({
+          label: 'templateContract() returns expected proxy (storage preserved)',
+          ok: false,
+          detail: `reverted on vnet: ${vnet.error}`,
+        })
+        continue
+      }
+      const ok = String(vnet.value).toLowerCase() === r.expectedTemplate.toLowerCase()
       oldChecks.push({
         label: 'templateContract() returns expected proxy (storage preserved)',
         ok,
-        detail: `live=${liveResult}, expected=${r.expectedTemplate}`,
+        detail: `live=${vnet.value}, expected=${r.expectedTemplate}`,
       })
       continue
     }
 
     if (!sacdRef) {
+      // No reference RPC: probe is informational. A revert here is not a failure
+      // — the same call may revert on the un-upgraded chain too. Set
+      // REFERENCE_RPC_URL to turn this into a real parity check.
       oldChecks.push({
-        label: `read: ${r.name}(${r.args.join(',')})`,
+        label: `read: ${sig}`,
         ok: true,
-        detail: `vnet=${formatResult(liveResult)} (no reference RPC for parity check)`,
+        detail: vnet.ok
+          ? `vnet returned ${formatResult(vnet.value)} (no reference RPC; informational)`
+          : `vnet reverted: ${vnet.error} (no reference RPC; could be expected contract behavior — set REFERENCE_RPC_URL to confirm)`,
       })
       continue
     }
 
-    let refResult: any
-    try {
-      refResult = await (sacdRef as any)[r.name](...r.args)
-    } catch (e: any) {
+    const ref = await tryRead(sacdRef, r.name, r.args)
+
+    // Parity comparison covers all four (vnet, ref) outcome combinations.
+    if (vnet.ok && ref.ok) {
+      const same = deepEqual(vnet.value, ref.value)
       oldChecks.push({
-        label: `parity: ${r.name}(${r.args.join(',')})`,
-        ok: false,
-        detail: `reference RPC reverted: ${safeRevertReason(e)} — cannot compare`,
+        label: `parity: ${sig}`,
+        ok: same,
+        detail: same
+          ? `vnet == ref (${formatResult(vnet.value)})`
+          : `vnet=${formatResult(vnet.value)}, ref=${formatResult(ref.value)} — STORAGE LAYOUT MAY BE BROKEN`,
       })
-      continue
+    } else if (!vnet.ok && !ref.ok) {
+      // Both reverted — same contract behavior on both sides. This is fine; the
+      // input just happens to hit a code path that reverts (e.g. ownerOf on a
+      // non-ERC721 asset address) on both the upgraded and un-upgraded chain.
+      oldChecks.push({
+        label: `parity: ${sig}`,
+        ok: true,
+        detail: `both reverted (consistent behavior). vnet="${vnet.error}", ref="${ref.error}"`,
+      })
+    } else if (vnet.ok && !ref.ok) {
+      oldChecks.push({
+        label: `parity: ${sig}`,
+        ok: false,
+        detail: `vnet succeeded (${formatResult(vnet.value)}) but ref reverted (${ref.error}) — UPGRADE CHANGED BEHAVIOR`,
+      })
+    } else if (!vnet.ok && ref.ok) {
+      oldChecks.push({
+        label: `parity: ${sig}`,
+        ok: false,
+        detail: `vnet reverted (${vnet.error}) but ref succeeded (${formatResult(ref.value)}) — UPGRADE BROKE THIS READ`,
+      })
     }
-
-    const same = deepEqual(liveResult, refResult)
-    oldChecks.push({
-      label: `parity: ${r.name}(${r.args.join(',')})`,
-      ok: same,
-      detail: same
-        ? `vnet == ref (${formatResult(liveResult)})`
-        : `vnet=${formatResult(liveResult)}, ref=${formatResult(refResult)} — STORAGE LAYOUT MAY BE BROKEN`,
-    })
   }
 
   // ------------------------------------------------------------------------
@@ -364,6 +397,41 @@ async function simulate(
       detail: `eth_call reverted: ${safeRevertReason(e)}`,
     })
   }
+}
+
+type ReadOutcome = { ok: true; value: any } | { ok: false; error: string }
+
+async function tryRead(contract: ethers.Contract, name: string, args: any[]): Promise<ReadOutcome> {
+  try {
+    const value = await (contract as any)[name](...args)
+    return { ok: true, value }
+  } catch (e: any) {
+    return { ok: false, error: safeRevertReason(e) }
+  }
+}
+
+// Strips the Solidity metadata blob from runtime bytecode. The last 2 bytes of
+// runtime bytecode encode the length of the appended CBOR metadata, which
+// varies with absolute source paths and compile timestamps even for byte-
+// identical source. Polygonscan ignores it during verification; so should we.
+function stripMetadata(bytecode: string): string {
+  const hex = bytecode.startsWith('0x') ? bytecode.slice(2) : bytecode
+  if (hex.length < 4) return '0x' + hex
+  const lengthHex = hex.slice(-4) // last 2 bytes (4 hex chars) = metadata length
+  const metadataLen = parseInt(lengthHex, 16)
+  const totalToStripChars = (metadataLen + 2) * 2
+  if (Number.isNaN(metadataLen) || totalToStripChars >= hex.length) return '0x' + hex
+  return '0x' + hex.slice(0, hex.length - totalToStripChars)
+}
+
+function firstDivergence(a: string, b: string): number | string {
+  const ah = a.startsWith('0x') ? a.slice(2) : a
+  const bh = b.startsWith('0x') ? b.slice(2) : b
+  const min = Math.min(ah.length, bh.length)
+  for (let i = 0; i < min; i += 2) {
+    if (ah.slice(i, i + 2) !== bh.slice(i, i + 2)) return i / 2
+  }
+  return ah.length === bh.length ? 'identical (only length differs?)' : `byte ${min / 2} (length mismatch)`
 }
 
 function formatResult(v: any): string {
